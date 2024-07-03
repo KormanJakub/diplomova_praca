@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace nia_api.Controllers;
 
-public class AdminController : Controller
+[Authorize("Admin")]
+public class AdminController : ControllerBase
 {
-    // GET
-    public IActionResult Index()
+    public AdminController()
     {
-        return View();
+        
     }
 }

@@ -3,9 +3,9 @@ using System.Text;
 
 namespace nia_api.Services
 {
-    public class HashPassword
+    public class PasswordService
     {
-        public string Hash(string password)
+        public string HashPassword(string password)
         {
             using (SHA256 sha256 = SHA256.Create())
             {
