@@ -2,7 +2,7 @@
 
 namespace nia_api.Requests;
 
-public class ForgotPasswordRequest
+public class VerificateCodeRequest
 {
     [Required, EmailAddress]
     public string? Email { get; set; }

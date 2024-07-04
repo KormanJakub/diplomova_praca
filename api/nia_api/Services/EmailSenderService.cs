@@ -4,12 +4,12 @@ using nia_api.Models;
 
 namespace nia_api.Services;
 
-public class EmaiSenderService : IEmailSender
+public class EmailSenderService : IEmailSender
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<EmaiSenderService> _logger;
+    private readonly ILogger<EmailSenderService> _logger;
 
-    public EmaiSenderService(IConfiguration configuration, ILogger<EmaiSenderService> logger)
+    public EmailSenderService(IConfiguration configuration, ILogger<EmailSenderService> logger)
     {
         _configuration = configuration;
         _logger = logger;

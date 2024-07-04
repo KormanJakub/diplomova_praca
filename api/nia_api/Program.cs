@@ -56,6 +56,15 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
+builder.Services.AddCors(
+    options => options.AddPolicy
+    (name: "Origin",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+        }
+    ));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<NiaDbSettings>(builder.Configuration.GetSection("NiaDbSettings"));
@@ -63,7 +72,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(
         options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
-builder.Services.AddTransient<IEmailSender, EmaiSenderService>();
+builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddSingleton<NiaDbContext>();
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<PasswordService>();
@@ -82,6 +91,10 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseCors("Origin");
+
 app.MapControllers();
+
+app.MapGet("/", () => "Health endpoint");
 
 app.Run();

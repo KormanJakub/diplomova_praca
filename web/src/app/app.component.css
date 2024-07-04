@@ -1,0 +1,12 @@
+html,
+
+body {
+  height: 100%;
+  position: relative;
+}
+
+app-root {
+  min-height: 100%;
+  display: block;
+  position: relative;
+}

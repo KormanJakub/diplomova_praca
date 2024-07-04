@@ -30,32 +30,36 @@ namespace nia_api.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest user)
         {
             if (user == null)
-                return BadRequest("User is empty!");
+                return BadRequest(new { error = "User is empty!" });
 
             if (_users.FindAsync(user.Email) == null)
-                return BadRequest("Email is already registered!");
+                return BadRequest(new { error = "Email is already registered!"});
             
             if (user.FirstName == null)
-                return BadRequest(new { Message = "First name is empty!" });
+                return BadRequest(new { error = "First name is empty!" });
 
             if (user.LastName == null)
-                return BadRequest(new { Message = "Last name is empty!" });
+                return BadRequest(new { error = "Last name is empty!" });
 
             if (user.Password.Length < 6)
-                return BadRequest(new { Message = "Password is too short! Min 6 Lenght" });
+                return BadRequest(new { error = "Password is too short! Min 6 Lenght" });
 
             if (!user.Password.Any(char.IsUpper))
-                return BadRequest(new { Message = "Password must contain at least one uppercase letter!" });
+                return BadRequest(new { error = "Password must contain at least one uppercase letter!" });
 
             if (!user.Password.Any(char.IsLower))
-                return BadRequest(new { Message = "Password must contain at least one lowercase letter!" });
+                return BadRequest(new { error = "Password must contain at least one lowercase letter!" });
 
             if (user.Password != user.RepeatPassword)
-                return BadRequest("Password's are not same!");
+                return BadRequest(new { error = "Password's are not same!"});
             
             var hashedPassword = _service.HashPassword(user.Password);
 
             var verificationCode = GenerateVerificationCode();
+            
+            var utcNow = DateTime.UtcNow;
+            var gmtPlus2 = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus2);
             
             var newUser = new User()
             {
@@ -65,8 +69,9 @@ namespace nia_api.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 IsAdmin = false,
+                IsEmailConfirmed = false,
                 VerificationCode = verificationCode,
-                CreatedAt = DateTime.Now
+                CreatedAt = localTime
             };
 
             await _emailSender.SendEmailAsync(
@@ -79,7 +84,7 @@ namespace nia_api.Controllers
                 );
 
             await _users.InsertOneAsync(newUser);
-            return Ok("Register successful and verification email sent successfully.!");
+            return Ok(new { message = "Register successful and verification email sent successfully.!"});
         }
 
         [AllowAnonymous]
@@ -87,17 +92,17 @@ namespace nia_api.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
         {
             if (user == null)
-                return BadRequest("User Request is null!");
+                return BadRequest(new { error = "User Request is null!"});
             
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
 
             if (dbUser == null)
-                return Unauthorized("User is not registered!");
+                return Unauthorized(new { error = "User is not registered!"});
 
             var hashPassword = _service.HashPassword(user.Password);
 
             if (dbUser.Password != hashPassword)
-                return Unauthorized("Password's do not match!");
+                return Unauthorized(new {error = "Password's do not match!"});
             
             var token = _token.GenerateToken(
                 dbUser.Id,
@@ -107,19 +112,19 @@ namespace nia_api.Controllers
             );
 
             if (dbUser.IsAdmin)
-                return Ok(new { token, role = "admin" });
+                return Ok(new { token, role = "admin", email_confirmation = dbUser.IsEmailConfirmed });
             
-            return Ok(new {token});
+            return Ok(new {token, email_confirmation = dbUser.IsEmailConfirmed});
         }
 
         [AllowAnonymous]
-        [HttpPost("verification-code")]
-        public async Task<IActionResult> VerificationCode([FromBody] SendingVerificationRequest user)
+        [HttpPut("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(string email)
         {
-            var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+            var dbUser = await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
             
             if (dbUser == null)
-                return Unauthorized("User is not registered!");
+                return Unauthorized(new { error = "User is not registered!"});
 
             var generateNewVerificationCode = GenerateVerificationCode();
             
@@ -139,7 +144,55 @@ namespace nia_api.Controllers
                 "Verification"
             );
             
-            return Ok("Verification code for Forgot Password sent successfully.!");
+            return Ok( new { message = "Verification code for Forgot Password sent successfully.!"});
+        }
+
+        [AllowAnonymous]
+        [HttpPost("verificate-code")]
+        public async Task<IActionResult> VerificateCode([FromBody] VerificateCodeRequest user)
+        {
+            var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+
+            if (dbUser == null)
+                return Unauthorized(new { error = "User is not registered!"});
+
+            if (user.VerificationCode != dbUser.VerificationCode)
+                return BadRequest(new {error = "You entered bad code"});
+            
+            return Ok(new {message = "You entered good code! Write new password!" });
+        }
+
+        [AllowAnonymous]
+        [HttpPut("new-password")]
+        public async Task<IActionResult> NewPassword([FromBody] NewPasswordRequest user)
+        {
+            var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+
+            if (user.NewPassword.Length < 6)
+                return BadRequest(new { error = "Password is too short! Min 6 Lenght" });
+
+            if (!user.NewPassword.Any(char.IsUpper))
+                return BadRequest(new { error = "Password must contain at least one uppercase letter!" });
+
+            if (!user.NewPassword.Any(char.IsLower))
+                return BadRequest(new { error = "Password must contain at least one lowercase letter!" });
+
+            if (user.NewPassword != user.RepeatNewPassword)
+                return BadRequest(new { error = "Password's are not same!"});
+
+            var hashedNewPassword = _service.HashPassword(dbUser.Password);
+
+            if (hashedNewPassword == dbUser.Password)
+                return BadRequest(new { error = "You entered old password!"});
+
+            var update = Builders<User>.Update.Set(u => u.Password, hashedNewPassword);
+            
+            await _users.FindOneAndUpdateAsync(
+                u => u.Id == dbUser.Id,
+                update 
+            );
+            
+            return Ok(new {message = "You have new password!"});
         }
         
         private int GenerateVerificationCode()
