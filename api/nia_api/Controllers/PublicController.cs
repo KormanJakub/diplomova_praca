@@ -54,6 +54,8 @@ namespace nia_api.Controllers
                 return BadRequest("Password's are not same!");
             
             var hashedPassword = _service.HashPassword(user.Password);
+
+            var verificationCode = GenerateVerificationCode();
             
             var newUser = new User()
             {
@@ -63,11 +65,21 @@ namespace nia_api.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 IsAdmin = false,
+                VerificationCode = verificationCode,
                 CreatedAt = DateTime.Now
             };
 
+            await _emailSender.SendEmailAsync(
+                newUser.Email,
+                "Potvrdenie registrácie",
+                newUser.FirstName,
+                newUser.LastName,
+                verificationCode.ToString(),
+                "Registration"
+                );
+
             await _users.InsertOneAsync(newUser);
-            return Ok("Register successful!");
+            return Ok("Register successful and verification email sent successfully.!");
         }
 
         [AllowAnonymous]
@@ -100,17 +112,41 @@ namespace nia_api.Controllers
             return Ok(new {token});
         }
 
-        [HttpPost("email")]
-        public async Task<IActionResult> Email()
+        [AllowAnonymous]
+        [HttpPost("verification-code")]
+        public async Task<IActionResult> VerificationCode([FromBody] SendingVerificationRequest user)
         {
-            var receiver = "kjakub@atlas.sk";
-            var firstName = "Jakub";
-            var lastName = "Korman";
-            var subject = "Registration Confirmation";
-            var code = "1592634";
+            var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+            
+            if (dbUser == null)
+                return Unauthorized("User is not registered!");
 
-            await _emailSender.SendEmailAsync(receiver, subject, firstName, lastName, code);
-            return Ok("Verification email sent successfully.");
+            var generateNewVerificationCode = GenerateVerificationCode();
+            
+            var update = Builders<User>.Update.Set(u => u.VerificationCode, generateNewVerificationCode);
+
+            await _users.FindOneAndUpdateAsync(
+                u => u.Id == dbUser.Id,
+                update 
+            );
+            
+            await _emailSender.SendEmailAsync(
+                dbUser.Email,
+                "Zabudnute heslo!",
+                dbUser.FirstName,
+                dbUser.LastName,
+                dbUser.ToString(),
+                "Verification"
+            );
+            
+            return Ok("Verification code for Forgot Password sent successfully.!");
+        }
+        
+        private int GenerateVerificationCode()
+        {
+            var random = new Random();
+            var verificationCode = random.Next(100000, 999999);
+            return verificationCode;
         }
     }
 }
