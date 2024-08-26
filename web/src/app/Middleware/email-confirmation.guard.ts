@@ -7,18 +7,17 @@ import {AuthService} from "../Services/auth.service";
   providedIn: 'root'
 })
 
-export class RoleGuard implements CanActivate {
+export class EmailConfirmationGuard implements CanActivate {
 
-  constructor(private auth: AuthService, private router: Router) { }
+  constructor(private auth: AuthService, private router:Router) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    if (this.auth.isAdminLoggedIn()) {
+    if (!this.auth.isEmailConfirmed()) {
       return true;
     } else {
-      alert("You are not admin!");
-      this.router.navigate(["logged"]);
+      this.router.navigate(["/verify-email"]);
       return false;
     }
   }
