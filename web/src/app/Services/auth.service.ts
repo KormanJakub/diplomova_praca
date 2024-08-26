@@ -39,6 +39,10 @@ export class AuthService {
   }
 
   public isAdminLoggedIn() {
-    return localStorage.getItem("uiAppAdmin") != null;
+    return localStorage.getItem('uiAppAdmin') === 'admin';
+  }
+
+  public isEmailConfirmed() {
+    return JSON.parse(localStorage.getItem("uiAppEmailConfirmation") || 'true');
   }
 }

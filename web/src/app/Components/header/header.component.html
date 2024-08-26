@@ -1,0 +1,23 @@
+<div class="navbar">
+  <div class="logo">
+    <img routerLink="/" src="logo.png" alt="Logo">
+  </div>
+  <div class="center-menu">
+    <a id="mikiny">Mikiny</a>
+    <a id="vlastny-design">Vlastný design</a>
+  </div>
+  <div class="right-menu">
+    <ng-container *ngIf="!isLogged">
+      <a routerLink="/login">Prihlásenie</a>
+      <a routerLink="/register">Registrácia</a>
+    </ng-container>
+    <ng-container *ngIf="isLogged">
+      <i class="pi pi-user" style="font-size: 1.75rem"></i>
+      <i class="pi pi-shopping-cart" pBadge style="font-size: 1.75rem"></i>
+    </ng-container>
+    <ng-container *ngIf="isAdmin">
+      <i class="pi pi-user-edit" style="font-size: 1.75rem"></i>
+      <i class="pi pi-shopping-cart" pBadge style="font-size: 1.75rem"></i>
+    </ng-container>
+  </div>
+</div>

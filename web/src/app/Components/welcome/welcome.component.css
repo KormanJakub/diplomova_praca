@@ -1,0 +1,90 @@
+.custom-carousel .center-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.custom-carousel .component-container {
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+  color: white;
+}
+
+.custom-carousel .content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.custom-carousel .header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.custom-carousel .line {
+  width: 50px;
+  height: 2px;
+  background-color: white;
+  margin-right: 1rem;
+}
+
+.custom-carousel h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.custom-carousel .buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.custom-carousel button {
+  margin: 0 1rem;
+}
+
+.custom-button {
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.text-stroke {
+  text-shadow:
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000;
+}
+
+.custom-button:hover {
+  background-color: black;
+  color: white;
+}
+
+.custom-button[style*="background-color: black"] {
+  color: white;
+}
+
+.custom-button[style*="background-color: white"] {
+  color: black;
+}
+
+@media (max-width: 768px) {
+  .custom-carousel h1 {
+    font-size: 1.5rem;
+  }
+
+  .custom-carousel .buttons {
+    flex-direction: column;
+  }
+
+  .custom-carousel button {
+    margin: 0.5rem 0;
+  }
+}

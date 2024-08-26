@@ -7,6 +7,8 @@ import {FloatLabelModule} from "primeng/floatlabel";
 import {InputTextModule} from "primeng/inputtext";
 import {PaginatorModule} from "primeng/paginator";
 import {Button} from "primeng/button";
+import {HeaderComponent} from "../header/header.component";
+import {FooterComponent} from "../footer/footer.component";
 
 /*
 TODO:
@@ -22,7 +24,9 @@ Ak email je potvredy presmeruj ho na uzivatelske konto
     FloatLabelModule,
     InputTextModule,
     PaginatorModule,
-    Button
+    Button,
+    HeaderComponent,
+    FooterComponent
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
@@ -38,8 +42,6 @@ export class LoginComponent {
   constructor( private router: Router, private authService: AuthService) { }
 
   login(user: LoginRequest) {
-    console.log(user);
-
     /*
     if (!this.loginForm.valid) {
       return;
@@ -47,9 +49,14 @@ export class LoginComponent {
     */
 
     this.authService.login(user).subscribe({
-      next: (response: { token: string, email_confirmation: string }) => {
+      next: (response: { token: string, email_confirmation: string, role?: string }) => {
         localStorage.setItem('uiAppToken', response.token);
-        localStorage.setItem('uiAppEmailConfirmation', response.email_confirmation);
+        localStorage.setItem('uiAppEmailConfirmation', JSON.stringify(response.email_confirmation));
+
+        if (response.role) {
+          localStorage.setItem('uiAppRole', response.role);
+        }
+
         this.router.navigate(['/']);
       },
       error: () => {

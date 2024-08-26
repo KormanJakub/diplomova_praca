@@ -1,11 +1,17 @@
 import { Component } from '@angular/core';
 import {FloatLabelModule} from "primeng/floatlabel";
 import {InputTextModule} from "primeng/inputtext";
-import {FormControl, FormGroup, FormsModule, Validators} from "@angular/forms";
-import {Router} from "@angular/router";
+import { FormControl, FormsModule, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {Router, RouterModule} from "@angular/router";
 import {AuthService} from "../../Services/auth.service";
 import {RegisterRequest} from "../../Requests/registerrequest";
 import {Button} from "primeng/button";
+import { PasswordModule } from 'primeng/password';
+import {DividerModule} from "primeng/divider";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
+import {HeaderComponent} from "../header/header.component";
 
 //TODO: Urob validaciu
 
@@ -16,7 +22,13 @@ import {Button} from "primeng/button";
     FloatLabelModule,
     InputTextModule,
     FormsModule,
-    Button
+    Button,
+    ReactiveFormsModule,
+    RouterModule,
+    CommonModule,
+    DividerModule,
+    PasswordModule,
+    HeaderComponent
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
@@ -25,17 +37,35 @@ import {Button} from "primeng/button";
 export class RegisterComponent {
   user: RegisterRequest = new RegisterRequest();
 
-  constructor(private router: Router, private authService: AuthService) { }
+  registerForm: FormGroup = new FormGroup({
+    email: new FormControl(null, [Validators.required, Validators.email]),
+    firstName: new FormControl(null, [Validators.required]),
+    lastName: new FormControl(null, [Validators.required]),
+  });
 
-  register(user: RegisterRequest) {
-    this.authService.register(user).subscribe({
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
+  register() {
+    if (this.registerForm.invalid) {
+      return;
+    }
+
+    const registerRequest: RegisterRequest = this.registerForm.value;
+
+    console.log(registerRequest);
+    /*
+    this.authService.register(registerRequest).subscribe({
       next: () => {
-        alert('Registrácia prebehla úspešne. Na email vám bolo poslasné overujúci kód!');
-        this.router.navigate(['/verify-email']);
+        alert('Registrácia prebehla úspešne. Prihlaste sa!');
+        this.router.navigate(['/login']);
       },
       error: (err) => {
         alert('Registration failed: ' + err.error.error);
       }
     })
+     */
   }
 }

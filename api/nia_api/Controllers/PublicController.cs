@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
 using nia_api.Models;
@@ -25,7 +24,6 @@ namespace nia_api.Controllers
             _emailSender = emailSender;
         }
         
-        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest user)
         {
@@ -68,12 +66,11 @@ namespace nia_api.Controllers
                 Password = hashedPassword,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                IsAdmin = false,
                 IsEmailConfirmed = false,
                 VerificationCode = verificationCode,
                 CreatedAt = localTime
             };
-
+            
             await _emailSender.SendEmailAsync(
                 newUser.Email,
                 "Potvrdenie registrácie",
@@ -82,12 +79,13 @@ namespace nia_api.Controllers
                 verificationCode.ToString(),
                 "Registration"
                 );
-
+        
+            ScheduleVerificationCodeDeletion(newUser);
+            
             await _users.InsertOneAsync(newUser);
-            return Ok(new { message = "Register successful and verification email sent successfully.!"});
+            return Ok(new { message = "Register successful and verification email sent successfully.!", email = newUser.Id});
         }
 
-        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
         {
@@ -117,7 +115,6 @@ namespace nia_api.Controllers
             return Ok(new {token, email_confirmation = dbUser.IsEmailConfirmed});
         }
 
-        [AllowAnonymous]
         [HttpPut("forgot-password")]
         public async Task<IActionResult> ForgotPassword(string email)
         {
@@ -147,7 +144,6 @@ namespace nia_api.Controllers
             return Ok( new { message = "Verification code for Forgot Password sent successfully.!"});
         }
 
-        [AllowAnonymous]
         [HttpPost("verificate-code")]
         public async Task<IActionResult> VerificateCode([FromBody] VerificateCodeRequest user)
         {
@@ -156,13 +152,37 @@ namespace nia_api.Controllers
             if (dbUser == null)
                 return Unauthorized(new { error = "User is not registered!"});
 
+            if (user.VerificationCode >= 100000)
+                return Unauthorized(new { error = "Wrong verification code!"});
+
             if (user.VerificationCode != dbUser.VerificationCode)
                 return BadRequest(new {error = "You entered bad code"});
             
             return Ok(new {message = "You entered good code! Write new password!" });
         }
 
-        [AllowAnonymous]
+        //TODO: Vytvoriť email, ktorý bude posielať verifikaciu
+        [HttpPost("new-verification-code")]
+        public async Task<IActionResult> NewVerificateCode([FromBody] EmailRequest user)
+        {
+            var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+            
+            if (dbUser == null)
+                return Unauthorized(new { error = "User is not registered!"});
+            
+            var generateNewVerificationCode = GenerateVerificationCode();
+            var update = Builders<User>.Update.Set(u => u.VerificationCode, generateNewVerificationCode);
+            
+            await _users.FindOneAndUpdateAsync(
+                u => u.Id == dbUser.Id,
+                update 
+            );
+            
+            ScheduleVerificationCodeDeletion(dbUser);
+            
+            return Ok(new {message = "You should receive new verification code!" });
+        }
+
         [HttpPut("new-password")]
         public async Task<IActionResult> NewPassword([FromBody] NewPasswordRequest user)
         {
@@ -200,6 +220,21 @@ namespace nia_api.Controllers
             var random = new Random();
             var verificationCode = random.Next(100000, 999999);
             return verificationCode;
+        }
+
+        private void ScheduleVerificationCodeDeletion(User user)
+        {
+            Task.Run((Func<Task>)(async () =>
+            {
+                await Task.Delay(TimeSpan.FromMinutes(10));
+
+                var lcUser = await _users.Find(u => u.Id == user.Id).FirstOrDefaultAsync();
+                if (lcUser != null && !lcUser.IsEmailConfirmed)
+                {
+                    lcUser.VerificationCode = 0;
+                    await _users.ReplaceOneAsync(u => u.Id == lcUser.Id, lcUser);
+                }
+            }));
         }
     }
 }
