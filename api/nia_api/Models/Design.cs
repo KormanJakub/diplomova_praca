@@ -4,23 +4,19 @@ using MongoDB.Bson;
 
 namespace nia_api.Models;
 
-public class Designň
+public class Design
 {
     [BsonId(IdGenerator = typeof(AscendingGuidGenerator))]
     [BsonElement("_id") ,BsonRepresentation(BsonType.String)]
     public Guid Id { get; set; }
     [BsonElement("name"), BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
-    [BsonElement("description"), BsonRepresentation(BsonType.String)]
-    public string? Description { get; set; }
-    [BsonElement("price"), BsonRepresentation(BsonType.Double)]
-    public double Price {  get; set; }
-    /*
-     * TODO: Pridať tagy
-     * TODO: Pridať na danú vec údaje (napr. mikina cervená, toľko kusov)
-     */
+    [BsonElement("imageUrl"), BsonRepresentation(BsonType.String)]
+    public string ImageUrl { get; set; } 
+    [BsonElement("price"), BsonRepresentation(BsonType.Decimal128)]
+    public decimal Price { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
 }

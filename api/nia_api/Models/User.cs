@@ -32,6 +32,8 @@ namespace nia_api.Models
         [BsonElement("verification_code"), BsonRepresentation(BsonType.Int32)]
         public int VerificationCode {  get; set; }
         [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
-        public DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+        [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
+        public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }
