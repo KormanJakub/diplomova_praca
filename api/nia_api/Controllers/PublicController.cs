@@ -55,10 +55,6 @@ namespace nia_api.Controllers
 
             var verificationCode = GenerateVerificationCode();
             
-            var utcNow = DateTime.UtcNow;
-            var gmtPlus2 = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
-            var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus2);
-            
             var newUser = new User()
             {
                 Id = Guid.NewGuid(),
@@ -68,7 +64,7 @@ namespace nia_api.Controllers
                 LastName = user.LastName,
                 IsEmailConfirmed = false,
                 VerificationCode = verificationCode,
-                CreatedAt = localTime
+                CreatedAt = LocalTimeService.LocalTime()
             };
             
             await _emailSender.SendEmailAsync(

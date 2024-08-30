@@ -25,5 +25,9 @@ namespace nia_api.Data
         public IMongoCollection<Design> Designs => _database.GetCollection<Design>("Designs");
         public IMongoCollection<Tag> Tags => _database.GetCollection<Tag>("Tags");
         public IMongoCollection<Product> Products => _database.GetCollection<Product>("Products");
+        public IMongoCollection<PairedDesign> PairedDesigns => _database.GetCollection<PairedDesign>("PairedDesigns");
+
+        public IMongoCollection<Customization> Customizations =>
+            _database.GetCollection<Customization>("Customizations");
     }
 }

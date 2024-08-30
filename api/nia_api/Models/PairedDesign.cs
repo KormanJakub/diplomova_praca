@@ -13,7 +13,7 @@ public class PairedDesign
     [BsonElement("name") ,BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
     [BsonElement("designId")]
-    public List<Design> DesignIds { get; set; } = new List<Design>();
+    public List<Guid> DesignIds { get; set; } = new List<Guid>();
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]

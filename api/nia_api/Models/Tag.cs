@@ -13,7 +13,7 @@ public class Tag
     [BsonElement("name"), BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -13,6 +13,10 @@ public class Customization
     public string? DesignId { get; set; }
     [BsonElement("productId") ,BsonRepresentation(BsonType.String)]
     public string? ProductId { get; set; }
+    [BsonElement("userDescription") ,BsonRepresentation(BsonType.String)]
+    public string? UserDescription { get; set; }
+    [BsonElement("userId") ,BsonRepresentation(BsonType.String)]
+    public string? UserId { get; set; }
     [BsonElement("price"), BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]

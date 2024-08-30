@@ -71,6 +71,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddSingleton<NiaDbContext>();
+builder.Services.AddSingleton<LocalTimeService>();
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<PasswordService>();
 
