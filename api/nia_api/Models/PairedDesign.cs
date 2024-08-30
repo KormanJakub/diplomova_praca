@@ -1,10 +1,11 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Bson;
+using nia_api.Services;
 
 namespace nia_api.Models;
 
-public class PairedDesing
+public class PairedDesign
 {
     [BsonId(IdGenerator = typeof(AscendingGuidGenerator))]
     [BsonElement("_id") ,BsonRepresentation(BsonType.String)]
@@ -14,7 +15,7 @@ public class PairedDesing
     [BsonElement("designId")]
     public List<Design> DesignIds { get; set; } = new List<Design>();
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = LocalTimeService.LocalTime();
 }
