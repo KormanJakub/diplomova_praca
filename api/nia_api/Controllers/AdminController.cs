@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
 using nia_api.Models;
@@ -68,36 +69,34 @@ public class AdminController : ControllerBase
         return Ok(dbDesigns);
     }
 
+    [HttpGet("design/all-paired-designs")]
+    public async Task<IActionResult> GetAllPairedDesgings()
+    {
+        var dbPairedDesigns = await _pairedDesigns.Find(_ => true).ToListAsync();
+
+        if (dbPairedDesigns.Count == 0 || dbPairedDesigns == null)
+            return NotFound(new { error = "No paired designs!" });
+
+        return Ok(dbPairedDesigns);
+    }
+
     [HttpGet("design/paired-design/designs-in-pair/{pairedDesignId}")]
     public async Task<IActionResult> GetDesignsInPair(string pairedDesignId)
     {
-        // Parse the pairedDesignId to a Guid
         Guid parsedPairedDesignId;
         if (!Guid.TryParse(pairedDesignId, out parsedPairedDesignId))
-        {
             return BadRequest(new { error = "Invalid pairedDesignId format." });
-        }
 
-        // Retrieve the paired design document
         var dbPairedDesigns = await _pairedDesigns
             .Find(pd => pd.Id == parsedPairedDesignId)
             .FirstOrDefaultAsync();
 
-        // Check if the paired design document exists
         if (dbPairedDesigns == null)
-        {
             return NotFound(new { error = "Paired design not found." });
-        }
-
-        Console.WriteLine(dbPairedDesigns); // Debugging output
-
-        // Check if DesignIds is not null or empty
+        
         if (dbPairedDesigns.DesignIds == null || !dbPairedDesigns.DesignIds.Any())
-        {
             return NotFound(new { error = "No designs found for this paired design." });
-        }
-
-        // Retrieve the designs associated with the DesignIds
+        
         var dbDesigns = await _designs
             .Find(d => dbPairedDesigns.DesignIds.Contains(d.Id))
             .ToListAsync();
@@ -147,6 +146,28 @@ public class AdminController : ControllerBase
 
         return Ok(new { message = "Your tag has been updated." });
     }
+
+    [HttpDelete("tag/remove/{tagId}")]
+    public async Task<IActionResult> RemoveTag(string tagId)
+    {
+        var id = Guid.Parse(tagId);
+
+        await _tags.DeleteOneAsync(t => t.Id == id);
+        
+        return Ok(new { message = "Tag successful removed!" });
+    }
+
+    [HttpDelete("tag/remove-with-all-products/{tagId}")]
+    public async Task<IActionResult> RemoveTagWithHisProducts(string tagId)
+    {
+        var id = Guid.Parse(tagId);
+
+        var countProducts = await _products.DeleteManyAsync(p => p.TagId == id);
+
+        await _tags.DeleteOneAsync(t => t.Id == id);
+        
+        return Ok(new { message = $"Tag successful removed with his {countProducts} products!" });
+    }
     
     [HttpPost("product/create/{tagId}")]
     public async Task<IActionResult> CreateProduct(Product product, string tagId)
@@ -186,6 +207,67 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Your product has been updated." });
     }
 
+    [HttpDelete("product/remove/{productId}")]
+    public async Task<IActionResult> RemoveProduct(string productId)
+    {
+        await _products.DeleteOneAsync(p => p.Id == Guid.Parse(productId));
+        
+        return Ok(new { message = "Your product has been successful removed!" });
+    }
+    
+    [HttpDelete("product/remove-color/{productId}/{color}")]
+    public async Task<IActionResult> RemoveColorForSpecificId(string productId, string color)
+    {
+        var dbProduct = await _products.Find(p => p.Id == Guid.Parse(productId)).FirstOrDefaultAsync();
+
+        if (dbProduct == null)
+            return NotFound(new { error = "Product not found!" });
+
+        var removedCount = dbProduct.Colors.RemoveAll(c => c.Name.Equals(color, StringComparison.OrdinalIgnoreCase));
+
+        if (removedCount > 0)
+        {
+            var updateResult = await _products.ReplaceOneAsync(p => p.Id == Guid.Parse(productId), dbProduct);
+
+            if (updateResult.ModifiedCount == 0)
+                return StatusCode(500, new { error = "Failed to update the product!" });
+            
+            return Ok(new { message = "Your product has been successful removed!" });
+        }
+        
+        return NotFound(new { error = $"Specified color: {color} not found for this product." });
+    }
+
+    [HttpDelete("product/remove-size/{productId}/{color}/{size}")]
+    public async Task<IActionResult> RemoveSizeForColorOfSpecificId(string productId, string color, string size)
+    {
+        var id = Guid.Parse(productId);
+
+        var dbProduct = await _products.Find(p => p.Id == id).FirstOrDefaultAsync();
+
+        if (dbProduct == null)
+            return NotFound(new { error = "Product not found!" });
+
+        var dbColor = dbProduct.Colors.FirstOrDefault(c => c.Name.Equals(color, StringComparison.OrdinalIgnoreCase));
+
+        if (dbColor == null)
+            return NotFound(new { error = "Specific color not founded for this product!" });
+
+        int removeCount = dbColor.Sizes.RemoveAll(s => s.Size.Equals(size, StringComparison.OrdinalIgnoreCase));
+
+        if (removeCount > 0)
+        {
+            var updateResult = await _products.ReplaceOneAsync(p => p.Id == id, dbProduct);
+            
+            if (updateResult.ModifiedCount == 0)
+                return StatusCode(500, new { error = "Failed to update the product." });
+            
+            return Ok(new { message = $"Size {size} has been successfully removed from the product color {color}!" });
+        }
+
+        return NotFound(new { error = "Specified size not found for this color." });
+    }
+
     [HttpPost("design/create")]
     public async Task<IActionResult> CreateDesign(Design design)
     {
@@ -218,6 +300,37 @@ public class AdminController : ControllerBase
             return NotFound(new { error = "Design not found!" });
         
         return Ok(new { message = "Your design has been updated." });
+    }
+
+    [HttpDelete("design/custom-delete/{designId}")]
+    public async Task<IActionResult> DeleteCustomDesign(string designId)
+    {
+        var id = Guid.Parse(designId);
+
+        var dbDesign = await _designs.DeleteOneAsync(d => d.Id == id);
+
+        if (dbDesign.DeletedCount == 0)
+            return BadRequest(new { error = "No design has been removed!" });
+
+        return Ok(new { message = "Design successful removed!"});
+    }
+    
+    [HttpDelete("design/delete-with-pair/{designId}")]
+    public async Task<IActionResult> DeleteCustomDesignWithPair(string designId)
+    {
+        var id = Guid.Parse(designId);
+
+        var dbDesign = await _designs.DeleteOneAsync(d => d.Id == id);
+
+        if (dbDesign.DeletedCount == 0)
+            return BadRequest(new { error = "No design has been removed!" });
+
+        var dbPairDesign = await _pairedDesigns.DeleteManyAsync(d => d.DesignIds.Contains(id));
+        
+        if (dbPairDesign.DeletedCount == 0)
+            return BadRequest(new { error = "No design has been removed!" });
+
+        return Ok(new { message = "Design successful removed!"});
     }
 
     [HttpPost("design/pair-two-designs")]
@@ -255,6 +368,40 @@ public class AdminController : ControllerBase
         
         return Ok(new { message = "Designs has been updated." });
     }
+
+    [HttpDelete("design/delete-pair-design/{pairDesignId}")]
+    public async Task<IActionResult> RemovePairDesign(string pairDesignId)
+    {
+        var id = Guid.Parse(pairDesignId);
+
+        var dbPairDesign = await _pairedDesigns.DeleteOneAsync(pd => pd.Id == id);
+
+        if (dbPairDesign.DeletedCount == 0)
+            return BadRequest("No pair removed!");
+
+        return Ok(new { message = "Pair successful removed!" });
+    }
     
-    //TODO: For all collections I need to make remove...
+    [HttpDelete("design/delete-one-pair/{pairDesignId}/{designId}")]
+    public async Task<IActionResult> RemoveOnePairDesign(string pairDesignId, string designId)
+    {
+        var pairId = Guid.Parse(pairDesignId);
+        var dId = Guid.Parse(designId);
+
+        var dbPairDesign = await _pairedDesigns.Find(pd => pd.Id == pairId).FirstOrDefaultAsync();
+
+        var removedCount = dbPairDesign.DesignIds.RemoveAll(d => d.Equals(dId));
+
+        if (removedCount > 0)
+        {
+            var updateResult = await _pairedDesigns.ReplaceOneAsync(pd => pd.Id == pairId, dbPairDesign);
+            
+            if (updateResult.ModifiedCount == 0)
+                return StatusCode(500, new { error = "Failed to update the pair design." });
+            
+            return Ok(new { message = "Pair successful removed!" });
+        }
+
+        return BadRequest(new { error = "Any pair removed!" });
+    }
 }

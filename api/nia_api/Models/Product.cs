@@ -20,10 +20,6 @@ public class Product
     public List<Colors> Colors { get; set; } = new List<Colors>();
     [BsonElement("price"), BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }
-    /*
-    [BsonElement("imageUrl"), BsonRepresentation(BsonType.String)]
-    public string ImageUrl { get; set; } 
-    */
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
 
@@ -35,6 +31,10 @@ public class Colors
 {
     [BsonElement("name"), BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
+    /*
+    [BsonElement("imageUrl"), BsonRepresentation(BsonType.String)]
+    public string ImageUrl { get; set; }
+    */
     [BsonElement("sizes")]
     public List<SizeInfo> Sizes { get; set; } = new List<SizeInfo>();
 }
