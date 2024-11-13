@@ -1,7 +1,9 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using nia_api.Data;
+using nia_api.Middleware;
 using nia_api.Models;
 using nia_api.Services;
 
@@ -25,9 +27,12 @@ builder.Services.AddAuthentication(x =>
             Encoding.UTF8
                 .GetBytes(builder.Configuration["JwtConfig:Key"])
         ),
+        
         ValidateIssuer = false,
+        
         ValidateAudience = false,
-        ClockSkew = TimeSpan.Zero,
+        
+        ClockSkew = TimeSpan.FromMinutes(5),
     };
 
     x.Events = new JwtBearerEvents
@@ -46,9 +51,11 @@ builder.Services.AddAuthentication(x =>
         },
         OnChallenge = context =>
         {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("OnChallange error", context.AuthenticateFailure);
-            return Task.CompletedTask;
+            context.HandleResponse(); 
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            var result = JsonSerializer.Serialize(new { error = "User is not logged in" });
+            return context.Response.WriteAsync(result);
         }
     };
 });
@@ -72,6 +79,7 @@ builder.Services.AddControllers()
 builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddSingleton<NiaDbContext>();
 builder.Services.AddSingleton<LocalTimeService>();
+builder.Services.AddSingleton<HeaderReaderService>();
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<PasswordService>();
 
@@ -89,7 +97,11 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
+
+app.UseMiddleware<UserMiddleware>();
 
 app.UseCors("Origin");
 

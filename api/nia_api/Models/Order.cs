@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Bson;
+using nia_api.Services;
 
 namespace nia_api.Models;
 
@@ -16,7 +17,7 @@ public class Order
     [BsonElement("userId"), BsonRepresentation(BsonType.String)]
     public Guid UserId { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = LocalTimeService.LocalTime();
 }

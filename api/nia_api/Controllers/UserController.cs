@@ -1,22 +1,164 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using nia_api.Data;
+using nia_api.Models;
+using nia_api.Requests;
+using nia_api.Services;
 
 namespace nia_api.Controllers;
 
+/*
+ * TODO:
+ * Vydieť všetky svoje customy
+ * Vytvorenie paired tovaru
+ * stornovanie objednavky (jedine ak bude stále možnosť že sa tovar nevyrába)
+ * Nákup svojích customov
+ */
+
 [ApiController]
+[Authorize]
 [Route("user")]
 public class UserController : ControllerBase
 {
-    /*
-     * TODO:
-     * Svoje udaje
-     * Update udajov
-     * Vymazanie profilu
-     * Nákup tovaru
-     * Platobná brána
-     */
-    [HttpGet("profile")]
-    public IActionResult GetUserProfile()
+    private readonly IMongoCollection<User> _users;
+    private readonly IMongoCollection<Customization> _customizations;
+    private readonly IMongoCollection<Design> _designs;
+    private readonly IMongoCollection<Product> _products;
+    
+    private readonly HeaderReaderService _headerReader;
+
+    public UserController(NiaDbContext context, HeaderReaderService headerReader)
     {
-        return Ok(new { Message = "This" });
+        _users = context.Users;
+        _headerReader = headerReader;
+        _customizations = context.Customizations;
+        _designs = context.Designs;
+        _products = context.Products;
+    }
+    
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetUserProfile()
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var dbUser = await _users.Find(u => u.Id == userId.Value).FirstOrDefaultAsync();
+        if (dbUser == null)
+            return NotFound(new { error = "User not found!" });
+
+        return Ok(dbUser);
+    }
+
+    [HttpPut("update")]
+    public async Task<IActionResult> UpdateUserProfile(User user)
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var filterUser = Builders<User>.Filter.Eq(u => u.Id, userId.Value);
+        var resultUser = await _users.ReplaceOneAsync(filterUser, user);
+        
+        if (resultUser.MatchedCount == 0)
+            return NotFound(new { error = "User not found!" });
+        
+        return Ok(new { message = "User is updated!"});
+    }
+
+    [HttpDelete("remove")]
+    public async Task<IActionResult> RemoveUser()
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        await _users.DeleteOneAsync(u => u.Id == userId.Value);
+        
+        return Ok(new { message = "User successful removed!" });
+    }
+
+    [HttpPost("make-customiazation")]
+    public async Task<IActionResult> Custom(CustomizationRequest request)
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        Guid.TryParse(request.DesignId, out var designId);
+        var dbDesign = await _designs.Find(d => d.Id == designId).FirstOrDefaultAsync();
+
+        if (dbDesign == null)
+            return NotFound(new { error = "Design not found." });
+
+        Guid.TryParse(request.ProductId, out var productId);
+        var dbProduct = await _products.Find(p => p.Id == productId).FirstOrDefaultAsync();
+
+        if (dbProduct == null)
+            return NotFound(new { error = "Product not found" });
+
+        var price = 0.0M;
+
+        if (request.UserDescription != null)
+            price = 2.0M;
+
+        var newCustomization = new Customization()
+        {
+            Id = Guid.NewGuid(),
+            DesignId = request.DesignId,
+            ProductId = request.ProductId,
+            UserId = userId.Value.ToString(),
+            UserDescription = request.UserDescription,
+            Price = price + dbDesign.Price + dbProduct.Price,
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+
+        await _customizations.InsertOneAsync(newCustomization);
+        
+        return Ok(new { message = "Customization successful created!" });
+    }
+
+    [HttpDelete("decrement-product-quantity")]
+    public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
+    {
+        Guid.TryParse(request.ProductId, out var _productId);
+        var dbProduct = await _products.Find(p => p.Id == _productId).FirstOrDefaultAsync();
+        
+        if (dbProduct == null)
+            return NotFound(new { error = "Product not found" });
+        
+        var filter = Builders<Product>.Filter.And(
+            Builders<Product>.Filter.Eq(p => p.Id, _productId),
+            Builders<Product>.Filter.ElemMatch(p => p.Colors, c => c.Name == request.ProductColorName && c.Sizes.Any(s => s.Size == request.ProductSize && s.Quantity > 0))
+        );
+        
+        var update = Builders<Product>.Update.Inc("colors.$[color].sizes.$[size].quantity", -1);
+
+        var arrayFilters = new[]
+        {
+            new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("color.name", request.ProductColorName)),
+            new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("size.size", request.ProductSize))
+        };
+
+        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters };
+        var updateResult = await _products.UpdateOneAsync(filter, update, updateOptions);
+
+        if (updateResult.MatchedCount == 0)
+        {
+            return NotFound(new { error = "Color or size not found, or quantity is already zero." });
+        }
+
+        if (updateResult.ModifiedCount == 0)
+        {
+            return BadRequest(new { error = "Failed to decrement quantity." });
+        }
+        
+        return Ok(new { message = "Product quantity decremented successfully!" });
     }
 }
