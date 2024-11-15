@@ -29,8 +29,9 @@ namespace nia_api.Controllers
         {
             if (user == null)
                 return BadRequest(new { error = "User is empty!" });
-
-            if (_users.FindAsync(user.Email) == null)
+            
+            var existingUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+            if (existingUser != null)
                 return BadRequest(new { error = "Email is already registered!"});
             
             if (user.FirstName == null)
@@ -40,7 +41,7 @@ namespace nia_api.Controllers
                 return BadRequest(new { error = "Last name is empty!" });
 
             if (user.Password.Length < 6)
-                return BadRequest(new { error = "Password is too short! Min 6 Lenght" });
+                return BadRequest(new { error = "Password is too short! Min 6 Length" });
 
             if (!user.Password.Any(char.IsUpper))
                 return BadRequest(new { error = "Password must contain at least one uppercase letter!" });
@@ -79,7 +80,7 @@ namespace nia_api.Controllers
             ScheduleVerificationCodeDeletion(newUser);
             
             await _users.InsertOneAsync(newUser);
-            return Ok(new { message = "Register successful and verification email sent successfully.!", email = newUser.Id});
+            return Ok(new { message = "Register successful and verification email sent successfully!", email = newUser.Id});
         }
 
         [HttpPost("login")]
@@ -96,7 +97,7 @@ namespace nia_api.Controllers
             var hashPassword = _service.HashPassword(user.Password);
 
             if (dbUser.Password != hashPassword)
-                return Unauthorized(new {error = "Password's do not match!"});
+                return Unauthorized(new { error = "Password's do not match!" });
             
             var token = _token.GenerateToken(
                 dbUser.Id,
@@ -140,7 +141,7 @@ namespace nia_api.Controllers
             return Ok( new { message = "Verification code for Forgot Password sent successfully.!"});
         }
 
-        [HttpPost("verificate-code")]
+        [HttpPost("verification-code")]
         public async Task<IActionResult> VerificateCode([FromBody] VerificateCodeRequest user)
         {
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
@@ -148,18 +149,18 @@ namespace nia_api.Controllers
             if (dbUser == null)
                 return Unauthorized(new { error = "User is not registered!"});
 
-            if (user.VerificationCode >= 100000)
-                return Unauthorized(new { error = "Wrong verification code!"});
+            if (user.VerificationCode <= 100000 & user.VerificationCode >= 1000000)
+                return BadRequest(new { error = "Wrong verification code!"});
 
             if (user.VerificationCode != dbUser.VerificationCode)
                 return BadRequest(new {error = "You entered bad code"});
             
+            
             return Ok(new {message = "You entered good code! Write new password!" });
         }
 
-        //TODO: Vytvoriť email, ktorý bude posielať verifikaciu
         [HttpPost("new-verification-code")]
-        public async Task<IActionResult> NewVerificateCode([FromBody] EmailRequest user)
+        public async Task<IActionResult> NewVerificationCode([FromBody] EmailRequest user)
         {
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
             
