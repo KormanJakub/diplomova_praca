@@ -2,5 +2,10 @@
 
 public enum EStatus
 {
-    
+    PRIJATA,
+    ZAPLATENA,
+    VO_VYROBE,
+    PRIPRAVENA,
+    POSLANA,
+    ZRUSENA
 }

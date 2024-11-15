@@ -11,11 +11,13 @@ public class Order
     [BsonElement("_id"), BsonRepresentation(BsonType.String)]
     public Guid Id { get; set; }
     [BsonElement("customizations")]
-    public List<Customization> Customizations { get; set; } = new List<Customization>();
+    public List<string> Customizations { get; set; } = new List<string>();
     [BsonElement("totalPrice"), BsonRepresentation(BsonType.Decimal128)]
     public decimal TotalPrice { get; set; }
     [BsonElement("userId"), BsonRepresentation(BsonType.String)]
     public Guid UserId { get; set; }
+    [BsonElement("status"), BsonRepresentation(BsonType.String)]
+    public string Status { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]

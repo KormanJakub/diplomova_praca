@@ -9,21 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="811628a6-2b54-4c00-8ec4-a7409fff1fc8" name="Changes" comment="Commit of BE">
-      <change afterPath="$PROJECT_DIR$/Middleware/UserMiddleware.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Requests/CustomizationRequest.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Services/HeaderReaderService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.nia_api/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.nia_api/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.nia_api/.idea/indexLayout.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.nia_api/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Controllers/UserController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Controllers/UserController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Models/Customization.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Models/Customization.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Models/Order.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Models/Order.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nia_api.sln" beforeDir="false" afterPath="$PROJECT_DIR$/waffl.sln" afterDir="false" />
-    </list>
+    <list default="true" id="811628a6-2b54-4c00-8ec4-a7409fff1fc8" name="Changes" comment="Commit of BE" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -150,7 +136,7 @@
       <workItem from="1729152139867" duration="642000" />
       <workItem from="1729157657250" duration="18000" />
       <workItem from="1729158048351" duration="41000" />
-      <workItem from="1731487906387" duration="15139000" />
+      <workItem from="1731487906387" duration="15297000" />
     </task>
     <servers />
   </component>

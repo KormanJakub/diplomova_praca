@@ -11,10 +11,6 @@ namespace nia_api.Controllers;
 
 /*
  * TODO:
- * Vydieť všetky svoje customy
- * Vytvorenie paired tovaru
- * stornovanie objednavky (jedine ak bude stále možnosť že sa tovar nevyrába)
- * Nákup svojích customov
  */
 
 [ApiController]
@@ -26,7 +22,8 @@ public class UserController : ControllerBase
     private readonly IMongoCollection<Customization> _customizations;
     private readonly IMongoCollection<Design> _designs;
     private readonly IMongoCollection<Product> _products;
-    
+    private readonly IMongoCollection<Order> _orders;
+
     private readonly HeaderReaderService _headerReader;
 
     public UserController(NiaDbContext context, HeaderReaderService headerReader)
@@ -36,8 +33,9 @@ public class UserController : ControllerBase
         _customizations = context.Customizations;
         _designs = context.Designs;
         _products = context.Products;
+        _orders = context.Orders;
     }
-    
+    //IDE
     [HttpGet("profile")]
     public async Task<IActionResult> GetUserProfile()
     {
@@ -51,6 +49,74 @@ public class UserController : ControllerBase
             return NotFound(new { error = "User not found!" });
 
         return Ok(dbUser);
+    }
+    //NEJDE
+    [HttpGet("my-customizations")]
+    public async Task<IActionResult> GetMyCustomizations()
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var dbUserCustomization = _customizations.Find(c => c.UserId == userId.Value.ToString()).ToListAsync();
+
+        if (dbUserCustomization == null)
+            return NotFound(new { error = "Customization for this user not founded!" });
+
+        return Ok(dbUserCustomization);
+    }
+
+    [HttpPost("make-order")]
+    public async Task<IActionResult> MakeOrder(List<string> customizationsIds)
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var dbCustomization =
+            await _customizations.Find(c => customizationsIds.Contains(c.Id.ToString())).ToListAsync();
+
+        var totalPrice = dbCustomization.Sum(c => c.Price);
+
+        var lcOrder = new Order
+        {
+            Id = Guid.NewGuid(),
+            Customizations = customizationsIds,
+            TotalPrice = totalPrice,
+            UserId = userId.Value,
+            Status = "Objednané",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+
+        await _orders.InsertOneAsync(lcOrder);
+
+        return Ok(new { message = "Order successfully created!" });
+    }
+
+    [HttpPost("cancel-order/{OrderId}")]
+    public async Task<IActionResult> CancelOrder(string OrderId)
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var dbOrder = _orders.Find(o => o.Id == Guid.Parse(OrderId)).FirstOrDefault();
+
+        if (dbOrder == null)
+            return NotFound(new { error = "Order not founded!" });
+
+        dbOrder.Status = "Stornovanie";
+        
+        var filterOrder = Builders<Order>.Filter.Eq(o => o.Id, userId.Value);
+        var resultOrder = await _orders.ReplaceOneAsync(filterOrder, dbOrder);
+
+        if (resultOrder.MatchedCount == 0)
+            return NotFound(new { error = "Order not found!" });
+
+        return Ok(new { message = "Order is updated!" });
     }
 
     [HttpPut("update")]
@@ -82,8 +148,9 @@ public class UserController : ControllerBase
         
         return Ok(new { message = "User successful removed!" });
     }
-
-    [HttpPost("make-customiazation")]
+    
+    //IDE
+    [HttpPost("make-customization")]
     public async Task<IActionResult> Custom(CustomizationRequest request)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
@@ -124,6 +191,7 @@ public class UserController : ControllerBase
         return Ok(new { message = "Customization successful created!" });
     }
 
+    //IDE
     [HttpDelete("decrement-product-quantity")]
     public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
     {
