@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
 using nia_api.Services;
@@ -74,7 +75,7 @@ namespace nia_api.Controllers
                 newUser.FirstName,
                 newUser.LastName,
                 verificationCode.ToString(),
-                "Registration"
+                EEmail.REGISTRACION
                 );
         
             ScheduleVerificationCodeDeletion(newUser);
@@ -135,7 +136,7 @@ namespace nia_api.Controllers
                 dbUser.FirstName,
                 dbUser.LastName,
                 dbUser.ToString(),
-                "Verification"
+                EEmail.VERIFICATION
             );
             
             return Ok( new { message = "Verification code for Forgot Password sent successfully.!"});

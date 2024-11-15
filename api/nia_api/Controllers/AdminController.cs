@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
 using nia_api.Models;
@@ -7,6 +6,15 @@ using nia_api.Services;
 using Tag = nia_api.Models.Tag;
 
 namespace nia_api.Controllers;
+
+/*
+ * TODO:
+ * Spraviť image upload
+ * Admin vie poslať Newsletter cez email
+ * Instagram, FB, Twitter jednoduchšie zasielanie
+ * Stornovať objednávku
+ * Môže vidieť všetky customization
+ */
 
 [ApiController]
 [Route("admin")]

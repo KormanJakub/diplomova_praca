@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
+using nia_api.Enums;
 using nia_api.Models;
 
 namespace nia_api.Services;
@@ -15,7 +16,7 @@ public class EmailSenderService : IEmailSender
         _logger = logger;
     }
     
-    public async Task SendEmailAsync(string to, string subject, string firstName, string lastName, string verificationCode, string typeOfEmail)
+    public async Task SendEmailAsync(string to, string subject, string firstName, string lastName, string verificationCode, EEmail emailType)
     {
         try
         {
@@ -29,14 +30,14 @@ public class EmailSenderService : IEmailSender
 
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
-            var registrationBody = GenerateRegistrionEmailBody(firstName, lastName, verificationCode);
+            var registrationBody = GenerateRegistarionEmailBody(firstName, lastName, verificationCode);
             var verificationBody = GenerateVerificationEmailBody(firstName, lastName, verificationCode);
             string body = "";
 
-            if (typeOfEmail == "Registration")
+            if (emailType == EEmail.REGISTRACION)
                 body = registrationBody;
 
-            if (typeOfEmail == "Verification")
+            if (emailType == EEmail.VERIFICATION)
                 body = verificationBody;
 
             var mailMessage = new MailMessage
@@ -59,7 +60,7 @@ public class EmailSenderService : IEmailSender
         }
     }
 
-    private string GenerateRegistrionEmailBody(string firstName, string lastName, string verificationCode)
+    private string GenerateRegistarionEmailBody(string firstName, string lastName, string verificationCode)
     {
         return $@"
         <head>

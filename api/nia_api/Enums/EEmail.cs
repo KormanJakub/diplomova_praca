@@ -2,5 +2,6 @@
 
 public enum EEmail
 {
-    
+    REGISTRACION,
+    VERIFICATION
 }

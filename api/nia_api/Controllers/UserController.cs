@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
 using nia_api.Services;
@@ -11,6 +12,7 @@ namespace nia_api.Controllers;
 
 /*
  * TODO:
+ * Platobnú branu
  */
 
 [ApiController]
@@ -35,7 +37,7 @@ public class UserController : ControllerBase
         _products = context.Products;
         _orders = context.Orders;
     }
-    //IDE
+    
     [HttpGet("profile")]
     public async Task<IActionResult> GetUserProfile()
     {
@@ -50,7 +52,7 @@ public class UserController : ControllerBase
 
         return Ok(dbUser);
     }
-    //NEJDE
+    
     [HttpGet("my-customizations")]
     public async Task<IActionResult> GetMyCustomizations()
     {
@@ -75,18 +77,23 @@ public class UserController : ControllerBase
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var dbCustomization =
-            await _customizations.Find(c => customizationsIds.Contains(c.Id.ToString())).ToListAsync();
+        var dbCustomization = await _customizations.Find(c => customizationsIds.Contains(c.Id.ToString())).ToListAsync();
 
         var totalPrice = dbCustomization.Sum(c => c.Price);
 
+        var lastOrder = await _orders.Find(FilterDefinition<Order>.Empty)
+            .SortByDescending(o => o.Id) 
+            .FirstOrDefaultAsync();
+
+        int newIntId = lastOrder != null ? lastOrder.Id + 1 : 1;
+
         var lcOrder = new Order
         {
-            Id = Guid.NewGuid(),
+            Id = newIntId,
             Customizations = customizationsIds,
             TotalPrice = totalPrice,
             UserId = userId.Value,
-            Status = "Objednané",
+            StatusOrder = EStatus.PRIJATA,
             CreatedAt = LocalTimeService.LocalTime()
         };
 
@@ -96,22 +103,21 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("cancel-order/{OrderId}")]
-    public async Task<IActionResult> CancelOrder(string OrderId)
+    public async Task<IActionResult> CancelOrder(int OrderId)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
 
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var dbOrder = _orders.Find(o => o.Id == Guid.Parse(OrderId)).FirstOrDefault();
+        var dbOrder = _orders.Find(o => o.Id == OrderId).FirstOrDefault();
 
         if (dbOrder == null)
             return NotFound(new { error = "Order not founded!" });
-
-        dbOrder.Status = "Stornovanie";
         
-        var filterOrder = Builders<Order>.Filter.Eq(o => o.Id, userId.Value);
-        var resultOrder = await _orders.ReplaceOneAsync(filterOrder, dbOrder);
+        var filterOrder = Builders<Order>.Filter.Eq(o => o.UserId, userId.Value);
+        var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
+        var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
 
         if (resultOrder.MatchedCount == 0)
             return NotFound(new { error = "Order not found!" });
@@ -149,7 +155,6 @@ public class UserController : ControllerBase
         return Ok(new { message = "User successful removed!" });
     }
     
-    //IDE
     [HttpPost("make-customization")]
     public async Task<IActionResult> Custom(CustomizationRequest request)
     {
@@ -191,7 +196,6 @@ public class UserController : ControllerBase
         return Ok(new { message = "Customization successful created!" });
     }
 
-    //IDE
     [HttpDelete("decrement-product-quantity")]
     public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
     {
