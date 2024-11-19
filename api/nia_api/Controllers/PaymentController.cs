@@ -1,6 +1,16 @@
-﻿namespace nia_api.Controllers;
+﻿using Microsoft.AspNetCore.Mvc;
 
-public class PaymentController
+namespace nia_api.Controllers;
+
+/*
+ * TODO:
+ * Vytvor platobnú bránu
+ * Webhook
+ */
+
+[ApiController]
+[Route("payment")]
+public class PaymentController : ControllerBase
 {
     
 }

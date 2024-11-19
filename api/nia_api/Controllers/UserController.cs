@@ -1,18 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
 using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
 using nia_api.Services;
+using Stripe.Checkout;
 
 namespace nia_api.Controllers;
 
 /*
  * TODO:
- * Platobnú branu
+ * UVAHA: Či nedáva zmysel do order dať aj vytvorenie customization
  */
 
 [ApiController]
@@ -99,7 +99,7 @@ public class UserController : ControllerBase
 
         await _orders.InsertOneAsync(lcOrder);
 
-        return Ok(new { message = "Order successfully created!" });
+        return Ok(new { message = "Order is successful!" });
     }
 
     [HttpPost("cancel-order/{OrderId}")]
@@ -156,81 +156,95 @@ public class UserController : ControllerBase
     }
     
     [HttpPost("make-customization")]
-    public async Task<IActionResult> Custom(CustomizationRequest request)
+    public async Task<IActionResult> Custom(List<CustomizationRequest> requests)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
 
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        Guid.TryParse(request.DesignId, out var designId);
-        var dbDesign = await _designs.Find(d => d.Id == designId).FirstOrDefaultAsync();
+        var customizations = new List<Customization>();
+        var failedCustomizations = new List<string>();
 
-        if (dbDesign == null)
-            return NotFound(new { error = "Design not found." });
-
-        Guid.TryParse(request.ProductId, out var productId);
-        var dbProduct = await _products.Find(p => p.Id == productId).FirstOrDefaultAsync();
-
-        if (dbProduct == null)
-            return NotFound(new { error = "Product not found" });
-
-        var price = 0.0M;
-
-        if (request.UserDescription != null)
-            price = 2.0M;
-
-        var newCustomization = new Customization()
+        foreach (var request in requests)
         {
-            Id = Guid.NewGuid(),
-            DesignId = request.DesignId,
-            ProductId = request.ProductId,
-            UserId = userId.Value.ToString(),
-            UserDescription = request.UserDescription,
-            Price = price + dbDesign.Price + dbProduct.Price,
-            CreatedAt = LocalTimeService.LocalTime()
-        };
+            Guid.TryParse(request.DesignId, out var designId);
+            var dbDesign = await _designs.Find(d => d.Id == designId).FirstOrDefaultAsync();
 
-        await _customizations.InsertOneAsync(newCustomization);
-        
-        return Ok(new { message = "Customization successful created!" });
+            if (dbDesign == null)
+            {
+                failedCustomizations.Add($"Design not found: {request.DesignId}");
+                continue;
+            }
+
+            Guid.TryParse(request.ProductId, out var productId);
+            var dbProduct = await _products.Find(p => p.Id == productId).FirstOrDefaultAsync();
+
+            if (dbProduct == null)
+            {
+                failedCustomizations.Add($"Product not found: {request.ProductId}");
+                continue;
+            }
+
+            var price = 0.0M;
+
+            if (!string.IsNullOrEmpty(request.UserDescription))
+                price = 2.0M;
+
+            var newCustomization = new Customization()
+            {
+                Id = Guid.NewGuid(),
+                DesignId = request.DesignId,
+                ProductId = request.ProductId,
+                UserId = userId.Value.ToString(),
+                UserDescription = request.UserDescription,
+                Price = price + dbDesign.Price + dbProduct.Price,
+                CreatedAt = LocalTimeService.LocalTime()
+            };
+
+            customizations.Add(newCustomization);
+        }
+
+        if (customizations.Any())
+            await _customizations.InsertManyAsync(customizations);
+
+        return Ok(new
+        {
+            SuccessIds = customizations.Select(c => c.Id),
+            FailedRequests = failedCustomizations        
+        });
     }
 
-    [HttpDelete("decrement-product-quantity")]
-    public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
+    [HttpPost("create-checkout-session")]
+    public IActionResult CreateCheckoutSession([FromBody] PaymentRequest request)
     {
-        Guid.TryParse(request.ProductId, out var _productId);
-        var dbProduct = await _products.Find(p => p.Id == _productId).FirstOrDefaultAsync();
-        
-        if (dbProduct == null)
-            return NotFound(new { error = "Product not found" });
-        
-        var filter = Builders<Product>.Filter.And(
-            Builders<Product>.Filter.Eq(p => p.Id, _productId),
-            Builders<Product>.Filter.ElemMatch(p => p.Colors, c => c.Name == request.ProductColorName && c.Sizes.Any(s => s.Size == request.ProductSize && s.Quantity > 0))
-        );
-        
-        var update = Builders<Product>.Update.Inc("colors.$[color].sizes.$[size].quantity", -1);
-
-        var arrayFilters = new[]
+        var options = new SessionCreateOptions()
         {
-            new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("color.name", request.ProductColorName)),
-            new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("size.size", request.ProductSize))
+            PaymentMethodTypes = new List<string> { "card" },
+            LineItems = new List<SessionLineItemOptions>()
+            {
+                new SessionLineItemOptions()
+                {
+                    PriceData = new SessionLineItemPriceDataOptions()
+                    {
+                        Currency = "eur",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions()
+                        {
+                            Name = request.ProductName,
+                        },
+                        UnitAmount = (long)(request.Amount * 100),
+                    },
+                    Quantity = request.Quantity,
+                },
+            },
+            Mode = "payment",
+            SuccessUrl = "http://localhost:5013/success?session_id={CHECKOUT_SESSION_ID}",
+            CancelUrl = "https://localhost:5013/cancel"
         };
 
-        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters };
-        var updateResult = await _products.UpdateOneAsync(filter, update, updateOptions);
+        var service = new SessionService();
+        var session = service.Create(options);
 
-        if (updateResult.MatchedCount == 0)
-        {
-            return NotFound(new { error = "Color or size not found, or quantity is already zero." });
-        }
-
-        if (updateResult.ModifiedCount == 0)
-        {
-            return BadRequest(new { error = "Failed to decrement quantity." });
-        }
-        
-        return Ok(new { message = "Product quantity decremented successfully!" });
+        return Ok(new { url = session.Url });
     }
 }

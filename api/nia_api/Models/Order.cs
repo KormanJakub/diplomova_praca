@@ -17,6 +17,7 @@ public class Order
     public decimal TotalPrice { get; set; }
     [BsonElement("userId"), BsonRepresentation(BsonType.String)]
     public Guid UserId { get; set; }
+    
     [BsonElement("statusOrder"), BsonRepresentation(BsonType.String)]
     public EStatus StatusOrder { get; set; }
     [BsonElement("paymentId"), BsonRepresentation(BsonType.String)]

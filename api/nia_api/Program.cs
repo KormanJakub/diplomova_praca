@@ -6,6 +6,7 @@ using nia_api.Data;
 using nia_api.Middleware;
 using nia_api.Models;
 using nia_api.Services;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +83,9 @@ builder.Services.AddSingleton<LocalTimeService>();
 builder.Services.AddSingleton<HeaderReaderService>();
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<PasswordService>();
+
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 var app = builder.Build();
 

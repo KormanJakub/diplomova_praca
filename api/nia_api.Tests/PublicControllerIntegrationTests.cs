@@ -480,7 +480,7 @@ public class PublicControllerIntegrationTests : IClassFixture<WebApplicationFact
         var expectedResult = "User is not registered!";
 
         // Act
-        var result = await _controller.NewVerificateCode(emailRequest);
+        var result = await _controller.NewVerificationCode(emailRequest);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -499,7 +499,7 @@ public class PublicControllerIntegrationTests : IClassFixture<WebApplicationFact
         var expectedResult = "You should receive new verification code!";
 
         // Act
-        var result = await _controller.NewVerificateCode(emailRequest);
+        var result = await _controller.NewVerificationCode(emailRequest);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);

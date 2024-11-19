@@ -22,6 +22,7 @@ namespace nia_api.Data
         }
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+        public IMongoCollection<GuestUser> GuestUsers => _database.GetCollection<GuestUser>("GuestUsers");
         public IMongoCollection<Design> Designs => _database.GetCollection<Design>("Designs");
         public IMongoCollection<Tag> Tags => _database.GetCollection<Tag>("Tags");
         public IMongoCollection<Product> Products => _database.GetCollection<Product>("Products");

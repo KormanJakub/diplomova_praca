@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace nia_api.Requests;
+﻿namespace nia_api.Requests;
 
 public class CustomizationRequest
 {
