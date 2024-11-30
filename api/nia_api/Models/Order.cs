@@ -25,6 +25,8 @@ public class Order
 
     [BsonElement("paymentStatus"), BsonRepresentation(BsonType.String)]
     public string PaymentStatus { get; set; }
+    [BsonElement("cancellationToken"), BsonRepresentation(BsonType.String)]
+    public string CancellationToken { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]

@@ -107,6 +107,8 @@ app.UseAuthorization();
 
 app.UseMiddleware<UserMiddleware>();
 
+app.UseMiddleware<AdminMiddleware>();
+
 app.UseCors("Origin");
 
 app.MapControllers();

@@ -9,9 +9,11 @@ using nia_api.Services;
 
 namespace nia_api.Controllers;
 
+//TODO: Keď vytvorím objednávku poslať email
+
 [ApiController]
-[Route("order")]
-public class OrderController : ControllerBase
+[Route("guest")]
+public class GuestUserController : ControllerBase
 {
     private readonly IMongoCollection<Product> _products;
     private readonly IMongoCollection<GuestUser> _guestUsers;
@@ -19,7 +21,7 @@ public class OrderController : ControllerBase
     private readonly IMongoCollection<Customization> _customizations;
     private readonly IMongoCollection<Order> _orders;
 
-    public OrderController(NiaDbContext context)
+    public GuestUserController(NiaDbContext context)
     {
         _products = context.Products;
         _guestUsers = context.GuestUsers;
@@ -83,7 +85,7 @@ public class OrderController : ControllerBase
                 UserId = guestUser.Id.ToString(),
                 UserDescription = customization.UserDescription,
                 Price = price,
-                CreatedAt = LocalTimeService.LocalTime()
+                CreatedAt = LocalTimeService.LocalTime(),
             };
 
             customizations.Add(newCustomization);
@@ -112,6 +114,8 @@ public class OrderController : ControllerBase
             .FirstOrDefaultAsync();
 
         int newIntId = lastOrder != null ? lastOrder.Id + 1 : 1;
+        
+        var cancellationToken = Guid.NewGuid().ToString();
 
         var lcOrder = new Order
         {
@@ -120,6 +124,7 @@ public class OrderController : ControllerBase
             TotalPrice = totalPrice,
             UserId = Guid.Parse(request.GuestUserId),
             StatusOrder = EStatus.PRIJATA,
+            CancellationToken = cancellationToken,
             CreatedAt = LocalTimeService.LocalTime()
         };
 
@@ -144,6 +149,24 @@ public class OrderController : ControllerBase
             return NotFound(new { error = "Order not found!" });
 
         return Ok(new { message = "Order is updated!" });
+    }
+    
+    [HttpPost("cancel-order-by-token")]
+    public async Task<IActionResult> CancelOrderByToken(string token)
+    {
+        var dbOrder = await _orders.Find(o => o.CancellationToken == token).FirstOrDefaultAsync();
+
+        if (dbOrder == null)
+            return NotFound(new { error = "Invalid or expired token!" });
+
+        var filterOrder = Builders<Order>.Filter.Eq(o => o.CancellationToken, token);
+        var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
+        var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
+
+        if (resultOrder.MatchedCount == 0)
+            return NotFound(new { error = "Order not found!" });
+
+        return Ok(new { message = "Order canceled successfully!" });
     }
     
     [HttpDelete("decrement-product-quantity")]

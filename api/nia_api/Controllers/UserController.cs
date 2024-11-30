@@ -10,11 +10,6 @@ using Stripe.Checkout;
 
 namespace nia_api.Controllers;
 
-/*
- * TODO:
- * UVAHA: Či nedáva zmysel do order dať aj vytvorenie customization
- */
-
 [ApiController]
 [Authorize]
 [Route("user")]
@@ -213,38 +208,5 @@ public class UserController : ControllerBase
             SuccessIds = customizations.Select(c => c.Id),
             FailedRequests = failedCustomizations        
         });
-    }
-
-    [HttpPost("create-checkout-session")]
-    public IActionResult CreateCheckoutSession([FromBody] PaymentRequest request)
-    {
-        var options = new SessionCreateOptions()
-        {
-            PaymentMethodTypes = new List<string> { "card" },
-            LineItems = new List<SessionLineItemOptions>()
-            {
-                new SessionLineItemOptions()
-                {
-                    PriceData = new SessionLineItemPriceDataOptions()
-                    {
-                        Currency = "eur",
-                        ProductData = new SessionLineItemPriceDataProductDataOptions()
-                        {
-                            Name = request.ProductName,
-                        },
-                        UnitAmount = (long)(request.Amount * 100),
-                    },
-                    Quantity = request.Quantity,
-                },
-            },
-            Mode = "payment",
-            SuccessUrl = "http://localhost:5013/success?session_id={CHECKOUT_SESSION_ID}",
-            CancelUrl = "https://localhost:5013/cancel"
-        };
-
-        var service = new SessionService();
-        var session = service.Create(options);
-
-        return Ok(new { url = session.Url });
     }
 }

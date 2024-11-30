@@ -2,11 +2,11 @@
 
 namespace nia_api.Middleware;
 
-public class RoleMiddleware
+public class AdminMiddleware
 {
     private readonly RequestDelegate _next;
 
-    private RoleMiddleware(RequestDelegate next)
+    private AdminMiddleware(RequestDelegate next)
     {
         _next = next;
     }
