@@ -128,6 +128,24 @@ public class OrderController : ControllerBase
         return Ok(new { message = "Order is successful!" });
     }
     
+    [HttpPost("cancel-order/{OrderId}")]
+    public async Task<IActionResult> CancelOrder(int OrderId)
+    {
+        var dbOrder = _orders.Find(o => o.Id == OrderId).FirstOrDefault();
+
+        if (dbOrder == null)
+            return NotFound(new { error = "Order not founded!" });
+        
+        var filterOrder = Builders<Order>.Filter.Eq(o => o.Id, OrderId);
+        var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
+        var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
+
+        if (resultOrder.MatchedCount == 0)
+            return NotFound(new { error = "Order not found!" });
+
+        return Ok(new { message = "Order is updated!" });
+    }
+    
     [HttpDelete("decrement-product-quantity")]
     public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
     {
