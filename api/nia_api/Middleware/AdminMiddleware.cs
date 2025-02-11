@@ -6,7 +6,7 @@ public class AdminMiddleware
 {
     private readonly RequestDelegate _next;
 
-    private AdminMiddleware(RequestDelegate next)
+    public AdminMiddleware(RequestDelegate next)
     {
         _next = next;
     }
@@ -15,9 +15,9 @@ public class AdminMiddleware
     {
         if (context.Request.Path.StartsWithSegments("/admin"))
         {
-            var userRole = context.User?.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+            var isAdmin = context.User?.Claims.FirstOrDefault(c => c.Type == "admin")?.Value;
 
-            if (string.IsNullOrEmpty(userRole) || userRole != "admin")
+            if (string.IsNullOrEmpty(isAdmin) || isAdmin.ToLower() != "true")
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsJsonAsync(new { error = "Access denied. Admins only." });

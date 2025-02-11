@@ -1,19 +1,15 @@
 import { Component } from '@angular/core';
 import {HeaderComponent} from "../header/header.component";
-import {FooterComponent} from "../footer/footer.component";
 import {CarouselModule} from "primeng/carousel";
-import {WelcomeComponent} from "../welcome/welcome.component";
-import {ContactComponent} from "../contact/contact.component";
+import {FirstCardComponent} from "../home-page/first-card/first-card.component";
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     HeaderComponent,
-    FooterComponent,
     CarouselModule,
-    WelcomeComponent,
-    ContactComponent
+    FirstCardComponent
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
