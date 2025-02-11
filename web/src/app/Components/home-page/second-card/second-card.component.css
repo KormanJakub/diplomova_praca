@@ -1,0 +1,44 @@
+.banner-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  height: 456px;
+  background-image: url("/business_value.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.banner-card-1,
+.banner-card-2,
+.banner-card-3,
+.banner-card-4 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 250px;
+  padding-left: 40px;
+}
+
+.banner-card-1 img,
+.banner-card-2 img,
+.banner-card-3 img,
+.banner-card-4 img {
+  margin-bottom: 10px;
+  max-width: 64px;
+}
+
+.banner-card-1 p,
+.banner-card-2 p,
+.banner-card-3 p,
+.banner-card-4 p {
+  font-size: 24px;
+  line-height: 28.8px;
+  font-weight: bold;
+  font-family: "Montserrat", sans-serif;
+  color: white;
+  margin: 0;
+  text-align: left;
+  margin-bottom: 30px;
+}

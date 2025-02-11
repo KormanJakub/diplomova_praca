@@ -1,5 +1,15 @@
 app-header,
-app-first-card {
+app-first-card,
+app-best-sale,
+app-second-card,
+app-third-card,
+app-galery-card,
+app-review-card,
+app-step-card,
+app-start-card,
+app-question-card,
+app-questions-by-card,
+app-footer{
   display: block;
   margin: 0;
   padding: 0;

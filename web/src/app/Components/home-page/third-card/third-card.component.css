@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.banner-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  height: 567px;
+  background-image: url("/content_wrapper.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.banner-information h1 {
+  font-size: 32px;
+  font-family: "Pandchang", sans-serif;
+  color: black;
+}
+
+.banner-information p {
+  font-size: 18px;
+  font-family: "Montserrat", sans-serif;
+  color: black;
+}
