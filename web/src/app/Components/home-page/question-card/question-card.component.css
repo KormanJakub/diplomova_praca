@@ -1,0 +1,89 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  display: flex;
+  gap: 30px;
+  padding: 99px 60px;
+  height: 972px;
+  width: auto;
+}
+
+.images-wrapper {
+  display: flex;
+  gap: 20px;
+}
+
+.question h1 {
+  font-size: 32px;
+  font-weight: bold;
+  font-family: "Montserrat", sans-serif;
+  line-height: 120%;
+}
+
+.question p {
+  font-size: 18px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.container-two-images {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.container-two-images img,
+.container-three-images img {
+  width: 303px;
+  border-radius: 10px;
+  height: 378px;
+  object-fit: cover;
+}
+
+.container-three-images {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.text-area textarea {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.name input,
+.email input {
+  height: 40px;
+  width: 100%;
+  border-radius: 6px;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 15px 30px;
+  width: 155px;
+  background-color: #091516;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #444;
+}
+

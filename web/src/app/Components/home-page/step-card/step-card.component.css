@@ -1,0 +1,96 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.banner-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  margin: auto;
+  height: 678px;
+  padding-top: 69px;
+  padding-bottom: 69px;
+  gap: 80px;
+}
+
+.banner-header h1 {
+  text-align: center;
+  font-size: 32px;
+  font-family: "Montserrat", sans-serif;
+  line-height: 120%;
+}
+
+.banner-second-container {
+  display: flex;
+}
+
+.first-step h3,
+.second-step h3,
+.third-step h3,
+.fourth-step h3 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 20px;
+  line-height: 140%;
+  text-align: center;
+}
+
+.first-step h5,
+.second-step h5,
+.third-step h5,
+.fourth-step h5 {
+  padding-top: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  line-height: 150%;
+  text-align: center;
+}
+
+.first-step p,
+.second-step p,
+.third-step p,
+.fourth-step p {
+  padding-top: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 16px;
+  line-height: 150%;
+  text-align: center;
+}
+
+.step-one-img img,
+.step-two-img img,
+.step-third-img img,
+.step-four-img img {
+  display: block;
+  padding-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.banner-button {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: #091516;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #444;
+}

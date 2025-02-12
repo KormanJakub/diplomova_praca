@@ -1,0 +1,46 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding-top: 112px;
+  height: 441px;
+  padding-bottom: 112px;
+  background-image: url("/56.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+
+}
+
+.container h1 {
+  text-align: center;
+  font-size: 40px;
+  line-height: 120%;
+  font-family: "Montserrat", sans-serif;
+  color: #091016;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: #091516;
+  color: #fff;
+  text-decoration: none;
+  width: 230px;
+  font-weight: bold;
+  font-size: 18px;
+  border-radius: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #444;
+}
