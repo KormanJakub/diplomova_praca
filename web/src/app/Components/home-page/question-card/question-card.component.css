@@ -23,7 +23,7 @@ body {
 .question h1 {
   font-size: 32px;
   font-weight: bold;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Panchang", sans-serif;
   line-height: 120%;
 }
 
@@ -61,6 +61,7 @@ body {
 .text-area textarea {
   width: 100%;
   border-radius: 6px;
+  font-family: "Montserrat", sans-serif;
 }
 
 .name input,
@@ -68,6 +69,40 @@ body {
   height: 40px;
   width: 100%;
   border-radius: 6px;
+}
+
+.drag-and-drop {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background-color: #fafafa;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+  max-width: 400px;
+  margin: 20px auto 20px 15px;
+}
+
+.drag-and-drop:hover {
+  border-color: #888;
+}
+
+.drag-and-drop i {
+  font-size: 48px;
+  color: #555;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.drag-and-drop p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.drag-and-drop.dragover {
+  border-color: #2196f3;
+  background-color: #e3f2fd;
 }
 
 .cta-button {

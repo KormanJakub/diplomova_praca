@@ -1,9 +1,75 @@
-<div class="footer">
-  <div class="footer-content">
-    <a href="https://www.instagram.com/wafflvysivanie/" target="_blank">
-      <i class="pi pi-instagram" style="font-size: 3rem;"></i>
-    </a>
-    <p>Copyright © 2024 Korman Jakub</p>
-    <p>V prípade problémov nás prosím kontaktujte na e-mailovej adrese alebo na instagrame.</p>
+<body>
+  <div class="footer-container">
+    <div class="content-container">
+      <div class="links">
+        <div class="logo">
+          <img src="logo_waffle_footer.png" alt="Waffl logo">
+        </div>
+
+        <div class="column-one">
+          <h4>Užitočné Odkazy</h4>
+          <div class="column-one-links">
+            <p>Domov</p>
+            <p>Najpredávanejšie</p>
+            <p>Proces</p>
+            <p>O nás</p>
+            <p>Galéria</p>
+          </div>
+        </div>
+
+        <div class="column-two">
+          <h4>Dôležité Odkazy</h4>
+          <div class="column-two-links">
+            <p>Zásady ochrany</p>
+            <p>Obchodné <br> Podmienky</p>
+            <p>Nastavenie Cookies</p>
+            <p>FAQ</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="newsletter">
+        <div class="frame-13">
+          <h3>Odberať</h3>
+          <p>Prihlásenie na odber noviniek o nových <br> dizajnoch a ponukách.</p>
+        </div>
+
+        <div class="actions">
+          <label for="emailInput">Zadajte email</label>
+          <input id="emailInput" type="text" placeholder="Zadajte email" [(ngModel)]="email"/>
+          <button (click)="receiveNews()">Prihlásiť sa</button>
+        </div>
+
+        <div class="gdpr">
+          <p>
+            Tým, že sa prihlásite na odber, súhlasíte s našimi Zásadami <br>
+            ochrany osobných údajov a dávate súhlas na prijímanie noviniek <br>
+            od našej spoločnosti.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="credits-container">
+      <div class="divider">
+        <img src="Divider.png" alt="Divider">
+      </div>
+
+      <div class="row">
+        <div class="credits">
+          <p>© 2025 waffl. All rights reserved.</p>
+        </div>
+
+        <div class="social_links">
+          <i class="pi pi-facebook"></i>
+          <i class="pi pi-instagram"></i>
+          <i class="pi pi-twitter"></i>
+          <i class="pi pi-linkedin"></i>
+          <i class="pi pi-youtube"></i>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</body>

@@ -1,0 +1,70 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  height: 647px;
+  width: 100%;
+  background-image: url("/FAQ.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  padding: 120px 120px 60px 60px;
+  display: flex;
+  gap: 101px;
+  text-align: initial;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.left h1 {
+  font-family: "Panchang", sans-serif;
+  color: white;
+  font-size: 32px;
+}
+
+.left p {
+  font-family: "Montserrat", sans-serif;
+  font-size: 18px;
+  color: #EDE8D0;
+}
+
+.faq {
+  display: flex;
+  padding-left: 200px;
+  flex-direction: column;
+  color: #FFFFFF;
+  gap: 64px;
+}
+
+.accordion-one {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header-accordion-one h2,
+.header-accordion-two h2,
+.header-accordion-three h2,
+.header-accordion-four h2 {
+  font-family: "Montserrat", sans-serif;
+  color: white;
+  font-size: 24px;
+}
+
+.content-accordion-one p,
+.content-accordion-two p,
+.content-accordion-three p,
+.content-accordion-four p {
+  font-family: "Montserrat", sans-serif;
+  color: white;
+  font-size: 18px;
+  margin-top: 24px;
+  line-height: 150%;
+}

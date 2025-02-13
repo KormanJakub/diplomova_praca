@@ -19,3 +19,13 @@ html, body { height: 100%; }
 app-root {
   min-height: 100%;
 }
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('assets/fonts/Panchang-Bold.woff2') format('woff2'),
+  url('assets/fonts/Panchang-Bold.woff') format('woff'),
+  url('assets/fonts/Panchang-Bold.ttf') format('truetype'),
+  url('assets/fonts/Panchang-Bold.eot');
+  font-weight: normal;
+  font-style: normal;
+}

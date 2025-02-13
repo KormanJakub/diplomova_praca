@@ -32,5 +32,7 @@ namespace nia_api.Data
             _database.GetCollection<Customization>("Customizations");
         
         public IMongoCollection<Order> Orders => _database.GetCollection<Order>("Orders");
+
+        public IMongoCollection<NewsReceiver> NewsReceivers => _database.GetCollection<NewsReceiver>("NewsReceiver");
     }
 }

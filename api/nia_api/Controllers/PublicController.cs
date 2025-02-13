@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
 using nia_api.Enums;
@@ -13,6 +14,9 @@ namespace nia_api.Controllers
     public class PublicController : ControllerBase
     {
         private readonly IMongoCollection<User> _users;
+        private readonly IMongoCollection<Product> _products;
+        private readonly IMongoCollection<NewsReceiver> _newsReceiver;
+        
         private readonly PasswordService _service;
         private readonly JwtTokenService _token;
         private readonly IEmailSender _emailSender;
@@ -20,9 +24,41 @@ namespace nia_api.Controllers
         public PublicController(NiaDbContext context, PasswordService service, JwtTokenService token, IEmailSender emailSender)
         {
             _users = context.Users;
+            _products = context.Products;
+            _newsReceiver = context.NewsReceivers;
             _service = service;
             _token = token;
             _emailSender = emailSender;
+        }
+
+        [HttpGet("all-products")]
+        public async Task<IActionResult> AllProducts()
+        {
+            var dbProducts = await _products.Find(_ => true).ToListAsync();
+            
+            if (dbProducts == null || dbProducts.Count == 0)
+                return NotFound(new { error = "No products found!" });
+            
+            return Ok(dbProducts);
+        }
+
+        [HttpPost("receive-news")]
+        public async Task<IActionResult> ReceiveNews([FromBody] EmailDto request)
+        {
+            var dbNewsReceivers = await _newsReceiver.Find(n => n.Email == request.Email).FirstOrDefaultAsync();
+
+            if (dbNewsReceivers != null)
+                return BadRequest(new { message = "User already receive!" });
+
+            var lcNewReceiver = new NewsReceiver()
+            {
+                Email = request.Email,
+                CreatedAt = LocalTimeService.LocalTime()
+            };
+
+            await _newsReceiver.InsertOneAsync(lcNewReceiver);
+            
+            return Ok(new {message = "Now you will receive news!"});
         }
         
         [HttpPost("register")]
@@ -234,5 +270,10 @@ namespace nia_api.Controllers
                 }
             }));
         }
+    }
+    
+    public class EmailDto
+    {
+        public string Email { get; set; }
     }
 }

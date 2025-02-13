@@ -32,7 +32,8 @@ body {
 
 .banner-information h1 {
   font-size: 32px;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Panchang", sans-serif;
+  font-weight: bold;
   margin-bottom: 20px;
   color: black;
 }
