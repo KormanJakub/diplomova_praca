@@ -1,1 +1,23 @@
-<p>Zobrazenie produktov, treba urobiť!</p>
+<body>
+<div class="container">
+  <div class="intro-echo">
+    <div class="header">
+      <h1>Najpredávanejšie</h1>
+    </div>
+    <p>Toto sú najpredávanejšie produkty!</p>
+  </div>
+
+  <div class="first-row">
+    <div *ngFor="let product of products; let i = index" class="product-card-{{i+1}}">
+      <div class="image-card">
+        <img *ngIf="product.Colors.length > 0" [src]="environment.apiUrl + product.Colors[0].PathOfFile" [alt]="product.Name">
+      </div>
+      <p>{{ product.Name }}</p>
+      <div class="price-card">
+        <p>{{ product.Price }}€</p>
+      </div>
+      <a href="#" class="cta-button">Pridať do košíka</a>
+    </div>
+  </div>
+</div>
+</body>

@@ -1,16 +1,16 @@
-interface Size {
+export interface Size {
   Size: string;
   Quantity: number;
 }
 
-interface Color {
-  Name: string | null;
+export interface Color {
+  Name: string;
   FileId: string | null;
   PathOfFile: string | null;
   Sizes: Size[];
 }
 
-interface Product {
+export interface Product {
   Id: string;
   TagId: string;
   Name: string;

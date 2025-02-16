@@ -1,1 +1,76 @@
-<p>login-page works!</p>
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+<div class="container">
+  <div class="container-inside">
+    <div class="image-content">
+      <img src="Photo_Gallery_5.JPG" alt="Login obrázok">
+    </div>
+
+    <div class="login-content">
+      <h1>Prihláste Sa!</h1>
+      <div class="registration-link">
+        <p>Nemáte ešte účet?</p>
+        <a href="/register" class="register-p">Zaregistrovať Sa!</a>
+      </div>
+
+      <div class="form-field-block">
+        <p-floatLabel>
+          <input
+            id="email"
+            pInputText
+            formControlName="email"
+            type="email"
+          />
+          <label for="email">Email</label>
+        </p-floatLabel>
+
+        <div
+          class="error-message"
+          *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+        >
+          <small *ngIf="loginForm.get('email')?.errors?.['required']">
+            Email je povinný.
+          </small>
+          <small *ngIf="loginForm.get('email')?.errors?.['email']">
+            Neplatný formát e-mailu.
+          </small>
+        </div>
+      </div>
+
+      <div class="form-field-block">
+        <p-floatLabel>
+          <input
+            id="password"
+            pInputText
+            formControlName="password"
+            type="password"
+          />
+          <label for="password">Heslo</label>
+        </p-floatLabel>
+
+        <div
+          class="error-message"
+          *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+        >
+          <small *ngIf="loginForm.get('password')?.errors?.['required']">
+            Heslo je povinné.
+          </small>
+          <small *ngIf="loginForm.get('password')?.errors?.['minlength']">
+            Heslo musí mať aspoň 6 znakov.
+          </small>
+        </div>
+      </div>
+
+      <div class="forget-password">
+        <a>Zabudnuté Heslo</a>
+      </div>
+      <button
+        type="submit"
+        class="login-button"
+        [disabled]="loginForm.invalid"
+      >
+        Prihláste sa!
+      </button>
+    </div>
+  </div>
+</div>
+</form>

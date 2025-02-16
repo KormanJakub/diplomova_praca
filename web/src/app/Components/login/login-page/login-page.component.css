@@ -1,0 +1,112 @@
+.container {
+  display: flex;
+  height: 741px;
+  max-height: 741px;
+  padding: 58px 275px 59px;
+  justify-content: center;
+  align-items: center;
+}
+
+.container-inside {
+  display: flex;
+  width: 890px;
+  height: 624px;
+  border: 3px solid #091516;
+  border-radius: 16px;
+  padding: 50px 30px;
+  justify-content: center;
+  gap: 40px
+}
+
+.image-content img {
+  width: 383px;
+  height: 575px;
+  padding-bottom: 50px;
+  border-radius: 16px;
+}
+
+.login-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  text-align: center;
+  height: auto;
+  h1 {
+    font-family: "Panchang", sans-serif;
+    margin: 0;
+    padding-top: 60px;
+  }
+}
+
+
+.form-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.error-message {
+  color: red;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.registration-link {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  gap: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  justify-content: center;
+}
+
+.registration-link p {
+  margin: 0;
+}
+
+.register-p {
+  font-weight: bold;
+  display: inline-block;
+  color: #091516;
+}
+
+.form-field-block {
+  width: 100%;
+}
+
+.form-field-block p-floatLabel {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-field-block p-floatLabel input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.forget-password {
+  display: flex;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  justify-content: left;
+  color: #091516;
+  font-weight: bold;
+}
+
+.login-button {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: #091516;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+  height: 50px;
+  width: 215px;
+  justify-content: center;
+}

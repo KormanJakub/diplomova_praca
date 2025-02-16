@@ -1,27 +1,34 @@
-# Web
+# E-Shop Frontend - Diploma Thesis
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.0.7.
+This repository contains the front-end part of an e-commerce application developed as part of my diploma thesis. Built using Angular, this project demonstrates a comprehensive approach to building a modern, scalable e-commerce platform with robust user authentication and an integrated admin panel.
 
-## Development server
+## Table of Contents
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- [Overview](#overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Admin Panel](#admin-panel)
+- [Technologies](#technologies)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Code scaffolding
+## Overview
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+The aim of this diploma thesis is to design and implement a full-featured e-commerce application. The front-end, built with Angular, includes functionalities for user registration and login, product browsing, shopping cart management, and an admin panel for store management. This project serves as a practical demonstration of modern web development techniques and best practices.
 
-## Build
+## Features
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+- **User Authentication:**
+  - Register a new account and log in with existing credentials.
+  - Secure authentication and session management.
 
-## Running unit tests
+- **Product Browsing and Purchasing:**
+  - Browse a catalog of products.
+  - Add items to the cart and proceed to checkout.
+  - View order history and track current orders.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **Admin Panel:**
+  - Dedicated admin login for secure access.
+  - Manage products, view orders, and update inventory.
+  - Dashboard overview for quick insights into store performance.

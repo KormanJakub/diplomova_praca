@@ -31,10 +31,10 @@ public class Colors
 {
     [BsonElement("name"), BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
-    /*
-    [BsonElement("imageUrl"), BsonRepresentation(BsonType.String)]
-    public string ImageUrl { get; set; }
-    */
+    [BsonElement("fileId"), BsonRepresentation(BsonType.String)]
+    public string FileId { get; set; }
+    [BsonElement("pathOfFile"), BsonRepresentation(BsonType.String)]
+    public string? PathOfFile { get; set; }
     [BsonElement("sizes")]
     public List<SizeInfo> Sizes { get; set; } = new List<SizeInfo>();
 }

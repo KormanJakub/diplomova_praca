@@ -12,10 +12,10 @@ public class Design
     public Guid Id { get; set; }
     [BsonElement("name"), BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
-    /*
-    [BsonElement("imageUrl"), BsonRepresentation(BsonType.String)]
-    public string ImageUrl { get; set; } 
-    */
+    [BsonElement("fileId"), BsonRepresentation(BsonType.String)]
+    public string FileId { get; set; } 
+    [BsonElement("pathOfFile"), BsonRepresentation(BsonType.String)]
+    public string? PathOfFile { get; set; }
     [BsonElement("price"), BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]

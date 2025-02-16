@@ -15,6 +15,7 @@ public class SeedingController : ControllerBase
     private readonly IMongoCollection<Product> _products;
     private readonly IMongoCollection<Tag> _tags;
     private readonly IMongoCollection<PairedDesign> _pairedDesigns;
+    private readonly IMongoCollection<Gallery> _gallery;
     
     public SeedingController(NiaDbContext context)
     {
@@ -22,6 +23,7 @@ public class SeedingController : ControllerBase
         _products = context.Products;
         _tags = context.Tags;
         _pairedDesigns = context.PairedDesigns;
+        _gallery = context.Gallery;
     }
     
     [HttpGet("data")]
@@ -31,6 +33,7 @@ public class SeedingController : ControllerBase
         await _products.DeleteManyAsync(FilterDefinition<Product>.Empty);
         await _pairedDesigns.DeleteManyAsync(FilterDefinition<PairedDesign>.Empty);
         await _tags.DeleteManyAsync(FilterDefinition<Tag>.Empty);
+        await _gallery.DeleteManyAsync(FilterDefinition<Gallery>.Empty);
 
         //TAGY
         var tag1 = new Tag
@@ -69,6 +72,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Biela",
+                    FileId = "9604dad2-082d-4930-a0d5-ca2cd38a1f17",
+                    PathOfFile = "/Files/G18500K_White.jpg",
                     Sizes = new List<SizeInfo>
                     {
                         new SizeInfo { Size = "S", Quantity = 10},
@@ -79,6 +84,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Čierna",
+                    FileId = "0597112e-183b-465e-a6cb-1f4a920a14ea",
+                    PathOfFile = "/Files/G18500K_Black.jpg",
                     Sizes = new List<SizeInfo>
                     {
                         new SizeInfo { Size = "S", Quantity = 10},
@@ -90,6 +97,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Zelená irish",
+                    FileId = "9d5c41a2-c92c-4afa-bfee-54a6130b623f",
+                    PathOfFile = "/Files/G18500K_Irish-Green.jpg",
                     Sizes = new List<SizeInfo>
                     {
                         new SizeInfo { Size = "S", Quantity = 1},
@@ -113,6 +122,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Tmavá Heather",
+                    FileId = "b0eb156a-6235-4997-8e50-4b804e3797e8",
+                    PathOfFile = "/Files/G18500K_Sport-Grey-(Heather).jpg",
                     Sizes = new List<SizeInfo>
                     {
                         new SizeInfo { Size = "S", Quantity = 1},
@@ -123,6 +134,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Biela",
+                    FileId = "03fca15c-05dd-4192-89ad-5e606e42fa58",
+                    PathOfFile = "/Files/G18500K_Maroon.jpg",
                     Sizes = new List<SizeInfo>
                     {
                         new SizeInfo { Size = "XL", Quantity = 1},
@@ -144,6 +157,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Natural",
+                    FileId = "a8e4b0bc-0391-442e-9b48-b147c5a7e2f9",
+                    PathOfFile = "/Files/G18500K_Graphite-Heather.jpg",
                     Sizes = new List<SizeInfo>
                     {
                         new SizeInfo { Size = "S", Quantity = 12},
@@ -170,6 +185,8 @@ public class SeedingController : ControllerBase
                 new Colors
                 {
                     Name = "Modrá royal",
+                    FileId = "46bda27a-64b3-40fa-baf9-f68a155dc467",
+                    PathOfFile = "/Files/G18500K_Royal.jpg",
                     Sizes = new List<SizeInfo>
                     {
                     }
@@ -257,6 +274,82 @@ public class SeedingController : ControllerBase
         };
 
         await _pairedDesigns.InsertManyAsync(new List<PairedDesign> { pair1, pair2 });
+        
+        //GALERY
+        var gallery1 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "58b1e48d-209a-4856-8390-1310775ea2ae",
+            PathOfFile = "/Files/Photo_Gallery_1.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery2 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "be987e73-ccab-4bff-bc71-1781b2466f68",
+            PathOfFile = "/Files/Photo_Gallery_2.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery3 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "52512394-b580-425c-9eb4-5419628026da",
+            PathOfFile = "/Files/Photo_Gallery_3.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery4 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "4aa4f0c9-8ab2-46f9-9243-f7ab3426f238",
+            PathOfFile = "/Files/Photo_Gallery_4.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery5 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "9c9e677f-fc4f-4360-82af-bda4c35d4027",
+            PathOfFile = "/Files/Photo_Gallery_5.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery6 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "a9fdb3c2-0101-4f55-a3e5-96944620ab40",
+            PathOfFile = "/Files/Photo_Gallery_6.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery7 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "7bd09659-45be-4be3-bc2c-ae120e3d46f9",
+            PathOfFile = "/Files/Photo_Gallery_7.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery8 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "6492f5cb-ccac-48fc-b8da-7fc26ee5e723",
+            PathOfFile = "/Files/Photo_Gallery_1.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var gallery9 = new Gallery()
+        {
+            Id = Guid.NewGuid(),
+            FileId = "b6814c38-5170-4b07-9929-4eccc8358374",
+            PathOfFile = "/Files/Photo_Gallery_9.JPG",
+            CreatedAt = LocalTimeService.LocalTime()
+        };
+        
+        await _gallery.InsertManyAsync(new List<Gallery> { gallery1, gallery2, gallery3, gallery4, 
+            gallery5, gallery6, gallery7, gallery8, gallery9 });
         
         Console.WriteLine("Database seeded with test data.");
     }

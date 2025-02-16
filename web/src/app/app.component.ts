@@ -10,7 +10,7 @@ import {PrimeNGConfig} from "primeng/api";
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  title = 'NIA-WEB';
+  title = 'WAFFLE';
 
   constructor(private primengConfig: PrimeNGConfig) {}
 

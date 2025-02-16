@@ -1,11 +1,10 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Bson;
 using nia_api.Services;
 
 namespace nia_api.Models;
 
-public class Gallery
+public class File
 {
     [BsonElement("_id"), BsonRepresentation(BsonType.String)]
     public Guid Id { get; set; }

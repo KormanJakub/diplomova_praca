@@ -1,0 +1,62 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 750px;
+  padding: 64px 64px 120px;
+  gap: 90px;
+}
+
+.intro-echo {
+  display: flex;
+  gap: 500px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 18px;
+}
+
+.header h1 {
+  font-family: "Panchang", sans-serif;
+}
+
+.first-row {
+  display: flex;
+  gap: 30px;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.first-row p {
+  font-family: "Montserrat", sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+}
+
+.image-card img {
+  width: auto;
+  height: 303px;
+  border-radius: 10px;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: #091516;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+  height: 50px;
+  width: 215px;
+}

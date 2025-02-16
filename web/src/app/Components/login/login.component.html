@@ -1,32 +1,3 @@
 <app-header></app-header>
-
-<div class="custom-container">
-  <div class="image-section card image-card">
-    <img src="login.jpg" alt="Promotional Image" class="promo-image">
-  </div>
-  <div class="form-section card form-card">
-    <h1>Prihlásiť sa</h1>
-    <div class="form-container">
-      <div class="email-container">
-        <p-floatLabel>
-          <input style="width: 100%" id="email" type="text" pInputText [(ngModel)]="user.email">
-          <label for="email">Email*</label>
-        </p-floatLabel>
-      </div>
-
-      <div class="password-container">
-        <p-floatLabel>
-          <input style="width: 100%" id="password" type="password" pInputText [(ngModel)]="user.password">
-          <label for="password">Heslo*</label>
-        </p-floatLabel>
-      </div>
-
-      <div class="forgot-password">
-        <a>Zabudnuté heslo</a>
-      </div>
-      <p-button icon="pi pi-check" severity="contrast" label="Prihlásiť sa" (click)="login(user)" styleClass="submit-button"></p-button>
-    </div>
-  </div>
-</div>
-
+<app-login-page></app-login-page>
 <app-footer></app-footer>

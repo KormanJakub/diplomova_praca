@@ -1,5 +1,114 @@
-<h1>Pre pokračovanie alebo nákup sa musíte zaregistrovať!</h1>
+<app-header></app-header>
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+  <div class="container">
+    <div class="container-inside">
+      <div class="register-content">
+        <h1>Registrovať Sa!</h1>
 
-<div class="card">
+        <div class="login-link">
+          <p>Ste už registrovaný?</p>
+          <a href="/login" class="login-p">Prihláste Sa!</a>
+        </div>
 
-</div>
+        <div class="form-field-block">
+          <p-floatLabel>
+            <input
+              id="email"
+              pInputText
+              formControlName="email"
+              type="email"
+            />
+            <label for="email">Email*</label>
+          </p-floatLabel>
+
+          <div class="error-message" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+            <small *ngIf="registerForm.get('email')?.errors?.['required']">
+              Email je povinný.
+            </small>
+            <small *ngIf="registerForm.get('email')?.errors?.['email']">
+              Neplatný formát e-mailu.
+            </small>
+          </div>
+        </div>
+
+        <div class="fist-and-last-name">
+          <div class="form-field-block">
+            <p-floatLabel>
+              <input
+                id="first_name"
+                pInputText
+                formControlName="first_name"
+                type="text"
+              />
+              <label for="first_name">Meno</label>
+            </p-floatLabel>
+          </div>
+
+          <div class="form-field-block">
+            <p-floatLabel>
+              <input
+                id="last_name"
+                pInputText
+                formControlName="last_name"
+                type="text"
+              />
+              <label for="last_name">Priezvisko</label>
+            </p-floatLabel>
+          </div>
+        </div>
+
+        <div class="form-field-block">
+          <p-floatLabel>
+            <input
+              id="password"
+              pInputText
+              formControlName="password"
+              type="password"
+            />
+            <label for="password">Heslo*</label>
+          </p-floatLabel>
+
+          <div class="error-message" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+            <small *ngIf="registerForm.get('password')?.errors?.['required']">
+              Heslo je povinné.
+            </small>
+            <small *ngIf="registerForm.get('password')?.errors?.['minlength']">
+              Heslo musí mať aspoň 6 znakov.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-field-block">
+          <p-floatLabel>
+            <input
+              id="repeatPassword"
+              pInputText
+              formControlName="repeatPassword"
+              type="password"
+            />
+            <label for="repeatPassword">Zopakovať heslo*</label>
+          </p-floatLabel>
+
+          <div class="error-message" *ngIf="registerForm.get('repeatPassword')?.touched && registerForm.get('repeatPassword')?.invalid">
+            <small *ngIf="registerForm.get('repeatPassword')?.errors?.['required']">
+              Heslo je povinné.
+            </small>
+            <small *ngIf="registerForm.get('repeatPassword')?.errors?.['minlength']">
+              Heslo musí mať aspoň 6 znakov.
+            </small>
+            <small *ngIf="registerForm.get('repeatPassword')?.errors?.['mismatch']">
+              Heslá sa nezhodujú.
+            </small>
+          </div>
+        </div>
+
+        <button class="register-button" type="submit" [disabled]="registerForm.invalid">Registrovať Sa!</button>
+      </div>
+
+      <div class="image-content">
+        <img src="Photo_Gallery_3.JPG" alt="Register obrázok" />
+      </div>
+    </div>
+  </div>
+</form>
+<app-footer></app-footer>

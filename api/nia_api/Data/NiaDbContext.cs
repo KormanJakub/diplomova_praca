@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using nia_api.Models;
+using File = nia_api.Models.File;
 using Tag = nia_api.Models.Tag;
 
 namespace nia_api.Data
@@ -34,5 +35,11 @@ namespace nia_api.Data
         public IMongoCollection<Order> Orders => _database.GetCollection<Order>("Orders");
 
         public IMongoCollection<NewsReceiver> NewsReceivers => _database.GetCollection<NewsReceiver>("NewsReceiver");
+
+        public IMongoCollection<File> Files => _database.GetCollection<File>("Files");
+
+        public IMongoCollection<Gallery> Gallery => _database.GetCollection<Gallery>("Gallery");
+
+        public IMongoCollection<Questions> Questions => _database.GetCollection<Questions>("Questions");
     }
 }

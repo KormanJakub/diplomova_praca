@@ -16,6 +16,8 @@ namespace nia_api.Controllers
         private readonly IMongoCollection<User> _users;
         private readonly IMongoCollection<Product> _products;
         private readonly IMongoCollection<NewsReceiver> _newsReceiver;
+        private readonly IMongoCollection<Gallery> _gallery;
+        private readonly IMongoCollection<Questions> _questions;
         
         private readonly PasswordService _service;
         private readonly JwtTokenService _token;
@@ -28,24 +30,75 @@ namespace nia_api.Controllers
             _newsReceiver = context.NewsReceivers;
             _service = service;
             _token = token;
+            _gallery = context.Gallery;
+            _questions = context.Questions;
             _emailSender = emailSender;
         }
 
         [HttpGet("all-products")]
         public async Task<IActionResult> AllProducts()
         {
-            var dbProducts = await _products.Find(_ => true).ToListAsync();
+            var dbProducts = await _products
+                .Find(_ => true)
+                .ToListAsync();
             
             if (dbProducts == null || dbProducts.Count == 0)
                 return NotFound(new { error = "No products found!" });
             
             return Ok(dbProducts);
         }
+        
+        //TODO: Keď bude analyze, upraviť
+        [HttpGet("best-three-products")]
+        public async Task<IActionResult> BestThreeProducts()
+        {
+            var dbProducts = await _products
+                .Find(_ => true)
+                .Limit(3)
+                .ToListAsync();
+            
+            if (dbProducts == null || dbProducts.Count == 0)
+                return NotFound(new { error = "No products found!" });
+            
+            return Ok(dbProducts);
+        }
+        
+        [HttpGet("all-gallery")]
+        public async Task<IActionResult> AllGallery()
+        {
+            var dbGallery = await _gallery
+                .Find(_ => true)
+                .ToListAsync();
+            
+            if (dbGallery == null || dbGallery.Count == 0)
+                return NotFound(new { error = "No products found!" });
+            
+            return Ok(dbGallery);
+        }
+
+        [HttpPost("give-question")]
+        public async Task<IActionResult> GiveQuestion([FromBody] QuestionRequest request)
+        {
+            var newQuestion = new Questions()
+            {
+                Email = request.Email,
+                Name = request.Name,
+                PathOfFile = request.PathOfUrl,
+                FileId = request.FileId,
+                CreatedAt = LocalTimeService.LocalTime()
+            };
+
+            await _questions.InsertOneAsync(newQuestion);
+
+            return Ok(new { message = "You sent a request!" });
+        }
 
         [HttpPost("receive-news")]
         public async Task<IActionResult> ReceiveNews([FromBody] EmailDto request)
         {
-            var dbNewsReceivers = await _newsReceiver.Find(n => n.Email == request.Email).FirstOrDefaultAsync();
+            var dbNewsReceivers = await _newsReceiver
+                .Find(n => n.Email == request.Email)
+                .FirstOrDefaultAsync();
 
             if (dbNewsReceivers != null)
                 return BadRequest(new { message = "User already receive!" });
@@ -67,7 +120,9 @@ namespace nia_api.Controllers
             if (user == null)
                 return BadRequest(new { error = "User is empty!" });
             
-            var existingUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+            var existingUser = await _users
+                .Find(u => u.Email == user.Email)
+                .FirstOrDefaultAsync();
             if (existingUser != null)
                 return BadRequest(new { error = "Email is already registered!"});
             

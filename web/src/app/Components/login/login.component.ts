@@ -9,6 +9,7 @@ import {PaginatorModule} from "primeng/paginator";
 import {Button} from "primeng/button";
 import {HeaderComponent} from "../header/header.component";
 import {FooterComponent} from "../footer/footer.component";
+import {LoginPageComponent} from "./login-page/login-page.component";
 
 /*
 TODO:
@@ -26,7 +27,8 @@ Ak email je potvredy presmeruj ho na uzivatelske konto
     PaginatorModule,
     Button,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    LoginPageComponent
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
