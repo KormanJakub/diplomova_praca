@@ -127,8 +127,8 @@ public class AdminController : ControllerBase
         {
             Id = Guid.NewGuid(),
             Name = tag.Name,
-            CreatedAt = tag.CreatedAt,
-            UpdatedAt = tag.UpdatedAt
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
         };
 
         await _tags.InsertOneAsync(newTag);
@@ -136,7 +136,7 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Tag successful created!" });
     }
 
-    [HttpPut("tag/update")]
+    [HttpPut("tag/one-update")]
     public async Task<IActionResult> UpdateTag(Tag tag)
     {
         var dbTag = await _tags.Find(t => t.Id == tag.Id).FirstOrDefaultAsync();
@@ -155,6 +155,27 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Your tag has been updated." });
     }
 
+    [HttpPut("tag/update")]
+    public async Task<IActionResult> UpdateTags([FromBody] List<Tag> tags)
+    {
+        if (tags == null || !tags.Any())
+            return BadRequest(new { message = "No tags provided for update." });
+        
+        
+        var updateTags = tags.Select(async tag =>
+        {
+            var updateDefinition = Builders<Tag>.Update
+                .Set(t => t.Name, tag.Name)
+                .Set(t => t.UpdatedAt, LocalTimeService.LocalTime());
+
+            await _tags.UpdateOneAsync(t => t.Id == tag.Id, updateDefinition);
+        });
+
+        await Task.WhenAll(updateTags);
+        
+        return Ok();
+    }
+
     [HttpDelete("tag/remove/{tagId}")]
     public async Task<IActionResult> RemoveTag(string tagId)
     {
@@ -163,6 +184,19 @@ public class AdminController : ControllerBase
         await _tags.DeleteOneAsync(t => t.Id == id);
         
         return Ok(new { message = "Tag successful removed!" });
+    }
+
+    [HttpDelete("tag/remove")]
+    public async Task<IActionResult> RemoveTags([FromBody] List<Tag> tags)
+    {
+        if (tags == null || !tags.Any())
+            return BadRequest(new { message = "No tags provided for deletion." });
+        
+        var tagIds = tags.Select(tag => tag.Id).ToList();
+
+        var result = await _tags.DeleteManyAsync(t => tagIds.Contains(t.Id));
+        
+        return Ok(new { message = $"{result.DeletedCount} tags were successfully deleted!"});
     }
 
     [HttpDelete("tag/remove-with-all-products/{tagId}")]

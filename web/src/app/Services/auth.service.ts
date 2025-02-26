@@ -6,13 +6,17 @@ import {environment} from "../../Environments/environment";
 import {LoginRequest} from "../Requests/loginrequest";
 import {VerificateCodeRequest} from "../Requests/verificatecoderequest";
 import {NewPasswordRequest} from "../Requests/newpasswordrequest";
+import {CookieService} from "ngx-cookie-service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  constructor(private httpClient: HttpClient) { }
+  constructor(
+    private httpClient: HttpClient,
+    private cookieService: CookieService
+  ) { }
 
   public register(user: RegisterRequest): Observable<any> {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/register`, user);
@@ -22,27 +26,19 @@ export class AuthService {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/login`, user);
   }
 
-  public forgotPassword(email: string): Observable<any> {
-    return this.httpClient.put<any>(`${environment.apiUrl}/public/forgot-password`, email);
-  }
-
-  public verificationCode(user: VerificateCodeRequest) : Observable<any> {
-    return this.httpClient.post<any>(`${environment.apiUrl}/public/verificate-code`, user);
-  }
-
-  public newPassword(user: NewPasswordRequest) : Observable<any> {
-    return this.httpClient.put<any>(`${environment.apiUrl}/public/new-password`, user);
-  }
-
   public isLoggedIn() {
-    return localStorage.getItem("uiAppToken") != null;
+    return this.cookieService.get("uiAppToken") != null;
+  }
+
+  public returnToken() {
+    return this.cookieService.get("uiAppToken");
   }
 
   public isAdminLoggedIn() {
-    return localStorage.getItem('uiAppAdmin') === 'admin';
+    return this.cookieService.get('uiAppAdmin') === 'admin';
   }
 
   public isEmailConfirmed() {
-    return JSON.parse(localStorage.getItem("uiAppEmailConfirmation") || 'true');
+    return JSON.parse(this.cookieService.get("uiAppEmailConfirmation") || 'true');
   }
 }

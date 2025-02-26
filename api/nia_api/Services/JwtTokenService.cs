@@ -14,12 +14,12 @@ public class JwtTokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(Guid userId, string email, string firstName, string lastName)
+    public string GenerateToken(Guid userId, string email, string firstName, string lastName, string? role)
     {
         var jwtKey = _configuration["JwtConfig:Key"];
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim("UserId", userId.ToString()),
             new Claim("UserEmail", email),
@@ -27,7 +27,12 @@ public class JwtTokenService
             new Claim("LastName", lastName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
-            
+
+        if (!string.IsNullOrEmpty(role))
+        {
+            claims.Add(new Claim("Role", role));
+        }
+        
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

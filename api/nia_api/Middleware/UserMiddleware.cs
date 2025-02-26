@@ -18,9 +18,8 @@ public class UserMiddleware
         if (context.Request.Path.StartsWithSegments("/user"))
         {
             var user = context.User;
-
             var userExists = await _headerReader.UserExistsAsync(user);
-            
+        
             if (!userExists)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -28,7 +27,7 @@ public class UserMiddleware
                 return;
             }
         }
-        
+    
         await _next(context);
     }
 }

@@ -1,5 +1,11 @@
 import { Injectable } from '@angular/core';
-import jwt_decode from 'jwt-decode';
+
+export interface JwtPayload {
+  UserId: string;
+  UserEmail: string;
+  FirstName: string;
+  LastName: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,17 +14,27 @@ export class DecodingTokenService {
 
   constructor() { }
 
-  private decodeToken(token: string): any {
-    
-  }
+  decodeToken(token: string): JwtPayload | null {
+    if (!token) {
+      return null;
+    }
 
-  readFromToken() {
-    const token = localStorage.getItem('uiAppToken');
-    if (token) {
-      const decodedToken = this.decodeToken(token);
-      console.log(decodedToken);
-    } else {
-      console.log("No such token");
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    try {
+      const base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const decodedPayload = atob(base64Payload);
+
+      const payloadObject: JwtPayload = JSON.parse(decodedPayload);
+
+      return payloadObject;
+    } catch (error) {
+      console.error('Chyba pri dekódovaní tokenu:', error);
+      return null;
     }
   }
+
 }

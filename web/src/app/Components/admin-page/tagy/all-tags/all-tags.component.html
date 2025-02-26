@@ -1,1 +1,83 @@
-<p>all-tags works!</p>
+<div class="card block justify-center items-center mr-8 mt-4">
+  <p-toast></p-toast>
+  <p-toolbar styleClass="mb-1">
+    <ng-template pTemplate="start">
+      <p-button label="Pridať" icon="pi pi-plus" class="mr-2" (onClick)="openNew()"></p-button>
+      <p-button severity="danger" label="Odstraniť" icon="pi pi-trash" outlined
+                (onClick)="deleteSelectedTags()"
+                [disabled]="!selectedTags || !selectedTags.length"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <div class="flex justify-center items-center w-full">
+    <p-table
+      #dt
+      [value]="tags"
+      [rows]="10"
+      [paginator]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      [(selection)]="selectedTags"
+      [rowHover]="true"
+      dataKey="Id"
+      currentPageReportTemplate="Zobrazovanie {first} do {last} z {totalRecords} tagov!"
+      [showCurrentPageReport]="true"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
+          <th pSortableColumn="Name" style="min-width:16rem">
+            Meno
+            <p-sortIcon field="Name"></p-sortIcon>
+          </th>
+          <th pSortableColumn="CreatedAt" style="min-width: 12rem">
+            Vytvorené
+            <p-sortIcon field="CreatedAt"></p-sortIcon>
+          </th>
+          <th pSortableColumn="UpdatedAt" style="min-width: 12rem">
+            Aktualizované
+            <p-sortIcon field="UpdatedAt"></p-sortIcon>
+          </th>
+          <th style="min-width:8rem">Akcie</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-tag>
+        <tr>
+          <td style="width: 3rem">
+            <p-tableCheckbox [value]="tag"></p-tableCheckbox>
+          </td>
+          <td>{{ tag.Name }}</td>
+          <td>{{ tag.CreatedAt | date:'short' }}</td>
+          <td>{{ tag.UpdatedAt | date:'short' }}</td>
+          <td>
+            <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
+                      (onClick)="editTag(tag)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">Žiadne tagy na zobrazenie</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog header="{{ tagDialogHeader }}" [(visible)]="tagDialog" [modal]="true"
+            [style]="{width: '30vw'}" [closable]="false">
+    <div class="p-field">
+      <span class="p-float-label">
+        <input id="name" type="text" pInputText [(ngModel)]="tag.Name" style="width: 300px; height: 2.5rem;"/>
+        <label for="name">Meno</label>
+      </span>
+    </div>
+    <p-footer>
+      <p-button label="Cancel" severity="danger" icon="pi pi-times" class="p-button-text"
+                (onClick)="hideDialog()"></p-button>
+      <p-button label="Submit" icon="pi pi-check" (onClick)="submitTag()"></p-button>
+    </p-footer>
+  </p-dialog>
+</div>

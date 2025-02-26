@@ -64,8 +64,8 @@ export class LoginPageComponent implements OnInit{
           this.cookieService.set('uiAppToken', response.token);
           this.cookieService.set('uiAppEmailConfirmation', JSON.stringify(response.email_confirmation));
 
-          if (response.role) {
-            this.cookieService.set('uiAppRole', response.role);
+          if (response.role === 'admin') {
+            this.cookieService.set('uiAppRole', 'admin');
           }
 
           this.router.navigate(['/']);

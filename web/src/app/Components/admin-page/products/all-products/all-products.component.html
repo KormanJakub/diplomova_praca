@@ -1,1 +1,80 @@
-<p>all-products works!</p>
+<div class="card">
+  <!-- Tabuľka produktov -->
+  <p-table #dt [value]="products" dataKey="Id">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 2rem"></th>
+        <th>Meno produktu</th>
+        <th>Cena</th>
+        <th>Vytvorené</th>
+        <th>Aktualizované</th>
+      </tr>
+    </ng-template>
+
+    <!-- Telo tabuľky pre produkty -->
+    <ng-template pTemplate="body" let-product>
+      <!-- Riadok produktu -->
+      <tr>
+        <td>
+          <a href="javascript:void(0)" (click)="toggleProduct(product)">
+            <i class="pi" [ngClass]="expandedProducts[product.Id] ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+          </a>
+        </td>
+        <td>{{ product.Name }}</td>
+        <td>{{ product.Price | currency }}</td>
+        <td>{{ product.CreatedAt | date:'short' }}</td>
+        <td>{{ product.UpdatedAt | date:'short' }}</td>
+      </tr>
+      <!-- Rozbalovací riadok pre farby -->
+      <tr *ngIf="expandedProducts[product.Id]">
+        <td colspan="5" class="p-0">
+          <div class="p-ml-4">
+            <p-table [value]="product.Colors" dataKey="Name">
+              <!-- Hlavička tabuľky farieb -->
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 3rem"></th>
+                  <th>Meno farby</th>
+                </tr>
+              </ng-template>
+              <!-- Telo tabuľky pre farby -->
+              <ng-template pTemplate="body" let-color>
+                <tr>
+                  <td>
+                    <a href="javascript:void(0)" (click)="toggleColor(product, color)">
+                      <i class="pi" [ngClass]="isColorExpanded(product, color) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                    </a>
+                  </td>
+                  <td>{{ color.Name }}</td>
+                </tr>
+                <!-- Rozbalovací riadok pre veľkosti -->
+                <tr *ngIf="isColorExpanded(product, color)">
+                  <td colspan="2" class="p-0">
+                    <div class="p-ml-4">
+                      <p-table [value]="color.Sizes">
+                        <!-- Hlavička tabuľky veľkostí -->
+                        <ng-template pTemplate="header">
+                          <tr>
+                            <th>Veľkosť</th>
+                            <th>Množstvo</th>
+                          </tr>
+                        </ng-template>
+                        <!-- Telo tabuľky pre veľkosti -->
+                        <ng-template pTemplate="body" let-size>
+                          <tr>
+                            <td>{{ size.Size }}</td>
+                            <td>{{ size.Quantity }}</td>
+                          </tr>
+                        </ng-template>
+                      </p-table>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

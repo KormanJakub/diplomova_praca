@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Router, RouterLink} from "@angular/router";
 import {AuthService} from "../../Services/auth.service";
-import {DecodingTokenService} from "../../Services/decoding-token.service";
+import {DecodingTokenService, JwtPayload} from "../../Services/decoding-token.service";
 import {Button} from "primeng/button";
 import {NgIf} from "@angular/common";
 import {BadgeModule} from "primeng/badge";
+import {CookieService} from "ngx-cookie-service";
 
 @Component({
   selector: 'app-header',
@@ -18,32 +19,43 @@ import {BadgeModule} from "primeng/badge";
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent {
-  //TODO: Keď budu ostatné komponenty, nech je to ready
+export class HeaderComponent implements OnInit{
+  decoded: JwtPayload | null = null;
 
-  isAdmin: boolean = this.authService.isAdminLoggedIn();
-  isLogged: boolean = this.authService.isLoggedIn();
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private decoding: DecodingTokenService,
+    private cookieService: CookieService
+  ) {}
 
-  constructor(private router: Router, private authService: AuthService) {}
+  ngOnInit(): void {
+    const token = this.authService.returnToken();
+    this.decoded = this.decoding.decodeToken(token);
+  }
 
-  userProfileId() {
-    /*TODO:
-     - Dekoduj token
-     - returni id uživateľa
-     */
+  logout(): void {
+    this.cookieService.delete('uiAppToken');
+    this.cookieService.delete('uiAppRole');
+    this.cookieService.delete('uiAppEmailConfirmation');
+
+    this.router.navigate(['/']);
   }
 
   routeToUserProfile () {
-    //TODO: Az ked bude uzivateľský komponent
-  }
-
-  routeToUserOrders() {
-    //TODO: Az ked bude uzivateľský komponent
+    this.router.navigate(['/user/', this.decoded?.UserId]);
   }
 
   routeToAdminProfile() {
-    //TODO: Az ked bude admin komponent
+    this.router.navigate(['/admin']);
   }
 
+  isLogged(): boolean {
+    const token = this.cookieService.get("uiAppToken");
+    return !!token;
+  }
 
+  isAdminLogged(): boolean {
+    return this.cookieService.get('uiAppRole') === 'admin';
+  }
 }

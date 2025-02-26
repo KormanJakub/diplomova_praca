@@ -42,7 +42,6 @@ export class GaleryCardComponent implements OnInit {
     this.publicService.galleryShowCaseForHome().subscribe({
       next: (gallery) => {
         this.gallery = gallery;
-        console.log(gallery);
       },
       error: (err) => {
         console.log(err);

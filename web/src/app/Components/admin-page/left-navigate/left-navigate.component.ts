@@ -1,12 +1,137 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {MenuModule} from "primeng/menu";
+import { MenuItem } from 'primeng/api';
+import {BadgeModule} from "primeng/badge";
 
 @Component({
   selector: 'app-left-navigate',
   standalone: true,
-  imports: [],
+  imports: [
+    MenuModule,
+    BadgeModule
+  ],
   templateUrl: './left-navigate.component.html',
   styleUrl: './left-navigate.component.css'
 })
-export class LeftNavigateComponent {
+export class LeftNavigateComponent implements OnInit{
+  items: MenuItem[] | undefined;
+
+    ngOnInit(): void {
+      this.items = [
+        {
+          separator: true
+        },
+        {
+          label: 'Objednávky',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+            },
+            {
+              label: 'Čakajúce',
+              icon: 'pi pi-plus',
+            },
+            {
+              label: 'Prijaté',
+              icon: 'pi pi-plus',
+            },
+            {
+              label: 'Šijem',
+              icon: 'pi pi-plus',
+            },
+            {
+              label: 'Pripravené',
+              icon: 'pi pi-plus',
+            },
+            {
+              label: 'Odoslané',
+              icon: 'pi pi-plus',
+            }
+          ]
+        },
+        {
+          label: 'Tagy',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+              routerLink: "/admin/tags"
+            },
+          ]
+        },
+        {
+          label: 'Produkty',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+              routerLink: "/admin/products"
+            },
+            ]
+        },
+        {
+          label: 'Dizajn',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+              routerLink: "/admin/designs"
+            },
+          ]
+        },
+        {
+          label: 'Párové dizajny',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+            },
+            {
+              label: 'Pridať',
+              icon: 'pi pi-plus',
+            }
+          ]
+        },
+        {
+          label: 'Galéria',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+            },
+            {
+              label: 'Pridať',
+              icon: 'pi pi-plus',
+            }
+          ]
+        },
+        {
+          label: 'Dizajny zákazníkov',
+          items: [
+            {
+              label: 'Všetky',
+              icon: 'pi pi-search',
+            }
+          ]
+        },
+        {
+          label: 'Profil',
+          items: [
+            {
+              label: 'Nastavenia',
+              icon: 'pi pi-cog',
+            },
+            {
+              label: 'Správy',
+              icon: 'pi pi-inbox',
+            }
+          ]
+        },
+        {
+          separator: true
+        }
+      ];
+    }
 
 }

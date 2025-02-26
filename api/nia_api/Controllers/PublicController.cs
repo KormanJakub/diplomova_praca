@@ -191,17 +191,17 @@ namespace nia_api.Controllers
             if (dbUser.Password != hashPassword)
                 return Unauthorized(new { error = "Password's do not match!" });
             
-            var token = _token.GenerateToken(
-                dbUser.Id,
-                dbUser.Email,
-                dbUser.FirstName,
-                dbUser.LastName
-            );
-
+            string token;
             if (dbUser.IsAdmin)
+            {
+                token = _token.GenerateToken(dbUser.Id, dbUser.Email, dbUser.FirstName, dbUser.LastName, "admin");
                 return Ok(new { token, role = "admin", email_confirmation = dbUser.IsEmailConfirmed });
-            
-            return Ok(new {token, email_confirmation = dbUser.IsEmailConfirmed});
+            }
+            else
+            {
+                token = _token.GenerateToken(dbUser.Id, dbUser.Email, dbUser.FirstName, dbUser.LastName, null);
+                return Ok(new { token, email_confirmation = dbUser.IsEmailConfirmed });
+            }
         }
 
         [HttpPut("forgot-password")]
