@@ -12,6 +12,8 @@ public class Product
     public Guid Id { get; set; }
     [BsonElement("tagId") ,BsonRepresentation(BsonType.String)]
     public Guid TagId { get; set; }
+    [BsonElement("tagName"), BsonRepresentation(BsonType.String)]
+    public string? TagName { get; set; }
     [BsonElement("name"), BsonRepresentation(BsonType.String)]
     public string? Name { get; set; }
     [BsonElement("description"), BsonRepresentation(BsonType.String)]

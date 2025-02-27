@@ -1,80 +1,257 @@
-<div class="card">
-  <!-- Tabuľka produktov -->
-  <p-table #dt [value]="products" dataKey="Id">
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="width: 2rem"></th>
-        <th>Meno produktu</th>
-        <th>Cena</th>
-        <th>Vytvorené</th>
-        <th>Aktualizované</th>
-      </tr>
+<div class="card block justify-center items-center mr-8 mt-4">
+  <p-toast></p-toast>
+  <p-toolbar styleClass="mb-1">
+    <ng-template pTemplate="start">
+      <p-button label="Pridať produkt" icon="pi pi-plus" class="mr-2" (onClick)="openNewProduct()"></p-button>
     </ng-template>
+  </p-toolbar>
 
-    <!-- Telo tabuľky pre produkty -->
-    <ng-template pTemplate="body" let-product>
-      <!-- Riadok produktu -->
-      <tr>
-        <td>
-          <a href="javascript:void(0)" (click)="toggleProduct(product)">
-            <i class="pi" [ngClass]="expandedProducts[product.Id] ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
-          </a>
-        </td>
-        <td>{{ product.Name }}</td>
-        <td>{{ product.Price | currency }}</td>
-        <td>{{ product.CreatedAt | date:'short' }}</td>
-        <td>{{ product.UpdatedAt | date:'short' }}</td>
-      </tr>
-      <!-- Rozbalovací riadok pre farby -->
-      <tr *ngIf="expandedProducts[product.Id]">
-        <td colspan="5" class="p-0">
-          <div class="p-ml-4">
-            <p-table [value]="product.Colors" dataKey="Name">
-              <!-- Hlavička tabuľky farieb -->
-              <ng-template pTemplate="header">
-                <tr>
-                  <th style="width: 3rem"></th>
-                  <th>Meno farby</th>
-                </tr>
-              </ng-template>
-              <!-- Telo tabuľky pre farby -->
-              <ng-template pTemplate="body" let-color>
-                <tr>
-                  <td>
-                    <a href="javascript:void(0)" (click)="toggleColor(product, color)">
-                      <i class="pi" [ngClass]="isColorExpanded(product, color) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
-                    </a>
-                  </td>
-                  <td>{{ color.Name }}</td>
-                </tr>
-                <!-- Rozbalovací riadok pre veľkosti -->
-                <tr *ngIf="isColorExpanded(product, color)">
-                  <td colspan="2" class="p-0">
-                    <div class="p-ml-4">
-                      <p-table [value]="color.Sizes">
-                        <!-- Hlavička tabuľky veľkostí -->
-                        <ng-template pTemplate="header">
-                          <tr>
-                            <th>Veľkosť</th>
-                            <th>Množstvo</th>
-                          </tr>
-                        </ng-template>
-                        <!-- Telo tabuľky pre veľkosti -->
-                        <ng-template pTemplate="body" let-size>
-                          <tr>
-                            <td>{{ size.Size }}</td>
-                            <td>{{ size.Quantity }}</td>
-                          </tr>
-                        </ng-template>
-                      </p-table>
-                    </div>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+  <div class="flex justify-center items-center w-full">
+    <p-table
+      #dt
+      [value]="products"
+      [rows]="10"
+      [paginator]="true"
+      [tableStyle]="{'min-width': '50rem'}"
+      dataKey="Id"
+      currentPageReportTemplate="Zobrazovanie {first} do {last} z {totalRecords} produktov!"
+      [showCurrentPageReport]="true"
+      [rowHover]="true"
+      [(selection)]="selectedProducts"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 2rem"></th>
+          <th>Tagy</th>
+          <th>Meno produktu</th>
+          <th>Cena</th>
+          <th>Vytvorené</th>
+          <th>Aktualizované</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-product>
+        <tr>
+          <td>
+            <a href="javascript:void(0)" (click)="toggleProduct(product)">
+              <i class="pi" [ngClass]="expandedProducts[product.Id] ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+            </a>
+          </td>
+          <td>{{ product.TagName }}</td>
+          <td>{{ product.Name }}</td>
+          <td>{{ product.Price | currency }}</td>
+          <td>{{ product.CreatedAt | date:'short' }}</td>
+          <td>{{ product.UpdatedAt | date:'short' }}</td>
+        </tr>
+        <tr *ngIf="expandedProducts[product.Id]">
+          <td colspan="5" class="p-0">
+            <div class="p-ml-4 flex gap-3 pt-3">
+              <div class="flex flex-column gap-4">
+                <p-button label="Pridať farbu" severity="help" icon="pi pi-plus" class="p-mb-2" (onClick)="openNewColor(product)"></p-button>
+                <p-button label="Upraviť produkt" severity="warning" icon="pi pi-plus" class="p-mb-2" (onClick)="openEditProduct(product)"></p-button>
+                <p-button label="Odstraniť produkt" severity="danger" icon="pi pi-trash" class="p-mb-2" (onClick)="deleteSelectedProduct(product)"></p-button>
+              </div>
+              <p-table [value]="product.Colors" dataKey="Name">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 3rem"></th>
+                    <th></th>
+                    <th>Meno farby</th>
+                    <th>Akcie</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-color>
+                  <tr>
+                    <td>
+                      <a href="javascript:void(0)" (click)="toggleColor(product, color)">
+                        <i class="pi" [ngClass]="isColorExpanded(product, color) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                      </a>
+                    </td>
+                    <td>
+                      <img [src]="environment.apiUrl + color.PathOfFile" alt="Obrazok" width="50"/>
+                    </td>
+                    <td>{{ color.Name }}</td>
+                    <td>
+                      <div class="flex gap-3">
+                        <p-button icon="pi pi-pencil" class="p-button-rounded p-button-text" (click)="openEditColor(product, color)"></p-button>
+                        <p-button icon="pi pi-trash" class="p-button-rounded p-button-text" severity="danger" (click)="deleteColor(product, color)"></p-button>
+                        <p-button label="Pridať veľkosť" severity="info" icon="pi pi-plus" class="p-button-sm" (click)="openNewSize(product, color)"></p-button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="isColorExpanded(product, color)">
+                    <td colspan="3" class="p-0">
+                      <div class="p-ml-4">
+                        <p-table [value]="color.Sizes">
+                          <ng-template pTemplate="header">
+                            <tr>
+                              <th>Veľkosť</th>
+                              <th>Množstvo</th>
+                              <th>Akcie</th>
+                            </tr>
+                          </ng-template>
+                          <ng-template pTemplate="body" let-size>
+                            <tr>
+                              <td>{{ size.Size }}</td>
+                              <td>{{ size.Quantity }}</td>
+                              <td>
+                                <div class="flex gap-4">
+                                  <p-button icon="pi pi-pencil" class="p-button-rounded p-button-text" (click)="openEditSize(product, color, size)"></p-button>
+                                  <p-button icon="pi pi-trash" class="p-button-rounded p-button-text" severity="danger" (click)="deleteSize(product, color, size)"></p-button>
+                                </div>
+                              </td>
+                            </tr>
+                          </ng-template>
+                        </p-table>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center">Žiadne produkty na zobrazenie</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog header="{{ colorDialogHeader }}" [(visible)]="colorDialog" [modal]="true"
+            [style]="{width: '30vw'}" [closable]="false">
+    <div class="p-fluid">
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="colorName" type="text" pInputText [(ngModel)]="currentColor.Name" style="width:300px; height:2.5rem;">
+        <label for="colorName">Názov farby</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="colorImage" type="file" accept="image/*" (change)="onImageSelected($event)" style="width:300px;">
+        <label for="colorImage">Obrázok</label>
+      </span>
+      </div>
+    </div>
+    <p-footer>
+      <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
+                (click)="hideColorDialog()"></p-button>
+      <p-button label="Submit" icon="pi pi-check" (click)="saveColor()"></p-button>
+    </p-footer>
+  </p-dialog>
+
+
+  <p-dialog header="{{ sizeDialogHeader }}" [(visible)]="sizeDialog" [modal]="true"
+            [style]="{width: '30vw'}" [closable]="false">
+    <div class="p-fluid">
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="sizeValue" type="text" pInputText [(ngModel)]="currentSize.Size" style="width:300px; height:2.5rem;">
+          <label for="sizeValue">Veľkosť</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="quantity" type="number" pInputText [(ngModel)]="currentSize.Quantity" style="width:300px; height:2.5rem;">
+          <label for="quantity">Množstvo</label>
+        </span>
+      </div>
+    </div>
+    <p-footer>
+      <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
+                (click)="hideSizeDialog()"></p-button>
+      <p-button label="Submit" icon="pi pi-check" (click)="saveSize()"></p-button>
+    </p-footer>
+  </p-dialog>
+
+  <p-dialog header="Uprav Product" [(visible)]="productDialog" [modal]="true"
+            [style]="{width: '30vw', height:'40vw'}" [closable]="false">
+    <div class="p-fluid flex flex-column gap-4">
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="name" type="text" pInputText [(ngModel)]="currentProduct.Name" style="width:300px; height:2.5rem;">
+        <label for="name">Názov produktu</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+        <textarea id="description" pInputTextarea [(ngModel)]="currentProduct.Description" style="width:300px; height:5rem;"></textarea>
+        <label for="description">Popis produktu</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+       <p-dropdown
+         [options]="tags"
+         optionLabel="Name"
+         placeholder="Vyber tag"
+         [(ngModel)]="selectedTag"
+         (onChange)="onTagChange($event)"
+         styleClass="w-full"
+       >
+       </p-dropdown>
+        <label for="tag">Tag</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="price" type="number" pInputText [(ngModel)]="currentProduct.Price" style="width:300px; height:2.5rem;">
+        <label for="price">Cena</label>
+      </span>
+      </div>
+    </div>
+    <p-footer>
+      <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
+                (click)="hideProductDialog()"></p-button>
+      <p-button label="Save" icon="pi pi-check" (click)="saveProduct()"></p-button>
+    </p-footer>
+  </p-dialog>
+
+
+  <p-dialog header="Vytvor produkt" [(visible)]="createProductDialog" [modal]="true"
+            [style]="{width: '30vw', height:'40vw'}" [closable]="false">
+    <div class="p-fluid flex flex-column gap-4">
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="newname" type="text" pInputText [(ngModel)]="newProduct.Name" style="width:300px; height:2.5rem;">
+        <label for="name">Názov produktu</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+        <textarea id="newdescription" pInputTextarea [(ngModel)]="newProduct.Description" style="width:300px; height:5rem;"></textarea>
+        <label for="description">Popis produktu</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+       <p-dropdown
+         [options]="tags"
+         optionLabel="Name"
+         placeholder="Vyber tag"
+         [(ngModel)]="selectedNewTag"
+         (onChange)="onTagCreate($event)"
+         styleClass="w-full"
+       >
+       </p-dropdown>
+        <label for="tag">Tag</label>
+      </span>
+      </div>
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="newprice" type="number" pInputText [(ngModel)]="newProduct.Price" style="width:300px; height:2.5rem;">
+        <label for="price">Cena</label>
+      </span>
+      </div>
+    </div>
+    <p-footer>
+      <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
+                (click)="hideCreateProductDialog()"></p-button>
+      <p-button label="Save" icon="pi pi-check" (click)="createProduct()"></p-button>
+    </p-footer>
+  </p-dialog>
 </div>

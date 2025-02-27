@@ -19,6 +19,11 @@ import {
 } from "./Components/admin-page/admin-important-informations/admin-important-informations.component";
 import {AllProductsComponent} from "./Components/admin-page/products/all-products/all-products.component";
 import {AllDesignsComponent} from "./Components/admin-page/designs/all-designs/all-designs.component";
+import {
+  AllPairedDesignsComponent
+} from "./Components/admin-page/paired-designs/all-paired-designs/all-paired-designs.component";
+import {AllGalleryComponent} from "./Components/admin-page/gallery/all-gallery/all-gallery.component";
+import {AllCustomizationsComponent} from "./Components/admin-page/all-customizations/all-customizations.component";
 
 export const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -50,7 +55,10 @@ export const routes: Routes = [
       { path: "", component: AdminImportantInformationsComponent},
       { path: "tags", component: AllTagsComponent},
       { path: "products", component: AllProductsComponent},
-      { path: "designs", component: AllDesignsComponent}
+      { path: "designs", component: AllDesignsComponent},
+      { path: "paired-designs", component: AllPairedDesignsComponent},
+      { path: "gallery", component: AllGalleryComponent},
+      { path: "customizations", component: AllCustomizationsComponent}
     ]
   }
 ];

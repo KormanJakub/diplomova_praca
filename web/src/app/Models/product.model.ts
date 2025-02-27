@@ -13,6 +13,7 @@ export interface Color {
 export interface Product {
   Id: string;
   TagId: string;
+  TagName: string;
   Name: string;
   Description: string;
   Colors: Color[];

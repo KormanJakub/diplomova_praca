@@ -27,6 +27,9 @@
           <th style="width: 3rem">
             <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
           </th>
+          <th pSortableColumn="PathOfFile" style="min-width:14rem">
+            <p-sortIcon field="PathOfFile"></p-sortIcon>
+          </th>
           <th pSortableColumn="Name" style="min-width:14rem">
             Meno
             <p-sortIcon field="Name"></p-sortIcon>
@@ -52,8 +55,11 @@
           <td style="width: 3rem">
             <p-tableCheckbox [value]="design"></p-tableCheckbox>
           </td>
+          <td>
+            <img [src]="environment.apiUrl + design.PathOfFile" alt="Obrazok" width="50"/>
+          </td>
           <td>{{ design.Name }}</td>
-          <td>{{ design.Price }}</td>
+          <td>{{ design.Price | currency }}</td>
           <td>{{ design.CreatedAt | date:'short' }}</td>
           <td>{{ design.UpdatedAt | date:'short' }}</td>
           <td>
@@ -86,11 +92,17 @@
         <label for="price">Cena</label>
       </span>
       </div>
+      <div class="p-field">
+      <span class="p-float-label">
+        <input id="colorImage" type="file" accept="image/*" (change)="onImageSelected($event)" style="width:300px;">
+        <label for="colorImage">Obrázok</label>
+      </span>
+      </div>
     </div>
     <p-footer>
       <p-button label="Cancel" severity="danger" icon="pi pi-times" class="p-button-text"
                 (onClick)="hideDialog()"></p-button>
-      <p-button label="Submit" icon="pi pi-check" (onClick)="submitDesign()"></p-button>
+      <p-button label="Submit" icon="pi pi-check" (onClick)="saveDesign()"></p-button>
     </p-footer>
   </p-dialog>
 </div>

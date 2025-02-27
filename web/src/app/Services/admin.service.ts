@@ -6,6 +6,8 @@ import {environment} from "../../Environments/environment";
 import {CookieService} from "ngx-cookie-service";
 import {Design} from "../Models/design.model";
 import {Product} from "../Models/product.model";
+import {AllPairedDesignsResponse, PairedDesign} from "../Models/paired-design.model";
+import {NewPairedDesign} from "../Models/new-paired-design.model";
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +19,7 @@ export class AdminService {
     private cookieService: CookieService
   ) { }
 
+  //TAG
   getAllTags(): Observable<Tag[]> {
     const token = this.cookieService.get('uiAppToken');
     const url = `${environment.apiUrl}/admin/tag/getAll`;
@@ -45,6 +48,7 @@ export class AdminService {
     return this.http.request<{ message: string }>('DELETE', url, { body: tags });
   }
 
+  //DESIGN
   getAllDesigns(): Observable<Design[]> {
     const url = `${environment.apiUrl}/admin/design/getAll`;
 
@@ -52,24 +56,66 @@ export class AdminService {
   }
 
   updateDesign(design: Design): Observable<Design> {
-    const url = `${environment.apiUrl}/admin/tag/one-update`;
+    const url = `${environment.apiUrl}/admin/design/update`;
     return this.http.put<Design>(url, design);
   }
 
   createDesign(design: Design): Observable<Design> {
-    const url = `${environment.apiUrl}/admin/tag/create`;
+    const url = `${environment.apiUrl}/admin/design/create`;
     return this.http.post<Design>(url, design);
   }
 
   deleteDesign(designs: Design[]): Observable<{ message: string }> {
-    const url = `${environment.apiUrl}/admin/tag/remove`;
+    const url = `${environment.apiUrl}/admin/design/remove`;
 
     return this.http.request<{ message: string }>('DELETE', url, { body: designs });
   }
 
-  getAllProducts(): Observable<Product[]> {
-    const url = `${environment.apiUrl}/admin/product/getAll`;
+  getSpecificDesign(ids: string[]): Observable<string[]> {
+    return this.http.request<string[]>('GET', `${environment.apiUrl}/admin/design/getSpecific`, {body: ids});
+  }
 
-    return this.http.get<Product[]>(url);
+  //PRODUCT
+  getAllProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(`${environment.apiUrl}/admin/product/getAll`);
+  }
+
+  getProductsByTag(tagId: string): Observable<Product[]> {
+    return this.http.get<Product[]>(`${environment.apiUrl}/admin/product/by/${tagId}`);
+  }
+
+  createProduct(product: Product, tagId: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/product/create/${tagId}`, product);
+  }
+
+  updateProduct(product: Product): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/admin/product/update`, product);
+  }
+
+  removeProduct(productId: string): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/admin/product/remove/${productId}`);
+  }
+
+  removeColorForSpecificId(productId: string, color: string): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/admin/product/remove-color/${productId}/${color}`);
+  }
+
+  removeSizeForColorOfSpecificId(productId: string, color: string, size: string): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/admin/product/remove-size/${productId}/${color}/${size}`);
+  }
+
+  //PAIRED-DESIGN
+  getAllPairedDesigns(): Observable<AllPairedDesignsResponse> {
+    return this.http.get<AllPairedDesignsResponse>(`${environment.apiUrl}/admin/design/all-paired-designs`);
+  }
+
+  createPairedDesigns(newPair: NewPairedDesign): Observable<PairedDesign> {
+    return this.http.post<PairedDesign>(`${environment.apiUrl}/admin/design/pair-two-designs`, newPair);
+  }
+
+  deletePairedDesigns(ids: string[]): Observable<any> {
+    return this.http.request<any>('delete', `${environment.apiUrl}/admin/design/delete-pair-design`, {
+      body: ids
+    });
   }
 }

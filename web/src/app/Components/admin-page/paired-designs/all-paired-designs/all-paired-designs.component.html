@@ -1,1 +1,153 @@
-<p>all-paired-designs works!</p>
+<div class="card block justify-center items-center mr-8 mt-4">
+  <p-toast></p-toast>
+  <p-toolbar styleClass="mb-1">
+    <ng-template pTemplate="start">
+      <p-button label="Pridať" icon="pi pi-plus" class="mr-2" (onClick)="openNew()"></p-button>
+      <p-button severity="danger" label="Odstraniť" icon="pi pi-trash" outlined
+                (onClick)="deleteSelectedPairedDesigns()"
+                [disabled]="!selectedPairedDesign || !selectedPairedDesign.length"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <div class="flex justify-center items-center w-full">
+    <p-table
+      #dt
+      [value]="pairedDesignsWithDesigns"
+      [rows]="10"
+      [paginator]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      [(selection)]="selectedPairedDesign"
+      [rowHover]="true"
+      dataKey="Id"
+      currentPageReportTemplate="Zobrazovanie {first} do {last} z {totalRecords} dizajnov!"
+      [showCurrentPageReport]="true"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <!-- Checkbox -->
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
+          <!-- Názov páru -->
+          <th pSortableColumn="Name" style="min-width:14rem">
+            Názov
+            <p-sortIcon field="Name"></p-sortIcon>
+          </th>
+          <!-- Prvý obrázok -->
+          <th pSortableColumn="Price" style="min-width:6rem">
+            Prvý obrázok
+            <p-sortIcon field="Price"></p-sortIcon>
+          </th>
+          <!-- Prvý dizajn (meno) -->
+          <th pSortableColumn="Price" style="min-width:6rem">
+            Prvý dizajn
+            <p-sortIcon field="Price"></p-sortIcon>
+          </th>
+          <!-- Druhý obrázok -->
+          <th pSortableColumn="Price" style="min-width:6rem">
+            Druhý obrázok
+            <p-sortIcon field="Price"></p-sortIcon>
+          </th>
+          <!-- Druhý dizajn (meno) -->
+          <th pSortableColumn="CreatedAt" style="min-width: 12rem">
+            Druhý dizajn
+            <p-sortIcon field="CreatedAt"></p-sortIcon>
+          </th>
+          <!-- Akcie -->
+          <th style="min-width:8rem">Akcie</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-pairedDesign>
+        <tr>
+          <!-- Checkbox -->
+          <td style="width: 3rem">
+            <p-tableCheckbox [value]="pairedDesign"></p-tableCheckbox>
+          </td>
+          <!-- Názov páru -->
+          <td>{{ pairedDesign.Name }}</td>
+          <!-- Prvý obrázok -->
+          <td>
+            <img *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 0"
+                 [src]="environment.apiUrl + pairedDesign.Designs[0].PathOfFile"
+                 [alt]="pairedDesign.Designs[0].Name"
+                 width="50"/>
+          </td>
+          <!-- Prvý dizajn (meno) -->
+          <td>
+            <span *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 0">
+              {{ pairedDesign.Designs[0].Name }}
+            </span>
+          </td>
+          <!-- Druhý obrázok -->
+          <td>
+            <img *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 1"
+                 [src]="environment.apiUrl + pairedDesign.Designs[1].PathOfFile"
+                 [alt]="pairedDesign.Designs[1].Name"
+                 width="50"/>
+          </td>
+          <!-- Druhý dizajn (meno) -->
+          <td>
+            <span *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 1">
+              {{ pairedDesign.Designs[1].Name }}
+            </span>
+          </td>
+          <!-- Akcie -->
+          <td>
+            <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
+                      (onClick)="editDesign(pairedDesign)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">Žiadne tagy na zobrazenie</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog header="Nový párový dizajn" [(visible)]="newDialog" [modal]="true" [style]="{width: '40vw', height: '40vw'}" [closable]="false">
+    <div class="p-fluid">
+      <div class="p-field">
+        <label for="newPairedName">Meno páru</label>
+        <input id="newPairedName" type="text" pInputText [(ngModel)]="newPairedDesign.Name"/>
+      </div>
+      <div class="p-field">
+        <label for="newDesign1">Prvý dizajn</label>
+        <p-dropdown id="newDesign1"
+                    [options]="availableDesigns"
+                    [(ngModel)]="newPairedDesign.Designs[0]"
+                    optionLabel="Name"
+                    [filter]="true">
+          <ng-template let-design pTemplate="item">
+            <div class="p-d-flex p-ai-center">
+              <img [src]="environment.apiUrl + design.PathOfFile" alt="{{ design.Name }}" width="30" style="margin-right: .5rem;">
+              <span>{{ design.Name }}</span>
+            </div>
+          </ng-template>
+        </p-dropdown>
+      </div>
+      <div class="p-field">
+        <label for="newDesign2">Druhý dizajn</label>
+        <p-dropdown id="newDesign2"
+                    [options]="availableDesigns"
+                    [(ngModel)]="newPairedDesign.Designs[1]"
+                    optionLabel="Name"
+                    [filter]="true">
+          <ng-template let-design pTemplate="item">
+            <div class="p-d-flex p-ai-center">
+              <img [src]="environment.apiUrl + design.PathOfFile" alt="{{ design.Name }}" width="30" style="margin-right: .5rem;">
+              <span>{{ design.Name }}</span>
+            </div>
+          </ng-template>
+        </p-dropdown>
+      </div>
+    </div>
+    <p-footer>
+      <p-button label="Cancel" icon="pi pi-times" (onClick)="closeNewDialog()"></p-button>
+      <p-button label="Create" icon="pi pi-check" (onClick)="saveNew()"></p-button>
+    </p-footer>
+  </p-dialog>
+</div>

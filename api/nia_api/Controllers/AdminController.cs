@@ -7,15 +7,6 @@ using Tag = nia_api.Models.Tag;
 
 namespace nia_api.Controllers;
 
-/*
- * TODO:
- * Spraviť image upload
- * Admin vie poslať Newsletter cez email
- * Instagram, FB, Twitter jednoduchšie zasielanie
- * Stornovať objednávku
- * Môže vidieť všetky customization
- */
-
 [ApiController]
 [Route("admin")]
 public class AdminController : ControllerBase
@@ -85,7 +76,18 @@ public class AdminController : ControllerBase
         if (dbPairedDesigns.Count == 0 || dbPairedDesigns == null)
             return NotFound(new { error = "No paired designs!" });
 
-        return Ok(dbPairedDesigns);
+        var designIds = dbPairedDesigns
+            .SelectMany(pd => pd.DesignIds)
+            .Distinct()
+            .ToList();
+
+        var designs = await _designs.Find(d => designIds.Contains(d.Id)).ToListAsync();
+
+        return Ok(new
+        {
+            PairedDesign = dbPairedDesigns,
+            Design = designs
+        });
     }
 
     [HttpGet("design/paired-design/designs-in-pair/{pairedDesignId}")]
@@ -198,6 +200,19 @@ public class AdminController : ControllerBase
         
         return Ok(new { message = $"{result.DeletedCount} tags were successfully deleted!"});
     }
+    
+    [HttpDelete("design/remove")]
+    public async Task<IActionResult> RemoveTags([FromBody] List<Design> designs)
+    {
+        if (designs == null || !designs.Any())
+            return BadRequest(new { message = "No tags provided for deletion." });
+        
+        var designIds = designs.Select(ds => ds.Id).ToList();
+
+        var result = await _designs.DeleteManyAsync(d => designIds.Contains(d.Id));
+        
+        return Ok(new { message = $"{result.DeletedCount} designs were successfully deleted!"});
+    }
 
     [HttpDelete("tag/remove-with-all-products/{tagId}")]
     public async Task<IActionResult> RemoveTagWithHisProducts(string tagId)
@@ -220,13 +235,14 @@ public class AdminController : ControllerBase
         if (tagId == null)
             return BadRequest(new { error = "Tag ID is empty!" });
 
-        var dbTags = _tags.Find(t => t.Id == Guid.Parse(tagId)).FirstOrDefaultAsync();
+        var dbTags = await _tags.Find(t => t.Id == Guid.Parse(tagId)).FirstOrDefaultAsync();
 
         if (dbTags == null)
             return BadRequest(new { error = "No TAG founded!" });
 
         product.Id = Guid.NewGuid();
         product.TagId = Guid.Parse(tagId);
+        product.TagName = dbTags.Name;
         product.CreatedAt = LocalTimeService.LocalTime();
 
         await _products.InsertOneAsync(product);
@@ -239,6 +255,30 @@ public class AdminController : ControllerBase
     {
         if (product == null)
             return BadRequest(new { error = "Product is null!" });
+
+        var dbProduct = await _products.Find(p => p.Id == product.Id).FirstOrDefaultAsync();
+        
+        if (dbProduct == null)
+            return NotFound(new { error = "Product not found!" });
+
+        if (dbProduct.Colors.Count == 0 || dbProduct.Colors == null)
+        {
+            foreach (var color in product.Colors)
+            {
+                var defaultColors = new List<Colors>
+                {
+                    new Colors
+                    {
+                        Name = color.Name,
+                        FileId = color.FileId,
+                        PathOfFile = color.PathOfFile,
+                        Sizes = null
+                    }
+                };
+                
+                product.Colors = defaultColors;
+            }
+        }
 
         var filterProduct = Builders<Product>.Filter.Eq(p => p.Id, product.Id);
         var resultProduct = await _products.ReplaceOneAsync(filterProduct, product);
@@ -311,14 +351,14 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("design/create")]
-    public async Task<IActionResult> CreateDesign(Design design)
+    public async Task<IActionResult> CreateDesign([FromBody] Design design)
     {
         if (design == null)
             return BadRequest(new {error = "Design is empty!"});
 
         var dbDesign = _designs.Find(d => d.Name == design.Name).FirstOrDefaultAsync();
 
-        if (dbDesign != null)
+        if (dbDesign == null)
             return BadRequest(new { error = "Name of design already exists!"});
 
         design.Id = Guid.NewGuid();
@@ -423,6 +463,18 @@ public class AdminController : ControllerBase
 
         return Ok(new { message = "Pair successful removed!" });
     }
+    
+    [HttpDelete("design/delete-pair-design")]
+    public async Task<IActionResult> RemovePairDesign([FromBody] List<string> pairedDesignIds)
+    {
+        if (pairedDesignIds == null || !pairedDesignIds.Any())
+            return BadRequest(new { message = "No pairedDesign IDs provided for deletion." });
+    
+        var result = await _pairedDesigns.DeleteManyAsync(pd => pairedDesignIds.Contains(pd.Id.ToString()));
+    
+        return Ok(new { message = $"{result.DeletedCount} paired designs were successfully deleted!" });
+    }
+
     
     [HttpDelete("design/delete-one-pair/{pairDesignId}/{designId}")]
     public async Task<IActionResult> RemoveOnePairDesign(string pairDesignId, string designId)

@@ -86,10 +86,7 @@ export class LeftNavigateComponent implements OnInit{
             {
               label: 'Všetky',
               icon: 'pi pi-search',
-            },
-            {
-              label: 'Pridať',
-              icon: 'pi pi-plus',
+              routerLink: "/admin/paired-designs"
             }
           ]
         },
@@ -99,11 +96,8 @@ export class LeftNavigateComponent implements OnInit{
             {
               label: 'Všetky',
               icon: 'pi pi-search',
+              routerLink: "/admin/gallery"
             },
-            {
-              label: 'Pridať',
-              icon: 'pi pi-plus',
-            }
           ]
         },
         {
@@ -112,6 +106,7 @@ export class LeftNavigateComponent implements OnInit{
             {
               label: 'Všetky',
               icon: 'pi pi-search',
+              routerLink: "/admin/customizations"
             }
           ]
         },

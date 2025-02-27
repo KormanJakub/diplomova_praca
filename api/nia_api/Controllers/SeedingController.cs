@@ -65,6 +65,7 @@ public class SeedingController : ControllerBase
             Id = Guid.Parse("924966f0-bf03-4ac4-8dbe-001a9d0593ef"),
             Name = "18500B HEAVY BLEND™ YOUTH hooded mikina",
             TagId = Guid.Parse("0d3a5093-9125-4c23-bee8-e9d97052cb5f"),
+            TagName = "Mikiny s kapucňami",
             Description = "279 g/m² (White: 265 g/m²), 50% bavlan, 50% polyester",
             Price = 11.95M,
             Colors = new List<Colors>
@@ -115,6 +116,7 @@ public class SeedingController : ControllerBase
             Id = Guid.Parse("38e15598-8148-4381-8aee-c311ce61ed2f"),
             Name = "18000 HEAVY BLEND™ ADULT crewneck mikina",
             TagId = Guid.Parse("82b30c6b-ffe3-4a62-a7f4-2d9587cc44f0"),
+            TagName = "Mikiny bez kapucní",
             Description = "270 g/m² (Biele: 255 g/m²), 50% bavlan, 50% polyester",
             Price = 12.80M,
             Colors = new List<Colors>
@@ -150,6 +152,7 @@ public class SeedingController : ControllerBase
             Id = Guid.Parse("47c7cb92-1d66-4078-9220-0fa55086add3"),
             Name = "2000 ULTRA COTTON™ ADULT tričko",
             TagId = Guid.Parse("c9415da6-10b3-4b97-ae41-9b92e63a05b3"),
+            TagName = "Tričká",
             Description = "279 g/m² (White: 265 g/m²), 100% bavlna (Ash: 99% bavlna, 1% polyester; Sport Grey: 90% bavlna, 10% polyester)\n",
             Price = 4.90M,
             Colors = new List<Colors>
@@ -178,6 +181,7 @@ public class SeedingController : ControllerBase
             Id = Guid.Parse("baa6bae4-ab93-4ec5-8cb5-8eb39c51ff02"),
             Name = "18000B HEAVY BLEND™ YOUTH crewneck mikina",
             TagId = Guid.Parse("82b30c6b-ffe3-4a62-a7f4-2d9587cc44f0"),
+            TagName = "Mikiny bez kapucní",
             Description = "270 g/m² (Biele: 255 g/m²), 50% bavlan, 50% polyester, priadza Open-End",
             Price = 7.37M,
             Colors = new List<Colors>
@@ -200,14 +204,10 @@ public class SeedingController : ControllerBase
             Id = Guid.Parse("1ecb389a-4399-472e-a348-9811b4e9cc23"),
             Name = "18500B HEAVY BLEND™ YOUTH hooded mikina",
             TagId = Guid.Parse("0d3a5093-9125-4c23-bee8-e9d97052cb5f"),
+            TagName = "Mikiny s kapucňami",
             Description = "279 g/m² (White: 265 g/m²), 50% bavlan, 50% polyester, farby heather sport: 60% polyester, 40% bavlna",
             Price = 11.95M,
-            Colors = new List<Colors>
-            {
-                new Colors
-                {
-                }
-            },
+            Colors = new List<Colors>(),
             CreatedAt = LocalTimeService.LocalTime()
         };
 

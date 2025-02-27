@@ -46,7 +46,7 @@ public class FileController : ControllerBase
             
             await _files.InsertOneAsync(newFile);
 
-            return Ok(new { id = newFile.Id });
+            return Ok(new { id = newFile.Id, path = newFile.Path });
         }
         catch (Exception e)
         {
@@ -79,6 +79,19 @@ public class FileController : ControllerBase
         {
             return StatusCode(500, "Internal server error: " + e);
         }
+    }
+    
+    [HttpDelete("move")]
+    public async Task<IActionResult> RemoveTags([FromBody] List<File> files)
+    {
+        if (files == null || !files.Any())
+            return BadRequest(new { message = "No files provided for deletion." });
+        
+        var filesId = files.Select(ds => ds.Id).ToList();
+
+        var result = await _files.DeleteManyAsync(d => filesId.Contains(d.Id));
+        
+        return Ok(new { message = $"{result.DeletedCount} designs were successfully deleted!"});
     }
 
     [HttpGet("byId/{id}")]
