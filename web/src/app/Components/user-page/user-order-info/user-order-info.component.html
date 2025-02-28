@@ -1,1 +1,68 @@
-<p>user-order-info works!</p>
+<div class="container m-6">
+  <div *ngIf="order; else loading">
+    <div class="text-center mb-4">
+      <h2 class="font-bold" style="font-size: 2rem;">Objednávka č. {{order.Id}}</h2>
+    </div>
+
+    <div class="shadow-3 p-4 mb-4">
+      <h3 class="text-xl mb-2">Fakturačné informácie</h3>
+      <div class="grid mb-2">
+        <div class="col-12 md-6">
+          <p><strong>Faktúra ID:</strong> {{ order.Id }}</p>
+          <p><strong>Kupujúci:</strong> {{ user.FirstName }} {{ user.LastName }}</p>
+          <p><strong>Email:</strong> {{ user.Email }}</p>
+          <p><strong>Telefonné číslo:</strong> {{ user.PhoneNumber }}</p>
+          <p><strong>Adressa:</strong> {{ user.Address }}</p>
+          <p><strong>ZIP:</strong> {{ user.Zip }}</p>
+        </div>
+        <div class="col-12 md-6">
+          <p><strong>Suma:</strong> {{ order.TotalPrice | currency:'€' }}</p>
+          <p><strong>Status:</strong> {{ getManualStatusLabel(order.StatusOrder) }}</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="col-12 md-6">
+          <p><strong>Vytvorené:</strong> {{ order.CreatedAt | date:'medium' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="shadow-3 p-4 mb-4">
+      <h3 class="text-xl mb-2">Detaily objednávky:</h3>
+      <p-table [value]="customizations" class="datatable-striped datatable-hover">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Obrázok Dizajn</th>
+            <th>Dizajn</th>
+            <th>Obrázok produktu</th>
+            <th>Produkt</th>
+            <th>Farba</th>
+            <th>Veľkosť</th>
+            <th>Popisok</th>
+            <th>Cena</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-custom>
+          <tr>
+            <td>
+              <img [src]="getDesignPath(custom.DesignId)" alt="{{ getDesignName(custom.DesignId) }}" style="max-width: 60px;">
+            </td>
+            <td>{{ getDesignName(custom.DesignId) }}</td>
+            <td>
+              <img [src]="getProductColorPath(custom.ProductId, custom.ProductColor)" alt="{{ getProductName(custom.ProductId) }}" style="max-width: 60px;">
+            </td>
+            <td>{{ getProductName(custom.ProductId) }}</td>
+            <td>{{ custom.ProductColor }}</td>
+            <td>{{ custom.ProductSize }}</td>
+            <td>{{ custom.UserDescription }}</td>
+            <td>{{ custom.Price | currency:'€' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <ng-template #loading>
+    <p class="text-center">Loading order information...</p>
+  </ng-template>
+</div>

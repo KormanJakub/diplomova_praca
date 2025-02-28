@@ -123,18 +123,18 @@
 
   <p-dialog header="{{ colorDialogHeader }}" [(visible)]="colorDialog" [modal]="true"
             [style]="{width: '30vw'}" [closable]="false">
-    <div class="p-fluid">
+    <div class="p-fluid flex flex-column gap-4">
       <div class="p-field">
       <span class="p-float-label">
         <input id="colorName" type="text" pInputText [(ngModel)]="currentColor.Name" style="width:300px; height:2.5rem;">
         <label for="colorName">Názov farby</label>
       </span>
       </div>
-      <div class="p-field">
-      <span class="p-float-label">
-        <input id="colorImage" type="file" accept="image/*" (change)="onImageSelected($event)" style="width:300px;">
-        <label for="colorImage">Obrázok</label>
-      </span>
+      <div class="field grid ai-center">
+        <label for="colorImage" class="col-fixed" style="width: 150px; font-weight: bold;">Obrázok</label>
+        <div class="p-col">
+          <input id="colorImage" type="file" accept="image/*" (change)="onImageSelected($event)" class="p-inputtext p-component" style="width: 100%;">
+        </div>
       </div>
     </div>
     <p-footer>

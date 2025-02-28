@@ -24,6 +24,12 @@ import {
 } from "./Components/admin-page/paired-designs/all-paired-designs/all-paired-designs.component";
 import {AllGalleryComponent} from "./Components/admin-page/gallery/all-gallery/all-gallery.component";
 import {AllCustomizationsComponent} from "./Components/admin-page/all-customizations/all-customizations.component";
+import {AllOrdersComponent} from "./Components/admin-page/all-orders/all-orders.component";
+import {OrderInformationComponent} from "./Components/admin-page/order-information/order-information.component";
+import {UserHomePageComponent} from "./Components/user-page/user-home-page/user-home-page.component";
+import {UserInformationComponent} from "./Components/user-page/user-information/user-information.component";
+import {UserOrdersComponent} from "./Components/user-page/user-orders/user-orders.component";
+import {UserOrderInfoComponent} from "./Components/user-page/user-order-info/user-order-info.component";
 
 export const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -58,7 +64,19 @@ export const routes: Routes = [
       { path: "designs", component: AllDesignsComponent},
       { path: "paired-designs", component: AllPairedDesignsComponent},
       { path: "gallery", component: AllGalleryComponent},
-      { path: "customizations", component: AllCustomizationsComponent}
+      { path: "customizations", component: AllCustomizationsComponent},
+      { path: "orders", component: AllOrdersComponent},
+      {path: "orders/:id", component: OrderInformationComponent}
+    ]
+  },
+  {
+    path: "user",
+    component: UserHomePageComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {path:"", component: UserInformationComponent},
+      {path:"my-orders", component: UserOrdersComponent},
+      {path:"my-order/:id", component: UserOrderInfoComponent}
     ]
   }
 ];

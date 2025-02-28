@@ -25,14 +25,10 @@ builder.Services.AddAuthentication(x =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8
-                .GetBytes(builder.Configuration["JwtConfig:Key"])
+            Encoding.UTF8.GetBytes(builder.Configuration["JwtConfig:Key"])
         ),
-        
         ValidateIssuer = false,
-        
         ValidateAudience = false,
-        
         ClockSkew = TimeSpan.FromMinutes(5),
     };
 
@@ -52,7 +48,7 @@ builder.Services.AddAuthentication(x =>
         },
         OnChallenge = context =>
         {
-            context.HandleResponse(); 
+            context.HandleResponse();
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
             var result = JsonSerializer.Serialize(new { error = "User is not logged in" });
@@ -61,25 +57,25 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-var corsPolicy = "AllowAll";
-
+var corsPolicy = "WafflWeb";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicy, policy =>
     {
         policy.WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.Configure<NiaDbSettings>(builder.Configuration.GetSection("NiaDbSettings"));
 builder.Services.AddControllers()
-    .AddJsonOptions(
-        options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddSingleton<NiaDbContext>();
@@ -93,7 +89,6 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -102,23 +97,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseStaticFiles(); 
-
+app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseCors(corsPolicy);
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<UserMiddleware>();
 
-//app.UseMiddleware<AdminMiddleware>();
-
-app.UseCors(corsPolicy);
-
 app.MapControllers();
-
 app.MapGet("/", () => "Health endpoint");
 
 app.Run();

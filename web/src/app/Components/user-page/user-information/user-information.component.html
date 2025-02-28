@@ -1,1 +1,65 @@
-<p>user-information works!</p>
+<div class="container mx-auto p-6">
+  <!-- Informácie o používateľovi -->
+  <div class="shadow-3 p-4 mb-4">
+    <h3 class="text-xl mb-2">Informácie uživateľa</h3>
+    <div class="grid mb-2">
+      <div class="col-12 md:col-6">
+        <p><strong>Meno a Priezvisko:</strong> {{ user.FirstName }} {{ user.LastName }}</p>
+        <p><strong>Email:</strong> {{ user.Email }}</p>
+        <p><strong>Telefonné číslo:</strong> {{ user.PhoneNumber }}</p>
+        <p><strong>Adresa:</strong> {{ user.Address }}</p>
+        <p><strong>ZIP:</strong> {{ user.Zip }}</p>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-center mt-4">
+      <p-button pButton type="button" severity="contrast" label="Upraviť profil" icon="pi pi-pencil" class="p-button-info p-button-sm" (click)="showUserDialog()"></p-button>
+      <p-button pButton type="button" severity="danger" label="Vymazať profil" icon="pi pi-trash" class="p-button-danger p-button-sm" (click)="removeUser()"></p-button>
+    </div>
+  </div>
+
+  <p-dialog header="Upraviť profil" [(visible)]="userDialog" [modal]="true" [style]="{width: '40vw'}" [closable]="false">
+    <div class="flex flex-column gap-5">
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="firstName" type="text" pInputText [(ngModel)]="user.FirstName" style="width: 100%; height: 2.5rem;"/>
+          <label for="firstName">Meno</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="lastName" type="text" pInputText [(ngModel)]="user.LastName" style="width: 100%; height: 2.5rem;"/>
+          <label for="lastName">Priezvisko</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="email" type="email" pInputText [(ngModel)]="user.Email" style="width: 100%; height: 2.5rem;"/>
+          <label for="email">Email</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="phone" type="text" pInputText [(ngModel)]="user.PhoneNumber" style="width: 100%; height: 2.5rem;"/>
+          <label for="phone">Telefónne číslo</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="address" type="text" pInputText [(ngModel)]="user.Address" style="width: 100%; height: 2.5rem;"/>
+          <label for="address">Adresa</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="zip" type="text" pInputText [(ngModel)]="user.Zip" style="width: 100%; height: 2.5rem;"/>
+          <label for="zip">ZIP</label>
+        </span>
+      </div>
+    </div>
+    <p-footer>
+      <p-button label="Vypnúť" severity="danger" icon="pi pi-times" class="p-button-text" (onClick)="hideUserDialog()"></p-button>
+      <p-button label="Potvrdiť" icon="pi pi-check" (onClick)="updateUserProfile()"></p-button>
+    </p-footer>
+  </p-dialog>
+
+</div>

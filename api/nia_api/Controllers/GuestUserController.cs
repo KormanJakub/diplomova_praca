@@ -105,7 +105,7 @@ public class GuestUserController : ControllerBase
     [HttpPost("make-order-without-register")]
     public async Task<IActionResult> MakeOrderWithoutRegister(GuestOrderRequest request)
     {
-        var dbCustomization = await _customizations.Find(c => request.CustomizationsId.Contains(c.Id.ToString())).ToListAsync();
+        var dbCustomization = await _customizations.Find(c => request.CustomizationsId.Contains(c.Id)).ToListAsync();
 
         var totalPrice = dbCustomization.Sum(c => c.Price);
 

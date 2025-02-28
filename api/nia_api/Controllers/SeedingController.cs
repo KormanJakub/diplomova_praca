@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Services;
 using Tag = nia_api.Models.Tag;
@@ -16,6 +17,8 @@ public class SeedingController : ControllerBase
     private readonly IMongoCollection<Tag> _tags;
     private readonly IMongoCollection<PairedDesign> _pairedDesigns;
     private readonly IMongoCollection<Gallery> _gallery;
+    private readonly IMongoCollection<Order> _orders;
+    private readonly IMongoCollection<Customization> _customizations;
     
     public SeedingController(NiaDbContext context)
     {
@@ -24,6 +27,8 @@ public class SeedingController : ControllerBase
         _tags = context.Tags;
         _pairedDesigns = context.PairedDesigns;
         _gallery = context.Gallery;
+        _orders = context.Orders;
+        _customizations = context.Customizations;
     }
     
     [HttpGet("data")]
@@ -34,6 +39,8 @@ public class SeedingController : ControllerBase
         await _pairedDesigns.DeleteManyAsync(FilterDefinition<PairedDesign>.Empty);
         await _tags.DeleteManyAsync(FilterDefinition<Tag>.Empty);
         await _gallery.DeleteManyAsync(FilterDefinition<Gallery>.Empty);
+        await _customizations.DeleteManyAsync(FilterDefinition<Customization>.Empty);
+        await _orders.DeleteManyAsync(FilterDefinition<Order>.Empty);
 
         //TAGY
         var tag1 = new Tag
@@ -218,6 +225,7 @@ public class SeedingController : ControllerBase
         {
             Id = Guid.Parse("72c71225-b5a2-487b-804d-78d4d33bfffc"),
             Name = "Mikey Mouse",
+            PathOfFile = "/Files/mickey.jpg",
             Price = 5M,
             CreatedAt = LocalTimeService.LocalTime()
         };
@@ -226,6 +234,7 @@ public class SeedingController : ControllerBase
         {
             Id = Guid.Parse("8ec40a4c-344f-4700-aad6-33dc3eba4771"),
             Name = "Car 1",
+            PathOfFile = "/Files/car1.png",
             Price = 7M,
             CreatedAt = LocalTimeService.LocalTime()
         };
@@ -234,6 +243,7 @@ public class SeedingController : ControllerBase
         {
             Id = Guid.Parse("c23fd540-bd37-4c16-baf5-7dde0a950cec"),
             Name = "Car 2",
+            PathOfFile = "/Files/car2.png",
             Price = 7M,
             CreatedAt = LocalTimeService.LocalTime()
         };
@@ -241,7 +251,8 @@ public class SeedingController : ControllerBase
         var design4 = new Design
         {
             Id = Guid.Parse("b8a7375a-e0c3-489e-b4c0-1f2a0b4eb9d2"),
-            Name = "Miney Mouse",
+            Name = "Minnie Mouse",
+            PathOfFile = "/Files/minnie.png",
             Price = 5M,
             CreatedAt = LocalTimeService.LocalTime()
         };
@@ -350,6 +361,144 @@ public class SeedingController : ControllerBase
         
         await _gallery.InsertManyAsync(new List<Gallery> { gallery1, gallery2, gallery3, gallery4, 
             gallery5, gallery6, gallery7, gallery8, gallery9 });
+        
+        //CUSTOMIZATIONS
+        var customization1 = new Customization()
+        {
+            Id = Guid.Parse("87d1a5c5-d7a1-49e1-b3d3-6369d634456a"),
+            DesignId = "8ec40a4c-344f-4700-aad6-33dc3eba4771",
+            ProductId = "924966f0-bf03-4ac4-8dbe-001a9d0593ef",
+            ProductColor = "Biela",
+            ProductSize = "S",
+            UserDescription = "Niekde meno Jakub",
+            UserId = "ad3e20f6-bed7-4fcc-b34c-9015221f90f5",
+            Price = 20.95M,
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var customization2 = new Customization()
+        {
+            Id = Guid.Parse("afadbf3a-ebe6-4594-bd6b-8f3be097738d"),
+            DesignId = "8ec40a4c-344f-4700-aad6-33dc3eba4771",
+            ProductId = "baa6bae4-ab93-4ec5-8cb5-8eb39c51ff02",
+            ProductColor = "Modrá royal",
+            ProductSize = "XL",
+            UserDescription = "",
+            UserId = "ad3e20f6-bed7-4fcc-b34c-9015221f90f5",
+            Price = 7M + 11.4M,
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+        
+        var customization3 = new Customization()
+        {
+            Id = Guid.Parse("3e02413f-9186-46ff-9520-1aa3d7b9778d"),
+            DesignId = "c23fd540-bd37-4c16-baf5-7dde0a950cec",
+            ProductId = "38e15598-8148-4381-8aee-c311ce61ed2f",
+            ProductColor = "Biela",
+            ProductSize = "XL",
+            UserDescription = "Meno Peter",
+            UserId = "ad3e20f6-bed7-4fcc-b34c-9015221f90f5",
+            Price = 7M + 12.8M + 2M,
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+
+        await _customizations.InsertManyAsync(
+            new List<Customization> { customization1, customization2, customization3 });
+        
+        //ORDERS
+        var order1 = new Order()
+        {
+            Id = 1,
+            Customizations = new List<Guid>
+            {
+                Guid.Parse("87d1a5c5-d7a1-49e1-b3d3-6369d634456a"),
+                Guid.Parse("afadbf3a-ebe6-4594-bd6b-8f3be097738d"),
+            },
+            TotalPrice = 20.95M + 18.4M, // Súčet cien customizácií
+            UserId = Guid.Parse("83ebe4ec-bac5-44c8-857c-e1384a8970bd"), // Nia Amba
+            StatusOrder = EStatus.PRIJATA,
+            PaymentId = "PAY-12345",
+            PaymentStatus = "Pending",
+            CancellationToken = Guid.NewGuid().ToString(),
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+
+        var order2 = new Order()
+        {
+            Id = 2,
+            Customizations = new List<Guid>
+            {
+                Guid.Parse("3e02413f-9186-46ff-9520-1aa3d7b9778d"),
+            },
+            TotalPrice = 21.8M, // Cena customization
+            UserId = Guid.Parse("92b6b1ef-0648-4640-9a30-a9ba88adda3d"),
+            StatusOrder = EStatus.ZAPLATENA,
+            PaymentId = "PAY-67890",
+            PaymentStatus = "Completed",
+            CancellationToken = Guid.NewGuid().ToString(),
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+
+        var order3 = new Order()
+        {
+            Id = 3,
+            Customizations = new List<Guid>
+            {
+                Guid.Parse("afadbf3a-ebe6-4594-bd6b-8f3be097738d"),
+            },
+            TotalPrice = 18.4M,
+            UserId = Guid.Parse("8e1a2f75-bfdd-4709-8a03-e97713eea7e5"), 
+            StatusOrder = EStatus.VO_VYROBE,
+            PaymentId = "PAY-11111",
+            PaymentStatus = "Processing",
+            CancellationToken = Guid.NewGuid().ToString(),
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+
+        var order4 = new Order()
+        {
+            Id = 4,
+            Customizations = new List<Guid>
+            {
+                Guid.Parse("87d1a5c5-d7a1-49e1-b3d3-6369d634456a"),
+                Guid.Parse("3e02413f-9186-46ff-9520-1aa3d7b9778d"),
+            },
+            TotalPrice = 42.75M, // Súčet cien
+            UserId = Guid.Parse("92b6b1ef-0648-4640-9a30-a9ba88adda3d"), // Nia Amba
+            StatusOrder = EStatus.PRIPRAVENA,
+            PaymentId = "PAY-22222",
+            PaymentStatus = "Paid",
+            CancellationToken = Guid.NewGuid().ToString(),
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+
+        var order5 = new Order()
+        {
+            Id = 5,
+            Customizations = new List<Guid>
+            {
+                Guid.Parse("87d1a5c5-d7a1-49e1-b3d3-6369d634456a")
+            },
+            TotalPrice = 20.95M,
+            UserId = Guid.Parse("8e1a2f75-bfdd-4709-8a03-e97713eea7e5"),
+            StatusOrder = EStatus.POSLANA,
+            PaymentId = "PAY-33333",
+            PaymentStatus = "Shipped",
+            CancellationToken = Guid.NewGuid().ToString(),
+            CreatedAt = LocalTimeService.LocalTime(),
+            UpdatedAt = LocalTimeService.LocalTime()
+        };
+
+        await _orders.InsertManyAsync(
+            new List<Order> { order1, order2, order3, order4, order5 });
+
         
         Console.WriteLine("Database seeded with test data.");
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Amazon.Runtime.Internal.Util;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
@@ -64,15 +65,117 @@ public class UserController : ControllerBase
         return Ok(dbUserCustomization);
     }
 
+    [HttpGet("orders")]
+    public async Task<IActionResult> GetOrders()
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var orders = await _orders.Find(o => o.UserId == userId).ToListAsync();
+
+        var customizations = await _customizations.Find(c => c.UserId == userId.ToString()).ToListAsync();
+
+        var designIds = customizations.Select(c => c.DesignId).Distinct().ToList();
+        var designs = await _designs.Find(d => designIds.Contains(d.Id.ToString())).ToListAsync();
+
+        var productColorMap = customizations
+            .GroupBy(c => c.ProductId)
+            .ToDictionary(
+                g => g.Key, 
+                g => g.Select(c => c.ProductColor).Distinct().ToList()
+            );
+
+        var productIds = productColorMap.Keys.ToList();
+        var products = await _products.Find(p => productIds.Contains(p.Id.ToString())).ToListAsync();
+
+        var filteredProducts = products.Select(p =>
+        {
+            var prodId = p.Id.ToString();
+            if (productColorMap.TryGetValue(prodId, out var requiredColors))
+            {
+                p.Colors = p.Colors.Where(color => requiredColors.Contains(color.Name)).ToList();
+            }
+            return p;
+        }).ToList();
+
+        return Ok(new 
+        {
+            orders,
+            customizations,
+            designs,
+            products = filteredProducts
+        });
+    }
+    
+    [HttpGet("orders/{Id}")]
+    public async Task<IActionResult> GetOrdersById(int Id)
+    {
+        var userId = await _headerReader.GetUserIdAsync(User);
+        if (userId == null)
+            return Unauthorized(new { error = "User ID not found in token!" });
+
+        var dbUser = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+
+        var order = await _orders.Find(o => o.Id == Id).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found" });
+        
+        var customizationIds = order.Customizations;
+        var customizations = await _customizations.Find(c => customizationIds.Contains(c.Id)).ToListAsync();
+
+        var productIds = customizations
+            .Select(c => c.ProductId)
+            .Distinct()
+            .ToList();
+        
+        var products = await _products
+            .Find(p => productIds.Contains(p.Id.ToString()))
+            .ToListAsync();
+
+        var customProductColors = customizations
+            .Select(c => new { ProductId = c.ProductId, Colors = c.ProductColor })
+            .Distinct()
+            .ToList();
+        
+        var filteredProducts = products.Select(p =>
+        {
+            var requestedColors = customProductColors
+                .Where(x => x.ProductId == p.Id.ToString())
+                .Select(x => x.Colors)
+                .Distinct()
+                .ToList();
+            p.Colors = p.Colors.Where(color => requestedColors.Contains(color.Name)).ToList();
+            return p;
+        }).ToList();
+        
+        var designIds = customizations
+            .Select(c => c.DesignId)
+            .Distinct()
+            .ToList();
+        var designGuids = designIds.Select(id => Guid.Parse(id)).ToList();
+        var designs = await _designs.Find(d => designGuids.Contains(d.Id)).ToListAsync();
+
+        return Ok(new 
+        {
+            order,
+            customizations,
+            designs,
+            products = filteredProducts,
+            user = dbUser
+        });
+    }
+
+
     [HttpPost("make-order")]
-    public async Task<IActionResult> MakeOrder(List<string> customizationsIds)
+    public async Task<IActionResult> MakeOrder(List<Guid> customizationsIds)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
 
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var dbCustomization = await _customizations.Find(c => customizationsIds.Contains(c.Id.ToString())).ToListAsync();
+        var dbCustomization = await _customizations.Find(c => customizationsIds.Contains(c.Id)).ToListAsync();
 
         var totalPrice = dbCustomization.Sum(c => c.Price);
 

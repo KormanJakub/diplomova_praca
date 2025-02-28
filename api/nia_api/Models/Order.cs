@@ -8,11 +8,12 @@ namespace nia_api.Models;
 
 public class Order
 {
-    [BsonId(IdGenerator = typeof(AscendingGuidGenerator))]
+    [BsonId(IdGenerator = typeof(NullIdChecker))]
     [BsonElement("_id"), BsonRepresentation(BsonType.Int64)]
     public int Id { get; set; }
-    [BsonElement("customizations")]
-    public List<string> Customizations { get; set; } = new List<string>();
+    [BsonElement("customizations"), BsonRepresentation(BsonType.String)]
+    public List<Guid> Customizations { get; set; } = new List<Guid>();
+
     [BsonElement("totalPrice"), BsonRepresentation(BsonType.Decimal128)]
     public decimal TotalPrice { get; set; }
     [BsonElement("userId"), BsonRepresentation(BsonType.String)]

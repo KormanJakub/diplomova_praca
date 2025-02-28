@@ -24,75 +24,61 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <!-- Checkbox -->
           <th style="width: 3rem">
             <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
           </th>
-          <!-- Názov páru -->
           <th pSortableColumn="Name" style="min-width:14rem">
             Názov
             <p-sortIcon field="Name"></p-sortIcon>
           </th>
-          <!-- Prvý obrázok -->
           <th pSortableColumn="Price" style="min-width:6rem">
             Prvý obrázok
             <p-sortIcon field="Price"></p-sortIcon>
           </th>
-          <!-- Prvý dizajn (meno) -->
           <th pSortableColumn="Price" style="min-width:6rem">
             Prvý dizajn
             <p-sortIcon field="Price"></p-sortIcon>
           </th>
-          <!-- Druhý obrázok -->
           <th pSortableColumn="Price" style="min-width:6rem">
             Druhý obrázok
             <p-sortIcon field="Price"></p-sortIcon>
           </th>
-          <!-- Druhý dizajn (meno) -->
           <th pSortableColumn="CreatedAt" style="min-width: 12rem">
             Druhý dizajn
             <p-sortIcon field="CreatedAt"></p-sortIcon>
           </th>
-          <!-- Akcie -->
           <th style="min-width:8rem">Akcie</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-pairedDesign>
         <tr>
-          <!-- Checkbox -->
           <td style="width: 3rem">
             <p-tableCheckbox [value]="pairedDesign"></p-tableCheckbox>
           </td>
-          <!-- Názov páru -->
           <td>{{ pairedDesign.Name }}</td>
-          <!-- Prvý obrázok -->
           <td>
             <img *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 0"
                  [src]="environment.apiUrl + pairedDesign.Designs[0].PathOfFile"
                  [alt]="pairedDesign.Designs[0].Name"
                  width="50"/>
           </td>
-          <!-- Prvý dizajn (meno) -->
           <td>
             <span *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 0">
               {{ pairedDesign.Designs[0].Name }}
             </span>
           </td>
-          <!-- Druhý obrázok -->
           <td>
             <img *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 1"
                  [src]="environment.apiUrl + pairedDesign.Designs[1].PathOfFile"
                  [alt]="pairedDesign.Designs[1].Name"
                  width="50"/>
           </td>
-          <!-- Druhý dizajn (meno) -->
           <td>
             <span *ngIf="pairedDesign.Designs && pairedDesign.Designs.length > 1">
               {{ pairedDesign.Designs[1].Name }}
             </span>
           </td>
-          <!-- Akcie -->
           <td>
             <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
                       (onClick)="editDesign(pairedDesign)"></p-button>
@@ -109,10 +95,11 @@
   </div>
 
   <p-dialog header="Nový párový dizajn" [(visible)]="newDialog" [modal]="true" [style]="{width: '40vw', height: '40vw'}" [closable]="false">
-    <div class="p-fluid">
-      <div class="p-field">
-        <label for="newPairedName">Meno páru</label>
-        <input id="newPairedName" type="text" pInputText [(ngModel)]="newPairedDesign.Name"/>
+    <div class="p-fluid flex flex-column gap-4">
+      <div class="p-field flex flex-column" style="height: 4rem;">
+        <label for="newPairedName" style="font-size: 1.25rem; margin-bottom: 0.5rem;">Meno páru</label>
+        <input id="newPairedName" type="text" pInputText [(ngModel)]="newPairedDesign.Name"
+               style="height: 2.5rem; font-size: 1.25rem; padding: 0.5rem;"/>
       </div>
       <div class="p-field">
         <label for="newDesign1">Prvý dizajn</label>
@@ -146,8 +133,8 @@
       </div>
     </div>
     <p-footer>
-      <p-button label="Cancel" icon="pi pi-times" (onClick)="closeNewDialog()"></p-button>
-      <p-button label="Create" icon="pi pi-check" (onClick)="saveNew()"></p-button>
+      <p-button label="Cancel" severity="danger" icon="pi pi-times" (onClick)="closeNewDialog()"></p-button>
+      <p-button label="Create" severity="primary" icon="pi pi-check" (onClick)="saveNew()"></p-button>
     </p-footer>
   </p-dialog>
 </div>

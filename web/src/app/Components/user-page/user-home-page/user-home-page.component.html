@@ -1,1 +1,13 @@
-<p>user-home-page works!</p>
+<app-header></app-header>
+<div class="container mt-4" style="min-height: calc(100vh - 200px);">
+  <div class="flex">
+    <div class="col-fixed" style="width: 250px;">
+      <app-user-left-navigate></app-user-left-navigate>
+    </div>
+
+    <div class="col" style="flex: 1; padding-left: 1rem;">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
+<app-footer></app-footer>

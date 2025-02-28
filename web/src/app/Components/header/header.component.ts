@@ -43,7 +43,7 @@ export class HeaderComponent implements OnInit{
   }
 
   routeToUserProfile () {
-    this.router.navigate(['/user/', this.decoded?.UserId]);
+    this.router.navigate(['/user']);
   }
 
   routeToAdminProfile() {

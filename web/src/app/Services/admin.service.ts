@@ -8,6 +8,8 @@ import {Design} from "../Models/design.model";
 import {Product} from "../Models/product.model";
 import {AllPairedDesignsResponse, PairedDesign} from "../Models/paired-design.model";
 import {NewPairedDesign} from "../Models/new-paired-design.model";
+import {Order} from "../Models/order.model";
+import {Customization} from "../Models/customization.model";
 
 @Injectable({
   providedIn: 'root'
@@ -117,5 +119,42 @@ export class AdminService {
     return this.http.request<any>('delete', `${environment.apiUrl}/admin/design/delete-pair-design`, {
       body: ids
     });
+  }
+
+  //ORDERS
+  getAllOrders(): Observable<{ Orders: Order[], Customization: any[] }> {
+    return this.http.get<{ Orders: Order[], Customization: any[] }>(`${environment.apiUrl}/admin/orders`);
+  }
+
+  getOrderInformation(orderId: number): Observable<{
+    order: Order,
+    customizations: Customization[],
+    products: Product[],
+    designs: Design[]}> {
+    return this.http.get<{
+      order: Order,
+      customizations: Customization[],
+      products: Product[],
+      designs: Design[]}>(`${environment.apiUrl}/admin/orders/${orderId}`);
+  }
+
+  increaseOrderStatus(orderId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/admin/orders/increase-status/${orderId}`, {});
+  }
+
+  decreaseOrderStatus(orderId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/admin/orders/decrease-status/${orderId}`, {});
+  }
+
+  cancelOrder(orderId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/admin/orders/cancel/${orderId}`, {});
+  }
+
+  removeOrder(orderId: number): Observable<any> {
+    return this.http.delete(`${environment.apiUrl}/admin/orders/${orderId}`);
+  }
+
+  updateOrder(orderId: number, updatedOrder: Order): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/admin/orders/${orderId}`, updatedOrder);
   }
 }

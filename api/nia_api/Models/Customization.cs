@@ -14,6 +14,10 @@ public class Customization
     public string? DesignId { get; set; }
     [BsonElement("productId") ,BsonRepresentation(BsonType.String)]
     public string? ProductId { get; set; }
+    [BsonElement("productColor") ,BsonRepresentation(BsonType.String)]
+    public string? ProductColor { get; set; }
+    [BsonElement("productSize") ,BsonRepresentation(BsonType.String)]
+    public string? ProductSize { get; set; }
     [BsonElement("userDescription") ,BsonRepresentation(BsonType.String)]
     public string? UserDescription { get; set; }
     [BsonElement("userId") ,BsonRepresentation(BsonType.String)]

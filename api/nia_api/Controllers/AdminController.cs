@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Services;
 using Tag = nia_api.Models.Tag;
@@ -15,6 +16,8 @@ public class AdminController : ControllerBase
     private readonly IMongoCollection<Product> _products;
     private readonly IMongoCollection<Tag> _tags;
     private readonly IMongoCollection<PairedDesign> _pairedDesigns;
+    private readonly IMongoCollection<Customization> _customizations;
+    private readonly IMongoCollection<Order> _orders;
     
     public AdminController(NiaDbContext context)
     {
@@ -22,6 +25,8 @@ public class AdminController : ControllerBase
         _products = context.Products;
         _tags = context.Tags;
         _pairedDesigns = context.PairedDesigns;
+        _customizations = context.Customizations;
+        _orders = context.Orders;
     }
 
     [HttpGet("tag/getAll")]
@@ -497,5 +502,180 @@ public class AdminController : ControllerBase
         }
 
         return BadRequest(new { error = "Any pair removed!" });
+    }
+    
+    //Customizations
+    [HttpGet("customizations")]
+    public async Task<IActionResult> GetAllCustomizations()
+    {
+        var dbCustomizations = await _customizations.Find(_ => true).ToListAsync();
+
+        if (dbCustomizations == null || dbCustomizations.Count == 0)
+            return NotFound(new { error = "No Customizations found!" });
+        
+        var designIds = dbCustomizations
+            .Select(c => c.DesignId)
+            .Distinct()
+            .ToList();
+
+        var designs = await _designs.Find(
+            d => designIds.Contains(d.Id.ToString()))
+            .ToListAsync();
+        
+        var productIds = dbCustomizations
+            .Select(c => c.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _products.Find(
+                p => productIds.Contains(p.Id.ToString()))
+            .ToListAsync();
+
+        return Ok(new
+        {
+            Customization = dbCustomizations,
+            Design = designs,
+            Product = products
+        });
+    }
+    
+    //Orders
+    [HttpGet("orders")]
+    public async Task<IActionResult> GetAllOrders()
+    {
+        var dbOrders = await _orders.Find(_ => true).ToListAsync();
+
+        if (dbOrders.Count == 0 || dbOrders == null)
+            return NotFound(new { error = "No Orders designs!" });
+
+        var customizationIds = dbOrders
+            .SelectMany(o => o.Customizations)
+            .Distinct()
+            .ToList();
+
+        var dbCustomizations = await _customizations
+            .Find(c => customizationIds.Contains(c.Id))
+            .ToListAsync();
+
+        return Ok(new
+        {
+            Orders = dbOrders,
+            Customization = dbCustomizations
+        });
+    }
+    
+    [HttpPost("orders/increase-status/{orderId}")]
+    public async Task<IActionResult> IncreaseOrderStatus(int orderId)
+    {
+        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found!" });
+
+        if (order.StatusOrder < EStatus.ZRUSENA) 
+            order.StatusOrder++;
+
+        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+
+        return Ok(new { message = "Order status increased!", order });
+    }
+    
+    [HttpPost("orders/decrease-status/{orderId}")]
+    public async Task<IActionResult> DecreaseOrderStatus(int orderId)
+    {
+        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found!" });
+
+        if (order.StatusOrder > EStatus.PRIJATA)
+            order.StatusOrder--;
+
+        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+
+        return Ok(new { message = "Order status decreased!", order });
+    }
+
+    [HttpDelete("orders/{orderId}")]
+    public async Task<IActionResult> RemoveOrder(int orderId)
+    {
+        var result = await _orders.DeleteOneAsync(o => o.Id == orderId);
+
+        if (result.DeletedCount == 0)
+            return NotFound(new { error = "Order not found!" });
+
+        return Ok(new { message = "Order deleted successfully!" });
+    }
+
+    [HttpPost("orders/cancel/{orderId}")]
+    public async Task<IActionResult> CancelOrder(int orderId)
+    {
+        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found!" });
+
+        order.StatusOrder = EStatus.ZRUSENA;
+        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+
+        return Ok(new { message = "Order cancelled!", order });
+    }
+    
+    [HttpPut("orders/{orderId}")]
+    public async Task<IActionResult> UpdateOrder(int orderId, [FromBody] Order updatedOrder)
+    {
+        if (updatedOrder == null)
+            return BadRequest(new { error = "Invalid order data!" });
+
+        var existingOrder = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        if (existingOrder == null)
+            return NotFound(new { error = "Order not found!" });
+
+        updatedOrder.Id = orderId;
+        await _orders.ReplaceOneAsync(o => o.Id == orderId, updatedOrder);
+
+        return Ok(new { message = "Order updated!", updatedOrder });
+    }
+    
+    [HttpGet("orders/{orderId}")]
+    public async Task<IActionResult> GetOrderInformation(int orderId)
+    {
+        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found" });
+
+        var customizationIds = order.Customizations;
+        var customizations = await _customizations.Find(c => customizationIds.Contains(c.Id)).ToListAsync();
+
+        var productIds = customizations
+            .Select(c => c.ProductId)
+            .Distinct()
+            .ToList();
+        
+        var products = await _products
+            .Find(p => productIds.Contains(p.Id.ToString()))
+            .ToListAsync();
+
+        var customProductColors = customizations
+            .Select(c => new { ProductId = c.ProductId, Colors = c.ProductColor })
+            .Distinct()
+            .ToList();
+        
+        var filteredProducts = products.Select(p =>
+        {
+            var requestedColors = customProductColors
+                .Where(x => x.ProductId == p.Id.ToString())
+                .Select(x => x.Colors)
+                .Distinct()
+                .ToList();
+            p.Colors = p.Colors.Where(color => requestedColors.Contains(color.Name)).ToList();
+            return p;
+        }).ToList();
+        
+        var designIds = customizations
+            .Select(c => c.DesignId)
+            .Distinct()
+            .ToList();
+        var designGuids = designIds.Select(id => Guid.Parse(id)).ToList();
+        var designs = await _designs.Find(d => designGuids.Contains(d.Id)).ToListAsync();
+
+        return Ok(new { order, customizations, products = filteredProducts, designs });
     }
 }

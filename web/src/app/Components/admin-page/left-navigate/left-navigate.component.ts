@@ -2,13 +2,15 @@ import {Component, OnInit} from '@angular/core';
 import {MenuModule} from "primeng/menu";
 import { MenuItem } from 'primeng/api';
 import {BadgeModule} from "primeng/badge";
+import {NgIf} from "@angular/common";
 
 @Component({
   selector: 'app-left-navigate',
   standalone: true,
   imports: [
     MenuModule,
-    BadgeModule
+    BadgeModule,
+    NgIf
   ],
   templateUrl: './left-navigate.component.html',
   styleUrl: './left-navigate.component.css'
@@ -27,27 +29,8 @@ export class LeftNavigateComponent implements OnInit{
             {
               label: 'Všetky',
               icon: 'pi pi-search',
+              routerLink: "/admin/orders"
             },
-            {
-              label: 'Čakajúce',
-              icon: 'pi pi-plus',
-            },
-            {
-              label: 'Prijaté',
-              icon: 'pi pi-plus',
-            },
-            {
-              label: 'Šijem',
-              icon: 'pi pi-plus',
-            },
-            {
-              label: 'Pripravené',
-              icon: 'pi pi-plus',
-            },
-            {
-              label: 'Odoslané',
-              icon: 'pi pi-plus',
-            }
           ]
         },
         {
@@ -98,16 +81,6 @@ export class LeftNavigateComponent implements OnInit{
               icon: 'pi pi-search',
               routerLink: "/admin/gallery"
             },
-          ]
-        },
-        {
-          label: 'Dizajny zákazníkov',
-          items: [
-            {
-              label: 'Všetky',
-              icon: 'pi pi-search',
-              routerLink: "/admin/customizations"
-            }
           ]
         },
         {
