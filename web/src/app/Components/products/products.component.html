@@ -1,1 +1,15 @@
-<p>products works!</p>
+<app-header></app-header>
+<div class="container mt-4" style="min-height: calc(100vh - 200px);">
+  <div class="flex">
+    <div class="col-fixed" style="width: 250px;">
+      <app-filter-product></app-filter-product>
+    </div>
+
+    <div class="col" style="flex: 1; padding-left: 1rem;">
+      <app-all-products></app-all-products>
+    </div>
+  </div>
+</div>
+<app-galery-card></app-galery-card>
+<app-questions-by-card></app-questions-by-card>
+<app-footer></app-footer>

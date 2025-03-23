@@ -1,1 +1,24 @@
-<p>all-products works!</p>
+<div class="container flex flex-column gap-1">
+  <h1>{{ tagName }}</h1>
+  <hr class="divider">
+
+  <div class="product-grid">
+    <ng-container *ngFor="let product of products | slice:0:6">
+      <div class="product-item"
+           *ngFor="let color of product.Colors"
+           (click)="redirectToProduct(product.Id, color.Name)">
+        <div class="image-container">
+          <img
+            [src]="environment.apiUrl + color.PathOfFile"
+            alt="{{ product.Name }} - {{ color.Name }}"
+            class="card-img"
+          />
+        </div>
+        <h2>
+          {{ product.Name }} – {{ color.Name }}
+        </h2>
+        <p class="price">{{ product.Price | currency: '€' }}</p>
+      </div>
+    </ng-container>
+  </div>
+</div>

@@ -1,0 +1,177 @@
+app-header,
+app-footer,
+.container {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+/* Kontajner pre celú checkout stránku */
+.checkout-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Info o prihlásení */
+.login-check {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Základné nastavenie pre karty/sekcie */
+.billing-section,
+.checkout-summary,
+.payment-options {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Nadpisy sekcií */
+.billing-section h2,
+.checkout-summary h2,
+.payment-options h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Štýly pre formulár */
+.form-grid {
+  gap: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+  color: #555;
+}
+
+input[pInputText] {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.cart-item {
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.img-col img {
+  max-width: 75px;
+  height: auto;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.img-col img:hover {
+  transform: scale(1.1);
+}
+
+.description-col {
+  display: flex;
+  align-items: center;
+}
+
+.total-order {
+  text-align: right;
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-top: 1rem;
+}
+
+.payment-options .p-field-radiobutton {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.payment-options label {
+  margin-left: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.proceed {
+  text-align: right;
+}
+
+.checkout-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.checkout-btn :hover {
+  background-color: #0b75c9;
+}
+
+@media (max-width: 768px) {
+  .checkout-container {
+    padding: 0 0.5rem;
+  }
+
+  .billing-section,
+  .checkout-summary,
+  .payment-options {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.cart-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  table-layout: auto;
+}
+
+.cart-table thead {
+  background-color: #f5f5f5;
+}
+
+.cart-table th,
+.cart-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  vertical-align: middle;
+}
+
+.cart-table th {
+  font-weight: 600;
+}
+
+.cart-image {
+  max-width: 75px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.total-order {
+  text-align: right;
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-top: 1rem;
+}
+

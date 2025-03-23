@@ -30,6 +30,9 @@ import {UserHomePageComponent} from "./Components/user-page/user-home-page/user-
 import {UserInformationComponent} from "./Components/user-page/user-information/user-information.component";
 import {UserOrdersComponent} from "./Components/user-page/user-orders/user-orders.component";
 import {UserOrderInfoComponent} from "./Components/user-page/user-order-info/user-order-info.component";
+import {ProductDetailComponent} from "./Components/products/product-detail/product-detail.component";
+import {ShoppingCartComponent} from "./Components/checkouts/shopping-cart/shopping-cart.component";
+import {FirstPageCheckoutComponent} from "./Components/checkouts/first-page-checkout/first-page-checkout.component";
 
 export const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -47,6 +50,7 @@ export const routes: Routes = [
   { path: "my-gallery", component: GalleryComponent},
   { path: "contact", component: ContactComponent},
   { path: "products", component: ProductsComponent},
+  { path: "product/:id", component: ProductDetailComponent},
   { path: "forgot-password", component: ForgotPasswordComponent},
   {
     path: "verify-email",
@@ -74,9 +78,11 @@ export const routes: Routes = [
     component: UserHomePageComponent,
     canActivate: [AuthGuard],
     children: [
-      {path:"", component: UserInformationComponent},
-      {path:"my-orders", component: UserOrdersComponent},
-      {path:"my-order/:id", component: UserOrderInfoComponent}
+      { path:"", component: UserInformationComponent},
+      { path:"my-orders", component: UserOrdersComponent},
+      { path:"my-order/:id", component: UserOrderInfoComponent}
     ]
-  }
+  },
+  { path: "shopping-cart", component: ShoppingCartComponent },
+  { path: "check-out", component: FirstPageCheckoutComponent}
 ];

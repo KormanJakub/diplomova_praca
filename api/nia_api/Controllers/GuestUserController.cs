@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
@@ -33,6 +34,9 @@ public class GuestUserController : ControllerBase
     [HttpPost("make-customization-without-register")]
     public async Task<IActionResult> MakeCustomizationWithoutRegister(GuestCustomizationRequest request)
     {
+        var designDictionary = new Dictionary<string, Design>();
+        var productDictionary = new Dictionary<string, Product>();
+        
         var guestUser = new GuestUser
         {
             Id = Guid.NewGuid(),
@@ -89,16 +93,36 @@ public class GuestUserController : ControllerBase
             };
 
             customizations.Add(newCustomization);
+            
+            if (!designDictionary.ContainsKey(customization.DesignId))
+                designDictionary.Add(customization.DesignId, dbDesign);
+
+            if (!productDictionary.ContainsKey(customization.ProductId))
+                productDictionary.Add(customization.ProductId, dbProduct);
         }
         
         if (customizations.Any())
+        {
             await _customizations.InsertManyAsync(customizations);
+
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                HttpOnly = true,
+                Secure = true
+            };
+
+            var customizationsJson = JsonSerializer.Serialize(customizations);
+            Response.Cookies.Append("CartItems", customizationsJson, cookieOptions);
+        }
 
         return Ok(new
         {
             GuestUserId = guestUser.Id,
-            SuccessIds = customizations.Select(c => c.Id),
-            FailedRequests = failedCustomizations
+            SuccessCustomization = customizations,
+            Designs = designDictionary.Values,
+            Products = productDictionary.Values,
+            FailedRequests = failedCustomizations 
         });
     }
 

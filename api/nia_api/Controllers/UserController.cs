@@ -1,4 +1,5 @@
-﻿using Amazon.Runtime.Internal.Util;
+﻿using System.Text.Json;
+using Amazon.Runtime.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -257,6 +258,8 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Custom(List<CustomizationRequest> requests)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
+        var designDictionary = new Dictionary<string, Design>();
+        var productDictionary = new Dictionary<string, Product>();
 
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
@@ -294,6 +297,8 @@ public class UserController : ControllerBase
                 Id = Guid.NewGuid(),
                 DesignId = request.DesignId,
                 ProductId = request.ProductId,
+                ProductColor = request.ProductColorName,
+                ProductSize = request.ProductSize,
                 UserId = userId.Value.ToString(),
                 UserDescription = request.UserDescription,
                 Price = price + dbDesign.Price + dbProduct.Price,
@@ -301,15 +306,35 @@ public class UserController : ControllerBase
             };
 
             customizations.Add(newCustomization);
+            
+            if (!designDictionary.ContainsKey(request.DesignId))
+                designDictionary.Add(request.DesignId, dbDesign);
+
+            if (!productDictionary.ContainsKey(request.ProductId))
+                productDictionary.Add(request.ProductId, dbProduct);
         }
 
         if (customizations.Any())
+        {
             await _customizations.InsertManyAsync(customizations);
+
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                HttpOnly = true,
+                Secure = true
+            };
+
+            var customizationsJson = JsonSerializer.Serialize(customizations);
+            Response.Cookies.Append("CartItems", customizationsJson, cookieOptions);
+        }
 
         return Ok(new
         {
-            SuccessIds = customizations.Select(c => c.Id),
-            FailedRequests = failedCustomizations        
+            SuccessCustomization = customizations,
+            Designs = designDictionary.Values,
+            Products = productDictionary.Values,
+            FailedRequests = failedCustomizations      
         });
     }
 }

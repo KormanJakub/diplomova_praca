@@ -1,1 +1,56 @@
-<p>shopping-cart works!</p>
+<app-header></app-header>
+<p-toast></p-toast>
+<div class="container">
+  <div class="information">
+    <h1>Nákupný košík</h1>
+    <div class="product-customizations">
+      <p-table [value]="productData" *ngIf="productData?.length">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Dizajn</th>
+            <th>Produkt</th>
+            <th>Popisok</th>
+            <th>Cena Dizajnu</th>
+            <th>Cena Produkt</th>
+            <th></th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>
+              <img [src]="item.DesignURL"
+                   style="max-width: 75px; height: auto;">
+            </td>
+            <td>
+              <img [src]="item.ProductURL"
+                   style="max-width: 75px; height: auto;">
+            </td>
+            <td>{{ item.UserDescription }}</td>
+            <td>{{ item.DesignPrice }} €</td>
+            <td>{{ item.ProductPrice }} €</td>
+            <td>
+              <p-button type="button" severity="danger" (click)="deleteItem(item)">Vymazať</p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <div class="checkout">
+    <div class="checkout-card">
+      <h2>Prehľad objednávky</h2>
+      <div class="totals">
+        <p>Súčet produktov: {{ totalProductPrice | currency:'€' }}</p>
+        <p>Súčet dizajnov: {{ totalDesignPrice | currency:'€' }}</p>
+        <p>Súčet vlasného popisu: {{ totalUserDescPrice | currency:'€' }}</p>
+        <p class="grand-total">Celková suma: {{ totalOverall | currency:'€' }}</p>
+      </div>
+      <button pButton type="button" (click)="continueToCheckout()" class="checkout-btn">
+        Pokračovať Do Pokladne!
+      </button>
+    </div>
+  </div>
+</div>
+<app-footer></app-footer>

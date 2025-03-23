@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using nia_api.Data;
 using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
 using nia_api.Services;
+using Tag = nia_api.Models.Tag;
 
 namespace nia_api.Controllers
 {
@@ -18,6 +20,8 @@ namespace nia_api.Controllers
         private readonly IMongoCollection<NewsReceiver> _newsReceiver;
         private readonly IMongoCollection<Gallery> _gallery;
         private readonly IMongoCollection<Questions> _questions;
+        private readonly IMongoCollection<Tag> _tags;
+        private readonly IMongoCollection<Design> _designs;
         
         private readonly PasswordService _service;
         private readonly JwtTokenService _token;
@@ -28,11 +32,14 @@ namespace nia_api.Controllers
             _users = context.Users;
             _products = context.Products;
             _newsReceiver = context.NewsReceivers;
-            _service = service;
-            _token = token;
             _gallery = context.Gallery;
             _questions = context.Questions;
+            _tags = context.Tags;
+            _designs = context.Designs;
+            
             _emailSender = emailSender;
+            _service = service;
+            _token = token;
         }
 
         [HttpGet("all-products")]
@@ -48,6 +55,69 @@ namespace nia_api.Controllers
             return Ok(dbProducts);
         }
         
+        [HttpGet("filter-products")]
+        public async Task<IActionResult> AllProducts([FromQuery] string? tagName)
+        {
+            List<Product> dbProducts;
+
+            if (tagName == null)
+            {
+                dbProducts = await _products.Find(_ => true).ToListAsync();
+            }
+            else
+            {
+                dbProducts = await _products.Find(p => p.TagName == tagName).ToListAsync();
+            }
+    
+            if (dbProducts == null || dbProducts.Count == 0)
+                return NotFound(new { error = "No products found!" });
+    
+            return Ok(dbProducts);
+        }
+
+        [HttpGet("product/{id}")]
+        public async Task<IActionResult> GetProduct(Guid id, [FromQuery] string color)
+        {
+            var dbProduct = await _products
+                .Find(p => p.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (dbProduct == null)
+                return NotFound("No product found!");
+
+            var dbProductColors = dbProduct.Colors
+                .Where(c => string.Equals(c.Name, color, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var productWithFilteredColor = new
+            {
+                dbProduct.Id,
+                dbProduct.TagId,
+                dbProduct.TagName,
+                dbProduct.Name,
+                dbProduct.Description,
+                Colors = dbProductColors,
+                dbProduct.Price,
+                dbProduct.CreatedAt,
+                dbProduct.UpdatedAt
+            };
+            
+            return Ok(productWithFilteredColor);
+        }
+
+        [HttpGet("all-designs")]
+        public async Task<IActionResult> GetDesigns()
+        {
+            var dbDesigns = await _designs
+                .Find(_ => true)
+                .ToListAsync();
+
+            if (dbDesigns == null)
+                return NotFound("No designs found!");
+            
+            return Ok(dbDesigns);
+        }
+        
         //TODO: Keď bude analyze, upraviť
         [HttpGet("best-three-products")]
         public async Task<IActionResult> BestThreeProducts()
@@ -61,6 +131,19 @@ namespace nia_api.Controllers
                 return NotFound(new { error = "No products found!" });
             
             return Ok(dbProducts);
+        }
+
+        [HttpGet("all-tags")]
+        public async Task<IActionResult> AllTags()
+        {
+            var dbTags = await _tags
+                .Find(_ => true)
+                .ToListAsync();
+
+            if (dbTags == null || dbTags.Count == 0)
+                return NotFound(new { error = "No tags found!" });
+            
+            return Ok(dbTags);
         }
         
         [HttpGet("all-gallery")]

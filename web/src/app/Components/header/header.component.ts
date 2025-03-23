@@ -50,6 +50,10 @@ export class HeaderComponent implements OnInit{
     this.router.navigate(['/admin']);
   }
 
+  routeToShoppingCart() {
+    this.router.navigate(['/shopping-cart']);
+  }
+
   isLogged(): boolean {
     const token = this.cookieService.get("uiAppToken");
     return !!token;

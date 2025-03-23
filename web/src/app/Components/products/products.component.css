@@ -1,0 +1,8 @@
+app-header,
+app-footer,
+app-questions-by-card,
+app-galery-card {
+  display: block;
+  margin: 0;
+  padding: 0;
+}

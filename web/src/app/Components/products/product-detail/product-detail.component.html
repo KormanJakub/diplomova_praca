@@ -1,1 +1,60 @@
-<p>product-detail works!</p>
+<app-header></app-header>
+<p-toast></p-toast>
+<div class="container flex mt-5 gap-5">
+  <div class="first-card">
+    <img [src]="environment.apiUrl + product.Colors[0].PathOfFile">
+  </div>
+
+  <div class="second-card flex flex-column gap-3">
+    <h1>{{ product.Name }} - {{product.Colors[0].Name}}</h1>
+    <h2>{{ product.Price | currency: '€' }}</h2>
+    <p>{{ product.Description }}</p>
+
+    <div class="flex flex-column gap-1">
+      <h3>Veľkosť</h3>
+      <select [(ngModel)]="selectedSize">
+        <option *ngFor="let size of product.Colors[0].Sizes"
+                [value]="size.Size">
+          {{ size.Size }} ({{ size.Quantity }})
+        </option>
+      </select>
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <h3>Dizajny</h3>
+      <div class="designs-container flex gap-2">
+        <ng-container
+          *ngFor="let design of designs | slice:0:5">
+          <img
+            [src]="environment.apiUrl + design.PathOfFile"
+            alt="Design image"
+            class="design-thumbnail"
+            (click)="selectDesign(design.Id)"
+            [class.selected]="selectedDesignId === design.Id"
+          />
+        </ng-container>
+      </div>
+    </div>
+
+
+    <div class="flex flex-column gap-1">
+      <h3>Popis</h3>
+      <p>
+        Tu môžete napísať rôzne nápady. Máte záujem o inicíalky? Napíšte mi.
+        <b>Poplatok je 2€</b>
+      </p>
+      <textarea
+        placeholder="Ľavý rukáv inicialka: R"
+        class="multi-line-input"
+        rows="2"
+        [(ngModel)]="selectedCustom"
+      ></textarea>
+    </div>
+
+
+    <button (click)="saveCustomization()">Pridať Do Košika!</button>
+  </div>
+</div>
+<app-galery-card></app-galery-card>
+<app-questions-by-card></app-questions-by-card>
+<app-footer></app-footer>

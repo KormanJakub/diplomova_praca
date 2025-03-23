@@ -16,20 +16,20 @@
     <div *ngIf="!isLogged()" class="sign-in">
       <a href="/login">Prihlásenie</a>
       <a href="/register">Registrácia</a>
-      <a>Košík</a>
+      <a (click)="routeToShoppingCart()">Pokladňa</a>
     </div>
 
     <div *ngIf="isLogged()">
       <div *ngIf="!isAdminLogged()" class="sign-in">
         <a (click)="routeToUserProfile()">Ahoj {{decoded?.FirstName}}!</a>
         <a (click)="logout()">Odhlásenie</a>
-        <a>Košík</a>
+        <a (click)="routeToShoppingCart()">Pokladňa</a>
       </div>
 
       <div *ngIf="isAdminLogged()" class="sign-in">
         <a (click)="routeToAdminProfile()">Admin: {{decoded?.FirstName}}!</a>
         <a (click)="logout()">Odhlásenie</a>
-        <a>Košík</a>
+        <a (click)="routeToShoppingCart()">Pokladňa</a>
       </div>
     </div>
   </div>

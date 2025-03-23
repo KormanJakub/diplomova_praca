@@ -82,6 +82,7 @@ builder.Services.AddSingleton<NiaDbContext>();
 builder.Services.AddSingleton<LocalTimeService>();
 builder.Services.AddSingleton<HeaderReaderService>();
 builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddScoped<PaymentService>();
 builder.Services.AddSingleton<PasswordService>();
 
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));

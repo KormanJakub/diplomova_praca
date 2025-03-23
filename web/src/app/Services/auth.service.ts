@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {RegisterRequest} from "../Requests/registerrequest";
-import {Observable} from "rxjs";
+import {catchError, Observable, of} from "rxjs";
 import {environment} from "../../Environments/environment";
 import {LoginRequest} from "../Requests/loginrequest";
 import {VerificateCodeRequest} from "../Requests/verificatecoderequest";
@@ -28,6 +28,22 @@ export class AuthService {
 
   public isLoggedIn() {
     return this.cookieService.get("uiAppToken") != null;
+  }
+
+  isLoggedInUser(): Observable<boolean> {
+    const token = this.cookieService.get('uiAppToken');
+    return of(!!token);
+  }
+
+  getUserProfile(): Observable<any> {
+    const token = this.cookieService.get('uiAppToken');
+
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`);
+
+    return this.httpClient.get<any>(`${environment.apiUrl}/user/profile`, { headers }).pipe(
+      catchError(err => of(null))
+    );
   }
 
   public returnToken() {

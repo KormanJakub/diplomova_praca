@@ -1,1 +1,110 @@
-<p>first-page-checkout works!</p>
+<app-header></app-header>
+<p-toast></p-toast>
+
+<div class="checkout-container">
+  <div class="login-check" *ngIf="!isLoggedIn">
+    <p-message severity="info" text="Prihlásenie Vám v budúcnosti zjednoduší objednávkový proces." class="info-message"></p-message>
+    <p-button label="Prihlásiť sa" (onClick)="login()" class="login-button"></p-button>
+  </div>
+
+  <div class="billing-section">
+    <h2>Fakturačné údaje</h2>
+    <form [formGroup]="billingForm" novalidate>
+      <div class="p-grid form-grid">
+        <div class="p-col-12 p-md-6">
+          <label for="firstName" class="form-label">Meno</label>
+          <input pInputText id="firstName" type="text" formControlName="firstName" placeholder="Meno"/>
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="lastName" class="form-label">Priezvisko</label>
+          <input pInputText id="lastName" type="text" formControlName="lastName" placeholder="Priezvisko" />
+        </div>
+        <div class="p-col-12">
+          <label for="address" class="form-label">Adresa</label>
+          <input pInputText id="address" type="text" formControlName="address" placeholder="Adresa" />
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="country" class="form-label">Krajina</label>
+          <input pInputText id="country" type="text" formControlName="country" placeholder="Krajina" />
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="zip" class="form-label">PSČ</label>
+          <input pInputText id="zip" type="text" formControlName="zip" placeholder="PSČ" />
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="email" class="form-label">Email</label>
+          <input pInputText id="email" type="email" formControlName="email" placeholder="Email" />
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="phoneNumber" class="form-label">Telefónne číslo</label>
+          <input pInputText id="phoneNumber" type="text" formControlName="phoneNumber" placeholder="Telefónne číslo" />
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="checkout-summary">
+    <h2>Prehľad košíka</h2>
+    <table class="cart-table">
+      <thead>
+      <tr>
+        <th>Dizajn</th>
+        <th>Produkt</th>
+        <th>Veľkosť</th>
+        <th>Popisok</th>
+        <th>Cena Dizajnu</th>
+        <th>Cena Produkt</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let item of productData">
+        <td>
+          <ng-container *ngIf="item.DesignURL; else noDesign">
+            <img [src]="item.DesignURL" alt="Design" class="cart-image" />
+          </ng-container>
+          <ng-template #noDesign></ng-template>
+        </td>
+
+        <td>
+          <img [src]="item.ProductURL" alt="Produkt" class="cart-image" />
+        </td>
+
+        <td>{{ item.ProductSize }}</td>
+        <td>{{ item.UserDescription }}</td>
+        <td>
+          <ng-container *ngIf="item.DesignURL; else noDesignPrice">
+            {{ item.DesignPrice }} €
+          </ng-container>
+          <ng-template #noDesignPrice></ng-template>
+        </td>
+
+        <td>{{ item.ProductPrice }} €</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="total-order">
+      Celková suma: {{ totalOverall | currency:'€' }}
+    </div>
+  </div>
+
+
+
+  <div class="payment-options">
+    <h2>Možnosti platby</h2>
+    <div class="p-field-radiobutton">
+      <p-radioButton name="payment" value="stripe" [(ngModel)]="selectedPaymentMethod" inputId="stripe"></p-radioButton>
+      <label for="stripe">Stripe</label>
+    </div>
+    <div class="p-field-radiobutton">
+      <p-radioButton name="payment" value="iban" [(ngModel)]="selectedPaymentMethod" inputId="iban"></p-radioButton>
+      <label for="iban">Platba na IBAN</label>
+    </div>
+  </div>
+
+  <div class="proceed">
+    <p-button label="Pokračovať do platby" (onClick)="proceedToPayment()" [disabled]="isProcessing" class="checkout-btn"></p-button>
+  </div>
+</div>
+
+<app-footer></app-footer>
