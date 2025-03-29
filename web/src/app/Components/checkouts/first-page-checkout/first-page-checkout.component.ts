@@ -4,7 +4,7 @@ import {FooterComponent} from "../../footer/footer.component";
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MessageService} from "primeng/api";
 import {AuthService} from "../../../Services/auth.service";
-import {Router} from "@angular/router";
+import {Router, Routes} from "@angular/router";
 import {CheckoutService} from "../../../Services/checkout.service";
 import {CurrencyPipe, NgForOf, NgIf} from "@angular/common";
 import {ToastModule} from "primeng/toast";
@@ -159,27 +159,27 @@ export class FirstPageCheckoutComponent implements OnInit {
       ProductSize: item.ProductSize
     }));
 
-    // Krok 1: Vytvorenie customizácií na BE
+    this.paymentForRegisteredUser(customRequests);
+  }
+
+  paymentForRegisteredUser(customRequests: CustomizationRequest[]) {
     this.checkoutService.createCustomizations(customRequests).subscribe(customResponse => {
-      // Z customResponse extrahujeme pole successCustomizations
       const successCustomizations = customResponse.SuccessCustomization;
-      // Z každého objektu vyberieme iba jeho Id
       const customizationIds = successCustomizations.map((cust: any) => cust.Id);
 
-      // Krok 2: Vytvorenie objednávky s customizáciami
-      this.checkoutService.createOrder(customizationIds).subscribe(orderResponse => {
-        // Krok 3: Podľa zvolenej platobnej metódy spustíme príslušný endpoint
+      this.checkoutService.createOrder(customizationIds).subscribe((orderResponse : any) => {
         if (this.selectedPaymentMethod === 'stripe') {
           const paymentRequest: PaymentRequestModel = {
-            ProductName: "Objednávka #" + orderResponse.orderId, // prípadne uprav podľa potrieb, napr. z prvého produktu
+            ProductName: orderResponse.OrderId.toString(),
             Amount: this.totalOverall,
-            Quantity: 1
+            Quantity: 1,
+            CancellationToken: orderResponse.CancellationToken.toString()
           };
 
           this.paymentService.createStripeSession(paymentRequest).subscribe((paymentResponse: any) => {
-            // Presmerovanie na Stripe checkout URL
             window.location.href = paymentResponse.url;
           }, err => {
+            console.error(err);
             this.isProcessing = false;
             this.messageService.add({
               severity: 'error',
@@ -188,8 +188,7 @@ export class FirstPageCheckoutComponent implements OnInit {
             });
           });
         } else {
-          // Ak je zvolená platba na IBAN, navigujeme na príslušnú stránku
-          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.orderId } });
+          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse} });
         }
       }, err => {
         this.isProcessing = false;
@@ -207,6 +206,10 @@ export class FirstPageCheckoutComponent implements OnInit {
         detail: 'Chyba pri vytváraní customizácie.'
       });
     });
+  }
+
+  paymentForGuestUser(customRequests: CustomizationRequest[]) {
+
   }
 }
 

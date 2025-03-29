@@ -1,4 +1,5 @@
-﻿using nia_api.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
+using nia_api.Requests;
 using Stripe;
 using Stripe.Checkout;
 
@@ -7,11 +8,13 @@ namespace nia_api.Services;
 public class PaymentService
 {
     private readonly IConfiguration _configuration;
+    private readonly string _frontendBaseUrl;
     
     public PaymentService(IConfiguration configuration)
     {
         _configuration = configuration;
         StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+        _frontendBaseUrl = _configuration["Hosting:Web-Url"];
     }
     
     public string CreateSession(PaymentRequest request)
@@ -36,8 +39,8 @@ public class PaymentService
                 },
             },
             Mode = "payment",
-            SuccessUrl = "https://localhost:4200/success?session_id={CHECKOUT_SESSION_ID}",
-            CancelUrl = "https://localhost:4200/cancel",
+            SuccessUrl = $"{_frontendBaseUrl}/success?order_id={request.ProductName}",
+            CancelUrl = $"{_frontendBaseUrl}/cancel?cancellationToken={request.CancellationToken}",
         };
 
         var service = new SessionService();

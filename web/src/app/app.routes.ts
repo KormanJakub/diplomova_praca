@@ -33,6 +33,9 @@ import {UserOrderInfoComponent} from "./Components/user-page/user-order-info/use
 import {ProductDetailComponent} from "./Components/products/product-detail/product-detail.component";
 import {ShoppingCartComponent} from "./Components/checkouts/shopping-cart/shopping-cart.component";
 import {FirstPageCheckoutComponent} from "./Components/checkouts/first-page-checkout/first-page-checkout.component";
+import {SecondPageCheckoutComponent} from "./Components/checkouts/second-page-checkout/second-page-checkout.component";
+import {ThirdPageCheckoutComponent} from "./Components/checkouts/third-page-checkout/third-page-checkout.component";
+import {CancellationoforderComponent} from "./Components/checkouts/cancellationoforder/cancellationoforder.component";
 
 export const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -84,5 +87,8 @@ export const routes: Routes = [
     ]
   },
   { path: "shopping-cart", component: ShoppingCartComponent },
-  { path: "check-out", component: FirstPageCheckoutComponent}
+  { path: "check-out", component: FirstPageCheckoutComponent},
+  { path: 'iban-payment', component: SecondPageCheckoutComponent },
+  { path: 'success', component: ThirdPageCheckoutComponent },
+  { path: 'cancel', component: CancellationoforderComponent}
 ];

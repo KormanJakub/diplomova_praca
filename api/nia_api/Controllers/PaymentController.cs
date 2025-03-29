@@ -25,6 +25,9 @@ public class PaymentController : ControllerBase
  [HttpPost("create-checkout-session")]
  public IActionResult CreateCheckoutSession([FromBody] PaymentRequest request)
  {
+  if (request == null || string.IsNullOrEmpty(request.ProductName))
+   return BadRequest("Invalid request");
+  
   var sessionUrl = _paymentService.CreateSession(request);
   return Ok(new { url = sessionUrl });
  }

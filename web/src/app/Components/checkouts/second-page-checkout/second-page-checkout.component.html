@@ -1,1 +1,22 @@
-<p>second-page-checkout works!</p>
+<app-header></app-header>
+<div class="container">
+  <div class="alert-success">
+    <p>✅ Objednávka bola úspešne rezervovaná!</p>
+  </div>
+
+  <div class="payment-info">
+    <div class="info-row">
+      <span class="label">IBAN:</span>
+      <span class="value">SK12 3456 7890 1234 5678 9012</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Meno príjemcu:</span>
+      <span class="value">Waffle</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Variabilný symbol:</span>
+      <span class="value">{{ orderId }}</span>
+    </div>
+  </div>
+</div>
+<app-footer></app-footer>

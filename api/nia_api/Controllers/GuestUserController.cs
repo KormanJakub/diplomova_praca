@@ -230,4 +230,35 @@ public class GuestUserController : ControllerBase
         
         return Ok(new { message = "Product quantity decremented successfully!" });
     }
+    
+    [HttpPost("cancel")]
+    public async Task<IActionResult> CancelOrder([FromQuery] string cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(cancellationToken))
+            return BadRequest("Cancellation is required!");
+        
+        var filter = Builders<Order>.Filter.Eq(o => o.CancellationToken, cancellationToken);
+        var update = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
+        
+        var updateResult = await _orders.UpdateOneAsync(filter, update);
+        
+        if (updateResult.MatchedCount == 0)
+            return NotFound("Order not found.");
+        
+        return Ok(new { message = "Objednávka bola úspešne zrušená." });
+    }
+    
+    [HttpPost("confirm-payment")]
+    public async Task<IActionResult> ConfirmPayment([FromQuery] int orderId)
+    {
+        var filter = Builders<Order>.Filter.Eq(o => o.Id, orderId);
+        var update = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZAPLATENA);
+        
+        var updateResult = await _orders.UpdateOneAsync(filter, update);
+        
+        if (updateResult.MatchedCount == 0)
+            return NotFound("Order not found.");
+        
+        return Ok(new { message = "Objednávka bola úspešne zaplatená." });
+    }
 }

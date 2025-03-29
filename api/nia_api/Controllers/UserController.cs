@@ -193,12 +193,13 @@ public class UserController : ControllerBase
             TotalPrice = totalPrice,
             UserId = userId.Value,
             StatusOrder = EStatus.PRIJATA,
+            CancellationToken = Guid.NewGuid().ToString(),
             CreatedAt = LocalTimeService.LocalTime()
         };
 
         await _orders.InsertOneAsync(lcOrder);
 
-        return Ok(new { message = "Order is successful!" });
+        return Ok(new { OrderId = lcOrder.Id, CancellationToken = lcOrder.CancellationToken});
     }
 
     [HttpPost("cancel-order/{OrderId}")]
@@ -214,7 +215,11 @@ public class UserController : ControllerBase
         if (dbOrder == null)
             return NotFound(new { error = "Order not founded!" });
         
-        var filterOrder = Builders<Order>.Filter.Eq(o => o.UserId, userId.Value);
+        var filterOrder = Builders<Order>.Filter.And(
+            Builders<Order>.Filter.Eq(o => o.Id, OrderId),
+            Builders<Order>.Filter.Eq(o => o.UserId, userId.Value)
+        );
+
         var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
         var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
 

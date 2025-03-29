@@ -6,7 +6,6 @@ app-footer,
   padding: 0;
 }
 
-/* Kontajner pre celú checkout stránku */
 .checkout-container {
   max-width: 1200px;
   margin: 20px auto;
@@ -16,7 +15,6 @@ app-footer,
   gap: 20px;
 }
 
-/* Info o prihlásení */
 .login-check {
   display: flex;
   flex-direction: column;
@@ -24,7 +22,6 @@ app-footer,
   gap: 10px;
 }
 
-/* Základné nastavenie pre karty/sekcie */
 .billing-section,
 .checkout-summary,
 .payment-options {
@@ -34,7 +31,6 @@ app-footer,
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Nadpisy sekcií */
 .billing-section h2,
 .checkout-summary h2,
 .payment-options h2 {
@@ -44,7 +40,6 @@ app-footer,
   color: #333;
 }
 
-/* Štýly pre formulár */
 .form-grid {
   gap: 1rem;
 }
