@@ -94,3 +94,97 @@ body {
 .cta-button:hover {
   background-color: #444;
 }
+
+@media (max-width: 768px) {
+  .banner-container {
+    height: auto;
+    padding: 40px 20px;
+    gap: 40px;
+  }
+  .banner-header h1 {
+    font-size: 28px;
+    padding: 0 10px;
+  }
+  .banner-second-container {
+    flex-direction: column;
+    gap: 40px;
+    align-items: center;
+  }
+  .first-step,
+  .second-step,
+  .third-step,
+  .fourth-step {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  .first-step h3,
+  .second-step h3,
+  .third-step h3,
+  .fourth-step h3 {
+    font-size: 18px;
+  }
+  .first-step h5,
+  .second-step h5,
+  .third-step h5,
+  .fourth-step h5 {
+    font-size: 13px;
+  }
+  .first-step p,
+  .second-step p,
+  .third-step p,
+  .fourth-step p {
+    font-size: 14px;
+  }
+  .cta-button {
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 390px) and (max-height: 844px) {
+  .banner-container {
+    padding: 20px 10px;
+    gap: 20px;
+    height: auto;
+  }
+  .banner-header h1 {
+    font-size: 24px;
+    padding: 0 5px;
+  }
+  .banner-second-container {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+  .first-step,
+  .second-step,
+  .third-step,
+  .fourth-step {
+    width: 100%;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+  .first-step h3,
+  .second-step h3,
+  .third-step h3,
+  .fourth-step h3 {
+    font-size: 16px;
+  }
+  .first-step h5,
+  .second-step h5,
+  .third-step h5,
+  .fourth-step h5 {
+    font-size: 12px;
+  }
+  .first-step p,
+  .second-step p,
+  .third-step p,
+  .fourth-step p {
+    font-size: 13px;
+  }
+  .cta-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}

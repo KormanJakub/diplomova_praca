@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
 using nia_api.Enums;
@@ -678,4 +679,102 @@ public class AdminController : ControllerBase
 
         return Ok(new { order, customizations, products = filteredProducts, designs });
     }
+    
+    [HttpPost("design/getSpecific")]
+    public async Task<IActionResult> GetSpecificDesigns([FromBody] List<string> designIds)
+    {
+        if (designIds == null || !designIds.Any())
+            return BadRequest(new { error = "Žiadne ID dizajnov neboli poskytnuté." });
+    
+        var guidIds = designIds.Select(id => Guid.Parse(id)).ToList();
+        var designs = await _designs.Find(d => guidIds.Contains(d.Id)).ToListAsync();
+
+        if (designs == null || designs.Count == 0)
+            return NotFound(new { error = "Dizajny neboli nájdené." });
+    
+        return Ok(designs);
+    }
+
+    [HttpGet("orders/sales-summary")]
+    public async Task<IActionResult> GetSalesSummary()
+    {
+        var soldCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.ZAPLATENA);
+        var pendingCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.PRIJATA);
+        var makingCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.VO_VYROBE);
+        var readyCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.PRIPRAVENA);
+        var sendCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.POSLANA);
+        var cancelCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.ZRUSENA);
+    
+        return Ok(new 
+        { 
+            soldOrders = soldCount,
+            pendingOrders = pendingCount,
+            makingOrders = makingCount,
+            readyOrders = readyCount,
+            sendOrders = sendCount,
+            cancelOrders = cancelCount
+        });
+    }
+
+    [HttpGet("products/low-stock")]
+    public async Task<IActionResult> GetLowStockProducts()
+    {
+        int threshold = 2;
+        var allProducts = await _products.Find(_ => true).ToListAsync();
+        var lowStockItems = new List<object>();
+
+        foreach (var product in allProducts)
+        {
+            foreach (var color in product.Colors)
+            {
+                foreach (var size in color.Sizes)
+                {
+                    if (size.Quantity < threshold)
+                    {
+                        lowStockItems.Add(new
+                        {
+                            productName = product.Name,
+                            color = color.Name,
+                            size = size.Size,
+                            quantity = size.Quantity
+                        });
+                    }
+                }
+            }
+        }
+    
+        return Ok(lowStockItems);
+    }
+    
+    [HttpGet("kpi")]
+    public async Task<IActionResult> GetKpiData()
+    {
+        var filter = Builders<Order>.Filter.Ne(o => o.StatusOrder, EStatus.ZRUSENA);
+    
+        var totalOrders = await _orders.CountDocumentsAsync(filter);
+
+        var revenueAggregate = await _orders.Aggregate()
+            .Match(filter)
+            .Group(new BsonDocument 
+            { 
+                { "_id", BsonNull.Value }, 
+                { "totalRevenue", new BsonDocument("$sum", "$totalPrice") }
+            })
+            .FirstOrDefaultAsync();
+        
+        decimal totalRevenue = revenueAggregate != null ? revenueAggregate["totalRevenue"].ToDecimal() : 0;
+        decimal averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+        var distinctUserIds = await _orders.DistinctAsync<Guid>("UserId", filter);
+        int newCustomers = distinctUserIds.ToList().Count;
+
+        return Ok(new 
+        {
+            totalOrders,
+            totalRevenue,
+            averageOrderValue,
+            newCustomers
+        });
+    }
+
 }

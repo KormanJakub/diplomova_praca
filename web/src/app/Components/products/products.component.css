@@ -6,3 +6,40 @@ app-galery-card {
   margin: 0;
   padding: 0;
 }
+
+.container {
+  min-height: calc(100vh - 200px);
+  padding: 1rem 2rem;
+}
+
+.flex {
+  display: flex;
+  gap: 1rem;
+}
+
+.col-fixed {
+  width: 250px;
+}
+
+.col {
+  flex: 1;
+  padding-left: 1rem;
+}
+
+@media (max-width: 768px) {
+  .flex {
+    flex-direction: column;
+  }
+  .col-fixed {
+    width: 100%;
+  }
+  .col {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .container {
+    padding: 0.5rem 1rem;
+  }
+}

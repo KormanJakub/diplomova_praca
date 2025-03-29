@@ -1,20 +1,32 @@
 <app-header></app-header>
-<p-toast></p-toast>
 <div class="container flex mt-5 gap-5">
   <div class="first-card">
-    <img [src]="environment.apiUrl + product.Colors[0].PathOfFile">
+    <div class="hoodie-container">
+    <img
+      [src]="environment.apiUrl + product.Colors[0].PathOfFile"
+      alt="White Hoodie"
+      class="hoodie-base">
+    <img *ngIf="selectedDesign"
+         [src]="environment.apiUrl + selectedDesign.PathOfFile"
+         alt="Design Overlay"
+         class="design-overlay">
+    </div>
   </div>
 
   <div class="second-card flex flex-column gap-3">
-    <h1>{{ product.Name }} - {{product.Colors[0].Name}}</h1>
-    <h2>{{ product.Price | currency: '€' }}</h2>
+    <h1>{{ product.Name }} - {{ product.Colors[0].Name }}</h1>
+    <h2>
+      {{ product.Price | currency: '€' }}
+      <span *ngIf="selectedDesign">
+        + {{ selectedDesign.Price | currency: '€' }}
+      </span>
+    </h2>
     <p>{{ product.Description }}</p>
 
     <div class="flex flex-column gap-1">
       <h3>Veľkosť</h3>
       <select [(ngModel)]="selectedSize">
-        <option *ngFor="let size of product.Colors[0].Sizes"
-                [value]="size.Size">
+        <option *ngFor="let size of product.Colors[0].Sizes" [value]="size.Size">
           {{ size.Size }} ({{ size.Quantity }})
         </option>
       </select>
@@ -23,8 +35,7 @@
     <div class="flex flex-column gap-1">
       <h3>Dizajny</h3>
       <div class="designs-container flex gap-2">
-        <ng-container
-          *ngFor="let design of designs | slice:0:5">
+        <ng-container *ngFor="let design of designs | slice:0:5">
           <img
             [src]="environment.apiUrl + design.PathOfFile"
             alt="Design image"
@@ -35,7 +46,6 @@
         </ng-container>
       </div>
     </div>
-
 
     <div class="flex flex-column gap-1">
       <h3>Popis</h3>
@@ -50,8 +60,7 @@
         [(ngModel)]="selectedCustom"
       ></textarea>
     </div>
-
-
+    <p-toast styleClass="my-toast"></p-toast>
     <button (click)="saveCustomization()">Pridať Do Košika!</button>
   </div>
 </div>

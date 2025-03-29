@@ -6,7 +6,7 @@ import {Product} from "../../../Models/product.model";
 import {Design} from "../../../Models/design.model";
 import {ActivatedRoute} from "@angular/router";
 import {PublicService} from "../../../Services/public.service";
-import {CurrencyPipe, NgForOf, SlicePipe} from "@angular/common";
+import {CurrencyPipe, NgForOf, NgIf, SlicePipe} from "@angular/common";
 import {environment} from "../../../../Environments/environment";
 import {FormsModule} from "@angular/forms";
 import {QuestionsByCardComponent} from "../../home-page/questions-by-card/questions-by-card.component";
@@ -27,7 +27,8 @@ import {ToastModule} from "primeng/toast";
     FormsModule,
     SlicePipe,
     QuestionsByCardComponent,
-    ToastModule
+    ToastModule,
+    NgIf
   ],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',
@@ -35,12 +36,12 @@ import {ToastModule} from "primeng/toast";
 })
 export class ProductDetailComponent implements OnInit {
 
-  customReq!: CookiesCustomizationRequest;
   customReqs: CookiesCustomizationRequest[] = [];
   product!: Product;
   designs: Design[] = [];
 
   selectedDesignId: string = '';
+  selectedDesign?: Design;
   selectedSize: string = '';
   selectedCustom!: string;
 
@@ -83,9 +84,27 @@ export class ProductDetailComponent implements OnInit {
 
   selectDesign(designId: string): void {
     this.selectedDesignId = designId;
+    this.selectedDesign = this.designs.find(d => d.Id === designId);
   }
 
   saveCustomization() {
+    if (!this.selectedSize) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Chyba',
+        detail: 'Prosím, vyberte veľkosť.'
+      });
+      return;
+    }
+    if (!this.selectedDesignId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Chyba',
+        detail: 'Prosím, vyberte dizajn.'
+      });
+      return;
+    }
+
     const id: string = this.route.snapshot.paramMap.get('id') ?? '';
     const color: string = this.route.snapshot.queryParamMap.get('color') ?? '';
 

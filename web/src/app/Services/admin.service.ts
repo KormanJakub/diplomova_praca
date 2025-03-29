@@ -57,6 +57,35 @@ export class AdminService {
     return this.http.get<Design[]>(url);
   }
 
+  getSpecificDesign(designIds: string[]): Observable<Design[]> {
+    const url = `${environment.apiUrl}/admin/design/getSpecific`;
+    return this.http.post<Design[]>(url, designIds);
+  }
+
+  getSalesSummaryAll(): Observable<{
+    soldOrders: number,
+    pendingOrders: number,
+    makingOrders: number,
+    readyOrders: number,
+    sendOrders: number,
+    cancelOrders: number
+  }> {
+    return this.http.get<{
+      soldOrders: number,
+      pendingOrders: number,
+      makingOrders: number,
+      readyOrders: number,
+      sendOrders: number,
+      cancelOrders: number
+    }>(`${environment.apiUrl}/admin/orders/sales-summary`);
+  }
+
+  getLowStockProducts(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${environment.apiUrl}/admin/products/low-stock`
+    );
+  }
+
   updateDesign(design: Design): Observable<Design> {
     const url = `${environment.apiUrl}/admin/design/update`;
     return this.http.put<Design>(url, design);
@@ -71,10 +100,6 @@ export class AdminService {
     const url = `${environment.apiUrl}/admin/design/remove`;
 
     return this.http.request<{ message: string }>('DELETE', url, { body: designs });
-  }
-
-  getSpecificDesign(ids: string[]): Observable<string[]> {
-    return this.http.request<string[]>('GET', `${environment.apiUrl}/admin/design/getSpecific`, {body: ids});
   }
 
   //PRODUCT
@@ -157,4 +182,19 @@ export class AdminService {
   updateOrder(orderId: number, updatedOrder: Order): Observable<any> {
     return this.http.put(`${environment.apiUrl}/admin/orders/${orderId}`, updatedOrder);
   }
+
+  getKpiData(): Observable<{
+    totalOrders: number,
+    totalRevenue: number,
+    averageOrderValue: number,
+    newCustomers: number
+  }> {
+    return this.http.get<{
+      totalOrders: number,
+      totalRevenue: number,
+      averageOrderValue: number,
+      newCustomers: number
+    }>(`${environment.apiUrl}/admin/kpi`);
+  }
+
 }

@@ -2,7 +2,7 @@ app-header,
 app-footer,
 app-questions-by-card,
 app-galery-card,
-.container{
+.container {
   display: block;
   margin: 0;
   padding: 0;
@@ -77,11 +77,17 @@ select {
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
 }
 
 .design-thumbnail:hover {
   transform: scale(1.05);
+}
+
+.design-thumbnail.selected {
+  transform: scale(1.5);
+  border: 2px solid #091516;
+  box-shadow: 0 4px 8px rgba(230, 0, 0, 0.3);
 }
 
 .multi-line-input {
@@ -108,6 +114,91 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+.hoodie-container {
+  position: relative;
+  display: inline-block;
+}
+
+.hoodie-base {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.design-overlay {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+
+  max-width: 30%;
+  max-height: 30%;
+
+  pointer-events: none;
+}
+
+.my-toast {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 9999 !important;
+  display: block !important;
+}
+
+
+@media (max-width: 1024px) {
+  .container {
+    width: 90%;
+    gap: 5rem;
+  }
+  select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 2rem;
+    margin: 1rem auto;
+    width: 95%;
+  }
+  .first-card,
+  .second-card {
+    max-width: 100%;
+  }
+  .second-card h1 {
+    font-size: 1.3rem;
+  }
+  .second-card h2 {
+    font-size: 1.2rem;
+  }
+  select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .container {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .second-card h1 {
+    font-size: 1.1rem;
+  }
+  .second-card h2 {
+    font-size: 1rem;
+  }
+  button {
+    font-size: 16px;
+    padding: 12px 20px;
+  }
+  .design-thumbnail {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 

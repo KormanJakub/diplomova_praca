@@ -44,3 +44,51 @@ body {
   line-height: 1.5;
   color: black;
 }
+
+@media (max-width: 768px) {
+  .banner-container {
+    flex-direction: column;
+    height: auto;
+    padding: 20px;
+    align-items: center;
+  }
+  .banner-image img {
+    width: 100%;
+    height: auto;
+  }
+  .banner-information {
+    padding-top: 20px;
+    padding-right: 0;
+    text-align: center;
+  }
+  .banner-information h1 {
+    font-size: 28px;
+  }
+  .banner-information p {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 390px) and (max-height: 844px) {
+  .banner-container {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+    align-items: center;
+  }
+  .banner-image img {
+    width: 100%;
+    height: auto;
+  }
+  .banner-information {
+    padding-top: 10px;
+    padding-right: 10px;
+    text-align: center;
+  }
+  .banner-information h1 {
+    font-size: 24px;
+  }
+  .banner-information p {
+    font-size: 14px;
+  }
+}

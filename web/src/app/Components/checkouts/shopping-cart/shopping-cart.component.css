@@ -122,3 +122,68 @@ body, h2, h3, p, button, th, td, span, div {
 .delete-btn:hover {
   background-color: RED;
 }
+
+.my-toast {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 9999 !important;
+  display: block !important;
+}
+
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 2rem;
+    margin: 1rem auto;
+    padding: 0 1rem;
+  }
+  .information, .checkout {
+    width: 100%;
+  }
+  .checkout {
+    align-items: center;
+  }
+  .checkout-card {
+    width: 100%;
+  }
+  .totals p {
+    font-size: 1em;
+  }
+  .checkout-card h2 {
+    font-size: 1.5em;
+  }
+  .checkout-btn {
+    font-size: 1em;
+    padding: 8px;
+  }
+
+  p-toast {
+    z-index: 9999;
+  }
+}
+
+@media (max-width: 390px) {
+  .container {
+    padding: 1rem 0.5rem;
+    gap: 1rem;
+  }
+  .information h1 {
+    font-size: 1.5rem;
+  }
+  .totals p {
+    font-size: 0.9em;
+  }
+  .checkout-card h2 {
+    font-size: 1.3em;
+  }
+  .checkout-btn {
+    font-size: 0.9em;
+    padding: 6px;
+  }
+
+  p-toast {
+    z-index: 9999;
+  }
+}

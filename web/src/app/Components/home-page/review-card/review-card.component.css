@@ -92,3 +92,72 @@
   font-weight: bold;
   padding: 16px;
 }
+
+@media (max-width: 768px) {
+  .container {
+    height: auto;
+    padding: 40px 20px;
+  }
+  .section-heading {
+    padding-top: 60px;
+  }
+  .section-heading h1 {
+    font-size: 28px;
+  }
+  .section-heading p {
+    font-size: 16px;
+  }
+  .content {
+    flex-direction: column;
+    padding: 40px 20px;
+    gap: 24px;
+  }
+  .column-one,
+  .column-two,
+  .column-three {
+    height: auto;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 390px) and (max-height: 844px) {
+  .container {
+    padding: 20px 10px;
+  }
+  .section-heading {
+    padding-top: 40px;
+  }
+  .section-heading h1 {
+    font-size: 24px;
+  }
+  .section-heading p {
+    font-size: 14px;
+  }
+  .content {
+    flex-direction: column;
+    padding: 20px 10px;
+    gap: 16px;
+  }
+  .column-one,
+  .column-two,
+  .column-three {
+    padding: 16px;
+  }
+  .content-one p,
+  .content-two p,
+  .content-three p {
+    font-size: 14px;
+  }
+  .avatar-one img,
+  .avatar-two img,
+  .avatar-three img {
+    width: 40px;
+    height: 40px;
+  }
+  .avatar-one p,
+  .avatar-two p,
+  .avatar-three p {
+    padding: 12px;
+    font-size: 14px;
+  }
+}

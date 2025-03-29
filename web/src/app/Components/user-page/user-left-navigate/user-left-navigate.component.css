@@ -1,0 +1,56 @@
+p-menu {
+  font-family: 'Montserrat', sans-serif;
+}
+
+p-menu ::ng-deep .p-menu {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+  width: 100%;
+  max-width: 300px;
+}
+
+p-menu ::ng-deep .p-menu-item-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+p-menu ::ng-deep .p-menu-item-link:hover {
+  background-color: #f0f0f0;
+  color: #007ad9;
+}
+
+p-menu ::ng-deep .p-badge {
+  margin-left: auto;
+}
+
+p-menu ::ng-deep .ml-auto {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  p-menu ::ng-deep .p-menu {
+    max-width: 100% !important;
+    padding: 0.5rem;
+  }
+  p-menu ::ng-deep .p-menu-item-link {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 390px) {
+  p-menu ::ng-deep .p-menu {
+    padding: 0.5rem;
+  }
+  p-menu ::ng-deep .p-menu-item-link {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}

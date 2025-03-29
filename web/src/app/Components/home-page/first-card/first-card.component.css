@@ -44,7 +44,7 @@ body {
 }
 
 .banner-content h1 {
-  font-size: 48px;
+  font-size: clamp(32px, 5vw, 48px);
   margin-bottom: 20px;
   line-height: 1.2;
   font-family: "Montserrat", sans-serif;
@@ -52,7 +52,7 @@ body {
 }
 
 .banner-content p {
-  font-size: 18px;
+  font-size: clamp(16px, 2.5vw, 18px);
   margin-bottom: 30px;
   line-height: 1.5;
   font-family: "Montserrat", sans-serif;
@@ -73,4 +73,27 @@ body {
 
 .cta-button:hover {
   background-color: #444;
+}
+
+@media screen and (max-width: 768px) {
+  .banner-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .banner-image {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .banner-image img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .banner-content {
+    padding: 20px;
+  }
 }

@@ -8,5 +8,47 @@ app-footer,
 
 .container {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  padding: 20px 15px;
+}
+
+.flex {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.col-fixed {
+  width: 250px;
+}
+
+.col {
+  flex: 1;
+  padding-left: 1rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    padding: 20px;
+  }
+  .flex {
+    flex-direction: column;
+  }
+  .col-fixed {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .col {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .container {
+    padding: 10px;
+  }
+  .flex {
+    gap: 0.5rem;
+  }
 }

@@ -34,7 +34,7 @@ export class PublicService {
     let params = new HttpParams();
 
     if (query && query.trim() !== '') {
-      params = params.set('tagId', query);
+      params = params.set('tagName', query);
     }
 
     return this.httpClient.get<Product[]>(`${environment.apiUrl}/public/filter-products`, { params });

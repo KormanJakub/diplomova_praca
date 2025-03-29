@@ -41,3 +41,68 @@
   text-align: left;
   margin-bottom: 30px;
 }
+
+@media (max-width: 768px) {
+  .banner-container {
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    padding: 20px;
+  }
+  .banner-card-1,
+  .banner-card-2,
+  .banner-card-3,
+  .banner-card-4 {
+    margin-top: 20px;
+    padding-left: 0;
+    align-items: center;
+    text-align: center;
+  }
+  .banner-card-1 p,
+  .banner-card-2 p,
+  .banner-card-3 p,
+  .banner-card-4 p {
+    font-size: 20px;
+    line-height: normal;
+    margin-bottom: 20px;
+  }
+  .banner-card-1 img,
+  .banner-card-2 img,
+  .banner-card-3 img,
+  .banner-card-4 img {
+    max-width: 48px;
+  }
+}
+
+@media (max-width: 390px) and (max-height: 844px) {
+  .banner-container {
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    padding: 10px;
+  }
+  .banner-card-1,
+  .banner-card-2,
+  .banner-card-3,
+  .banner-card-4 {
+    margin-top: 10px;
+    padding-left: 0;
+    align-items: center;
+    text-align: center;
+  }
+  .banner-card-1 p,
+  .banner-card-2 p,
+  .banner-card-3 p,
+  .banner-card-4 p {
+    font-size: 16px;
+    line-height: 20px;
+    margin-bottom: 15px;
+  }
+  .banner-card-1 img,
+  .banner-card-2 img,
+  .banner-card-3 img,
+  .banner-card-4 img {
+    max-width: 32px;
+    margin-bottom: 5px;
+  }
+}

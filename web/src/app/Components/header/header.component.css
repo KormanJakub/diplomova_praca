@@ -48,7 +48,7 @@ nav a {
   color: white;
   text-decoration: none;
   font-family: "Montserrat", sans-serif;
-  font-size: 18px;
+  font-size: clamp(18px, 4vw, 24px);
   font-weight: 500;
   line-height: 150%;
   cursor: pointer;
@@ -67,4 +67,55 @@ nav a::after {
 
 nav a:hover::after {
   width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  nav {
+    padding: 20px 20px;
+  }
+
+  .logo img {
+    width: 180px;
+  }
+
+  .menu-bar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .menu-items {
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  .sign-in {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  nav {
+    padding: 15px;
+  }
+
+  .logo img {
+    width: 150px;
+  }
+
+  .menu-bar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .menu-items {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sign-in {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
