@@ -15,6 +15,11 @@ import {InputTextModule} from "primeng/inputtext";
 import {CustomizationRequest} from "../../../Requests/customizationrequest";
 import {PaymentService} from "../../../Services/payment.service";
 import {PaymentRequestModel} from "../../../Requests/paymentrequest";
+import {CookieService} from "ngx-cookie-service";
+import {UserService} from "../../../Services/user.service";
+import {GuestService} from "../../../Services/guest.service";
+import {GuestOrderRequest} from "../../../Requests/guestorderrequest";
+import {CustomizationGuestRequest} from "../../../Requests/customizationguestrequest";
 
 @Component({
   selector: 'app-first-page-checkout',
@@ -60,6 +65,8 @@ export class FirstPageCheckoutComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private paymentService: PaymentService,
+    private cookieService: CookieService,
+    private guestService: GuestService
   ) {
     this.billingForm = this.fb.group({
       firstName: ['', Validators.required],
@@ -77,23 +84,21 @@ export class FirstPageCheckoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.authService.isLoggedInUser().subscribe(loggedIn => {
-      this.isLoggedIn = loggedIn;
-      if (this.isLoggedIn) {
-        this.authService.getUserProfile().subscribe(user => {
-          this.userData = user;
-          this.billingForm.patchValue({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            address: user.address,
-            country: user.country,
-            email: user.email,
-            zip: user.zip,
-            phoneNumber: user.phoneNumber
-          });
+    this.isLoggedIn = this.isUserLoginIn();
+    if (this.isLoggedIn) {
+      this.authService.getUserProfile().subscribe(user => {
+        this.userData = user;
+        this.billingForm.patchValue({
+          firstName: user.FirstName,
+          lastName: user.LastName,
+          address: user.Address,
+          country: user.Country,
+          email: user.Email,
+          zip: user.Zip,
+          phoneNumber: user.PhoneNumber
         });
-      }
-    });
+      });
+    }
 
     this.cookieValue = this.getCookieValue(this.cookieName);
 
@@ -101,6 +106,11 @@ export class FirstPageCheckoutComponent implements OnInit {
       const decoded = decodeURIComponent(this.cookieValue);
       this.productData = JSON.parse(decoded);
     }
+  }
+
+  isUserLoginIn() {
+    const token = this.cookieService.get('uiAppToken');
+    return !!token;
   }
 
   calculateTotal(): void {
@@ -159,7 +169,11 @@ export class FirstPageCheckoutComponent implements OnInit {
       ProductSize: item.ProductSize
     }));
 
-    this.paymentForRegisteredUser(customRequests);
+    if (this.isLoggedIn) {
+      this.paymentForRegisteredUser(customRequests);
+    } else {
+      this.paymentForGuestUser(customRequests);
+    }
   }
 
   paymentForRegisteredUser(customRequests: CustomizationRequest[]) {
@@ -188,7 +202,7 @@ export class FirstPageCheckoutComponent implements OnInit {
             });
           });
         } else {
-          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse} });
+          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId} });
         }
       }, err => {
         this.isProcessing = false;
@@ -208,8 +222,72 @@ export class FirstPageCheckoutComponent implements OnInit {
     });
   }
 
-  paymentForGuestUser(customRequests: CustomizationRequest[]) {
+  paymentForGuestUser(customRequests: CustomizationRequest[]): void {
+    const guestCustomizationRequest: CustomizationGuestRequest = {
+      GuestData: {
+        Email: this.billingForm.value.email,
+        FirstName: this.billingForm.value.firstName,
+        LastName: this.billingForm.value.lastName,
+        Country: this.billingForm.value.country,
+        PhoneNumber: this.billingForm.value.phoneNumber,
+        Address: this.billingForm.value.address,
+        Zip: this.billingForm.value.zip
+      },
+      Customizations: customRequests
+    };
 
+    this.guestService.makeCustomizationWithoutRegister(guestCustomizationRequest)
+      .subscribe(customResponse => {
+        const successCustomizations = customResponse.SuccessCustomization;
+        const customizationIds = successCustomizations.map((cust: any) => cust.Id);
+
+        const guestOrderRequest: GuestOrderRequest = {
+          GuestUserId: customResponse.GuestUserId,
+          CustomizationsId: customizationIds
+        };
+
+        this.guestService.makeOrderWithoutRegister(guestOrderRequest)
+          .subscribe((orderResponse: any) => {
+            if (this.selectedPaymentMethod === 'stripe') {
+              const paymentRequest: PaymentRequestModel = {
+                ProductName: orderResponse.OrderId.toString(),
+                Amount: this.totalOverall,
+                Quantity: 1,
+                CancellationToken: orderResponse.CancellationToken.toString()
+              };
+
+              this.paymentService.createStripeSession(paymentRequest)
+                .subscribe((paymentResponse: any) => {
+                  window.location.href = paymentResponse.url;
+                }, err => {
+                  console.error(err);
+                  this.isProcessing = false;
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'Chyba',
+                    detail: 'Chyba pri vytváraní Stripe platby.'
+                  });
+                });
+            } else {
+              this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId } });
+            }
+          }, err => {
+            this.isProcessing = false;
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Chyba',
+              detail: 'Chyba pri vytváraní objednávky.'
+            });
+          });
+      }, err => {
+        this.isProcessing = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Chyba',
+          detail: 'Chyba pri vytváraní customizácie.'
+        });
+      });
   }
+
 }
 

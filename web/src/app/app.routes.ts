@@ -13,7 +13,6 @@ import {NoAuthGuard} from "./Guards/no-auth.guard";
 import {AdminHomePageComponent} from "./Components/admin-page/admin-home-page/admin-home-page.component";
 import {AdminAuthGuard} from "./Guards/admin-auth.guard";
 import {AllTagsComponent} from "./Components/admin-page/tagy/all-tags/all-tags.component";
-import {AddTagsComponent} from "./Components/admin-page/tagy/add-tags/add-tags.component";
 import {
   AdminImportantInformationsComponent
 } from "./Components/admin-page/admin-important-informations/admin-important-informations.component";
@@ -36,6 +35,7 @@ import {FirstPageCheckoutComponent} from "./Components/checkouts/first-page-chec
 import {SecondPageCheckoutComponent} from "./Components/checkouts/second-page-checkout/second-page-checkout.component";
 import {ThirdPageCheckoutComponent} from "./Components/checkouts/third-page-checkout/third-page-checkout.component";
 import {CancellationoforderComponent} from "./Components/checkouts/cancellationoforder/cancellationoforder.component";
+import {FolloworderComponent} from "./Components/checkouts/followorder/followorder.component";
 
 export const routes: Routes = [
   { path: "", component: HomeComponent },
@@ -90,5 +90,6 @@ export const routes: Routes = [
   { path: "check-out", component: FirstPageCheckoutComponent},
   { path: 'iban-payment', component: SecondPageCheckoutComponent },
   { path: 'success', component: ThirdPageCheckoutComponent },
-  { path: 'cancel', component: CancellationoforderComponent}
+  { path: 'cancel', component: CancellationoforderComponent},
+  { path: 'follow-order',component: FolloworderComponent}
 ];

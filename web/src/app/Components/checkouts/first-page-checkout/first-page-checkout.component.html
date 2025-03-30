@@ -20,16 +20,16 @@
           <input pInputText id="lastName" type="text" formControlName="lastName" placeholder="Priezvisko" />
         </div>
         <div class="p-col-12">
-          <label for="address" class="form-label">Adresa</label>
-          <input pInputText id="address" type="text" formControlName="address" placeholder="Adresa" />
-        </div>
-        <div class="p-col-12 p-md-6">
-          <label for="country" class="form-label">Krajina</label>
-          <input pInputText id="country" type="text" formControlName="country" placeholder="Krajina" />
+          <label for="address" class="form-label">Ulica č. domu</label>
+          <input pInputText id="address" type="text" formControlName="address" placeholder="Ulica č. domu" />
         </div>
         <div class="p-col-12 p-md-6">
           <label for="zip" class="form-label">PSČ</label>
           <input pInputText id="zip" type="text" formControlName="zip" placeholder="PSČ" />
+        </div>
+        <div class="p-col-12 p-md-6">
+          <label for="country" class="form-label">Krajina</label>
+          <input pInputText id="country" type="text" formControlName="country" placeholder="Krajina" />
         </div>
         <div class="p-col-12 p-md-6">
           <label for="email" class="form-label">Email</label>
@@ -91,16 +91,51 @@
 
 
   <div class="payment-options">
-    <h2>Možnosti platby</h2>
-    <div class="p-field-radiobutton">
-      <p-radioButton name="payment" value="stripe" [(ngModel)]="selectedPaymentMethod" inputId="stripe"></p-radioButton>
-      <label for="stripe">Stripe</label>
+    <h2>Zvoľte Spôsob Platby</h2>
+
+    <div class="field-radiobutton flex mb-3" style="text-align: left;">
+      <div class="flex" style="align-items: baseline;">
+        <p-radioButton
+          name="payment"
+          value="stripe"
+          [(ngModel)]="selectedPaymentMethod"
+          inputId="stripe">
+        </p-radioButton>
+        <div class="stripe-logo ml-4" style="margin-left: 8px;">
+          <img src="Stripe.svg" alt="Stripe" style="height: 20px;">
+        </div>
+      </div>
+      <div class="payment-details" style="margin-left: 8px; margin-top: 4px;">
+        <div class="kartou-online">
+          <label for="stripe" style="font-size: 1.2rem">
+            Kartou online
+          </label>
+        </div>
+        <div class="payment-logos flex ml-3" style="gap: 8px; margin-top: 4px;">
+          <img src="Visa.png" alt="Visa" style="height: 15px;">
+          <img src="Mastercard.png" alt="MasterCard" style="height: 15px;">
+        </div>
+      </div>
     </div>
-    <div class="p-field-radiobutton">
+
+
+    <div class="field-radiobutton flex ai-center">
       <p-radioButton name="payment" value="iban" [(ngModel)]="selectedPaymentMethod" inputId="iban"></p-radioButton>
-      <label for="iban">Platba na IBAN</label>
+      <div class="payment-logos flex ml-3" style="gap: 8px; margin-top: 4px;">
+        <img src="bank.png" alt="Bank" style="height: 20px;">
+      </div>
+      <div class="ml-2 d-flex ai-center">
+        <i class="pi pi-bank mr-2" style="font-size: 1.2rem;"></i>
+        <label for="iban" style="font-size: 1.2rem">
+          Prevodom na účet
+        </label>
+      </div>
     </div>
+
   </div>
+
+
+
 
   <div class="proceed">
     <p-button label="Pokračovať do platby" (onClick)="proceedToPayment()" [disabled]="isProcessing" class="checkout-btn"></p-button>

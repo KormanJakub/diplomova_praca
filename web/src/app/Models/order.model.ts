@@ -7,6 +7,7 @@ export interface Order {
   PaymentId: string;
   PaymentStatus: string;
   CancellationToken: string;
+  FollowToken: string;
   CreatedAt: string;
   UpdatedAt: string;
 }

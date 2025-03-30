@@ -28,6 +28,8 @@ public class Order
     public string PaymentStatus { get; set; }
     [BsonElement("cancellationToken"), BsonRepresentation(BsonType.String)]
     public string CancellationToken { get; set; }
+    [BsonElement("followToken"), BsonRepresentation(BsonType.String)]
+    public string FollowToken { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]

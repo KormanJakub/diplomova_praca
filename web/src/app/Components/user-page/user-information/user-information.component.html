@@ -6,8 +6,9 @@
         <p><strong>Meno a Priezvisko:</strong> {{ user.FirstName }} {{ user.LastName }}</p>
         <p><strong>Email:</strong> {{ user.Email }}</p>
         <p><strong>Telefonné číslo:</strong> {{ user.PhoneNumber }}</p>
-        <p><strong>Adresa:</strong> {{ user.Address }}</p>
+        <p><strong>Ulica č.domu:</strong> {{ user.Address }}</p>
         <p><strong>ZIP:</strong> {{ user.Zip }}</p>
+        <p><strong>Krajina:</strong> {{ user.Country }}</p>
       </div>
     </div>
     <div class="flex gap-3 justify-center mt-4">
@@ -45,13 +46,19 @@
       <div class="p-field">
         <span class="p-float-label">
           <input id="address" type="text" pInputText [(ngModel)]="user.Address" style="width: 100%; height: 2.5rem;"/>
-          <label for="address">Adresa</label>
+          <label for="address">Ulica č.domu</label>
         </span>
       </div>
       <div class="p-field">
         <span class="p-float-label">
           <input id="zip" type="text" pInputText [(ngModel)]="user.Zip" style="width: 100%; height: 2.5rem;"/>
           <label for="zip">ZIP</label>
+        </span>
+      </div>
+      <div class="p-field">
+        <span class="p-float-label">
+          <input id="country" type="text" pInputText [(ngModel)]="user.Country" style="width: 100%; height: 2.5rem;"/>
+          <label for="country">Krajina</label>
         </span>
       </div>
     </div>

@@ -1,0 +1,7 @@
+app-header,
+app-footer,
+.container {
+  display: block;
+  margin: 0;
+  padding: 0;
+}

@@ -1,21 +1,34 @@
 <app-header></app-header>
-<div class="container">
-  <div class="alert-success">
-    <p>✅ Objednávka bola úspešne rezervovaná!</p>
+<div class="container" style="max-width: 600px; margin: 0 auto; padding: 1rem;">
+  <div class="alert-success" style="margin-bottom: 1.5rem; text-align: center;">
+    <p style="font-size: 1.2rem;">✅ Objednávka bola úspešne rezervovaná!</p>
   </div>
 
-  <div class="payment-info">
-    <div class="info-row">
-      <span class="label">IBAN:</span>
+  <div class="payment-info" style="font-size: 1rem; line-height: 1.5;">
+    <div class="info-row" style="margin-bottom: 0.8rem;">
+      <span class="label" style="font-weight: bold; margin-right: 0.5rem;">IBAN:</span>
       <span class="value">SK12 3456 7890 1234 5678 9012</span>
     </div>
-    <div class="info-row">
-      <span class="label">Meno príjemcu:</span>
+    <div class="info-row" style="margin-bottom: 0.8rem;">
+      <span class="label" style="font-weight: bold; margin-right: 0.5rem;">Meno príjemcu:</span>
       <span class="value">Waffle</span>
     </div>
-    <div class="info-row">
-      <span class="label">Variabilný symbol:</span>
+    <div class="info-row" style="margin-bottom: 1.5rem;">
+      <span class="label" style="font-weight: bold; margin-right: 0.5rem;">Variabilný symbol:</span>
       <span class="value">{{ orderId }}</span>
+    </div>
+
+    <div class="info-row" style="margin-bottom: 1rem;">
+      <span class="label" style="display: block; font-weight: bold; margin-bottom: 0.3rem;">
+        Vašu objednávku môžete sledovať na adrese:
+      </span>
+      <a
+        class="order-link"
+        [href]="orderTrackingUrl + '?followToken=' + order.FollowToken"
+        target="_blank"
+        style="font-size: 1.1rem; color: #007ad9; text-decoration: none; border-bottom: 1px solid #007ad9;">
+        Link na presmerovanie!
+      </a>
     </div>
   </div>
 </div>

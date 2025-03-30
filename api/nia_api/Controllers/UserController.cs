@@ -194,6 +194,7 @@ public class UserController : ControllerBase
             UserId = userId.Value,
             StatusOrder = EStatus.PRIJATA,
             CancellationToken = Guid.NewGuid().ToString(),
+            FollowToken = Guid.NewGuid().ToString(),
             CreatedAt = LocalTimeService.LocalTime()
         };
 

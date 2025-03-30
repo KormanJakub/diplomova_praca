@@ -10,8 +10,6 @@ using nia_api.Services;
 
 namespace nia_api.Controllers;
 
-//TODO: Keď vytvorím objednávku poslať email
-
 [ApiController]
 [Route("guest")]
 public class GuestUserController : ControllerBase
@@ -34,9 +32,6 @@ public class GuestUserController : ControllerBase
     [HttpPost("make-customization-without-register")]
     public async Task<IActionResult> MakeCustomizationWithoutRegister(GuestCustomizationRequest request)
     {
-        var designDictionary = new Dictionary<string, Design>();
-        var productDictionary = new Dictionary<string, Product>();
-        
         var guestUser = new GuestUser
         {
             Id = Guid.NewGuid(),
@@ -49,58 +44,65 @@ public class GuestUserController : ControllerBase
             PhoneNumber = request.GuestData.PhoneNumber,
             CreatedAt = LocalTimeService.LocalTime()
         };
-
         await _guestUsers.InsertOneAsync(guestUser);
         
-        var designIds = request.Customizations.Select(c => Guid.Parse(c.DesignId)).ToList();
-        var dbDesigns = await _designs.Find(d => designIds.Contains(d.Id)).ToListAsync();
-
-        var productIds = request.Customizations.Select(c => Guid.Parse(c.ProductId)).ToList();
-        var dbProducts = await _products.Find(p => productIds.Contains(p.Id)).ToListAsync();
+        var designDictionary = new Dictionary<string, Design>();
+        var productDictionary = new Dictionary<string, Product>();
         
         var customizations = new List<Customization>();
         var failedCustomizations = new List<string>();
-        
-        foreach (var customization in request.Customizations)
+
+        foreach (var req in request.Customizations)
         {
-            var dbDesign = dbDesigns.FirstOrDefault(d => d.Id.ToString() == customization.DesignId);
+            if (!Guid.TryParse(req.DesignId, out var designGuid))
+            {
+                failedCustomizations.Add($"Neplatný DesignId: {req.DesignId}");
+                continue;
+            }
+            var dbDesign = await _designs.Find(d => d.Id == designGuid).FirstOrDefaultAsync();
             if (dbDesign == null)
             {
-                failedCustomizations.Add($"Design not found: {customization.DesignId}");
+                failedCustomizations.Add($"Design not found: {req.DesignId}");
                 continue;
             }
 
-            var dbProduct = dbProducts.FirstOrDefault(p => p.Id.ToString() == customization.ProductId);
+            if (!Guid.TryParse(req.ProductId, out var productGuid))
+            {
+                failedCustomizations.Add($"Neplatný ProductId: {req.ProductId}");
+                continue;
+            }
+            var dbProduct = await _products.Find(p => p.Id == productGuid).FirstOrDefaultAsync();
             if (dbProduct == null)
             {
-                failedCustomizations.Add($"Product not found: {customization.ProductId}");
+                failedCustomizations.Add($"Product not found: {req.ProductId}");
                 continue;
             }
 
-            var price = dbDesign.Price + dbProduct.Price;
-            if (!string.IsNullOrEmpty(customization.UserDescription))
-                price += 2.0M;
+            var additionalPrice = !string.IsNullOrEmpty(req.UserDescription) ? 2.0M : 0.0M;
+            var price = dbDesign.Price + dbProduct.Price + additionalPrice;
 
             var newCustomization = new Customization
             {
                 Id = Guid.NewGuid(),
-                DesignId = customization.DesignId,
-                ProductId = customization.ProductId,
+                DesignId = req.DesignId,
+                ProductId = req.ProductId,
                 UserId = guestUser.Id.ToString(),
-                UserDescription = customization.UserDescription,
+                UserDescription = req.UserDescription,
                 Price = price,
-                CreatedAt = LocalTimeService.LocalTime(),
+                ProductColor = req.ProductColorName,
+                ProductSize = req.ProductSize,
+                CreatedAt = LocalTimeService.LocalTime()
             };
 
             customizations.Add(newCustomization);
-            
-            if (!designDictionary.ContainsKey(customization.DesignId))
-                designDictionary.Add(customization.DesignId, dbDesign);
 
-            if (!productDictionary.ContainsKey(customization.ProductId))
-                productDictionary.Add(customization.ProductId, dbProduct);
+            if (!designDictionary.ContainsKey(req.DesignId))
+                designDictionary.Add(req.DesignId, dbDesign);
+
+            if (!productDictionary.ContainsKey(req.ProductId))
+                productDictionary.Add(req.ProductId, dbProduct);
         }
-        
+
         if (customizations.Any())
         {
             await _customizations.InsertManyAsync(customizations);
@@ -122,7 +124,7 @@ public class GuestUserController : ControllerBase
             SuccessCustomization = customizations,
             Designs = designDictionary.Values,
             Products = productDictionary.Values,
-            FailedRequests = failedCustomizations 
+            FailedRequests = failedCustomizations
         });
     }
 
@@ -149,12 +151,19 @@ public class GuestUserController : ControllerBase
             UserId = Guid.Parse(request.GuestUserId),
             StatusOrder = EStatus.PRIJATA,
             CancellationToken = cancellationToken,
+            FollowToken = Guid.NewGuid().ToString(),
             CreatedAt = LocalTimeService.LocalTime()
         };
 
         await _orders.InsertOneAsync(lcOrder);
 
-        return Ok(new { message = "Order is successful!" });
+        return Ok(new
+        {
+            OrderId = lcOrder.Id, 
+            CancellationToken = lcOrder.CancellationToken,
+            FollowToken = lcOrder.FollowToken
+        });
+
     }
     
     [HttpPost("cancel-order/{OrderId}")]
@@ -260,5 +269,67 @@ public class GuestUserController : ControllerBase
             return NotFound("Order not found.");
         
         return Ok(new { message = "Objednávka bola úspešne zaplatená." });
+    }
+    
+    [HttpPost("follow-order")]
+    public async Task<IActionResult> ConfirmPayment([FromQuery] string followToken)
+    {
+        var order = await _orders.Find(o => o.FollowToken == followToken).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found" });
+        
+        var customizationIds = order.Customizations;
+        var customizations = await _customizations.Find(c => customizationIds.Contains(c.Id)).ToListAsync();
+
+        var productIds = customizations
+            .Select(c => c.ProductId)
+            .Distinct()
+            .ToList();
+        
+        var products = await _products
+            .Find(p => productIds.Contains(p.Id.ToString()))
+            .ToListAsync();
+
+        var customProductColors = customizations
+            .Select(c => new { ProductId = c.ProductId, Colors = c.ProductColor })
+            .Distinct()
+            .ToList();
+        
+        var filteredProducts = products.Select(p =>
+        {
+            var requestedColors = customProductColors
+                .Where(x => x.ProductId == p.Id.ToString())
+                .Select(x => x.Colors)
+                .Distinct()
+                .ToList();
+            p.Colors = p.Colors.Where(color => requestedColors.Contains(color.Name)).ToList();
+            return p;
+        }).ToList();
+        
+        var designIds = customizations
+            .Select(c => c.DesignId)
+            .Distinct()
+            .ToList();
+        var designGuids = designIds.Select(id => Guid.Parse(id)).ToList();
+        var designs = await _designs.Find(d => designGuids.Contains(d.Id)).ToListAsync();
+
+        var guestUser = await _guestUsers.Find(g => g.Id == order.UserId).FirstOrDefaultAsync();
+
+        return Ok(new 
+        {
+            order,
+            customizations,
+            designs,
+            products = filteredProducts,
+            user = guestUser
+        });
+    }
+
+    [HttpGet("order/{OrderId}")]
+    public async Task<IActionResult> OrderInformationById(int OrderId)
+    {
+        var dbOrder = await _orders.Find(o => o.Id == OrderId).FirstOrDefaultAsync();
+
+        return Ok(dbOrder);
     }
 }

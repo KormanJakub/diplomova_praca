@@ -37,7 +37,7 @@ export class UserOrderInfoComponent implements OnInit {
   orderId!: number;
 
   manualStatuses: ManualStatus[] = [
-    { value: 0, label: 'Prijaté',    bgClass: 'green-600' },
+    { value: 0, label: 'Rezervované',    bgClass: 'green-600' },
     { value: 1, label: 'Zaplatené',   bgClass: 'blue-600' },
     { value: 2, label: 'Vo výrobe',   bgClass: 'yellow-600' },
     { value: 3, label: 'Pripravené',  bgClass: 'purple-600' },
