@@ -1,26 +1,27 @@
-<body>
-  <div class="container">
-    <div class="title">
-      <div class="section-title">
-        <h1>Pozrite si Moju tvorbu</h1>
-      </div>
+<div class="gallery-section">
+  <div class="gallery-intro">
+    <h1>Pozrite si Moju tvorbu</h1>
+    <a routerLink="/products" class="cta-button">
+      Objednajte Si Váš Kúsok Tiež!
+    </a>
+  </div>
 
-      <div class="button-component">
-        <a href="#" class="cta-button">Objednajte Si Váš Kúsok Tiež!</a>
-      </div>
-    </div>
-
-    <div class="content">
-      <div class="image-content">
-        <div class="image-wrapper" *ngFor="let item of visibleImages">
-          <img [src]="environment.apiUrl + item.PathOfFile" alt="Obrazok" />
+  <div
+    class="slider"
+    (mouseenter)="pauseAutoplay()"
+    (mouseleave)="startAutoplay()"
+  >
+    <button class="arrow left" (click)="prev()">‹</button>
+    <div class="viewport">
+      <div
+        class="track"
+        [style.transform]="'translateX(-' + translatePercent + '%)'"
+      >
+        <div class="slide" *ngFor="let img of gallery">
+          <img [src]="environment.apiUrl + img.PathOfFile" alt="Obrazok" />
         </div>
       </div>
-
-      <div class="photos-container">
-        <button (click)="prev()">⟵</button>
-        <button (click)="next()">⟶</button>
-      </div>
     </div>
+    <button class="arrow right" (click)="next()">›</button>
   </div>
-</body>
+</div>

@@ -7,5 +7,6 @@ public enum EStatus
     VO_VYROBE,
     PRIPRAVENA,
     POSLANA,
-    ZRUSENA
+    ZRUSENA,
+    REKLAMACIA
 }

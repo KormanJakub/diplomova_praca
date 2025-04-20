@@ -2,10 +2,11 @@ import {Component, OnInit} from '@angular/core';
 import {UserService} from "../../../Services/user.service";
 import {User} from "../../../Models/user.model";
 import {CurrencyPipe, DatePipe} from "@angular/common";
-import {Button} from "primeng/button";
+import {Button, ButtonDirective} from "primeng/button";
 import {Footer} from "primeng/api";
 import {FormsModule} from "@angular/forms";
 import {DialogModule} from "primeng/dialog";
+import {ChipsModule} from "primeng/chips";
 
 @Component({
   selector: 'app-user-information',
@@ -16,7 +17,9 @@ import {DialogModule} from "primeng/dialog";
     Button,
     Footer,
     FormsModule,
-    DialogModule
+    DialogModule,
+    ChipsModule,
+    ButtonDirective
   ],
   templateUrl: './user-information.component.html',
   styleUrl: './user-information.component.css'

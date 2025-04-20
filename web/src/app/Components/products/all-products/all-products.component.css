@@ -16,6 +16,14 @@
   gap: 1rem;
 }
 
+.sold-out {
+  font-family: 'Montserrat', sans-serif;
+  color: #e60000;
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
 .product-item {
   border: 1px solid #ccc;
   padding: 1rem;

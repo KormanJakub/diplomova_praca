@@ -17,7 +17,16 @@
         <h2>
           {{ product.Name }} – {{ color.Name }}
         </h2>
-        <p class="price">{{ product.Price | currency: '€' }}</p>
+        <ng-container *ngIf="color.Sizes && color.Sizes.length > 0; else outOfStock">
+          <p class="price">
+            {{ product.Price | currency: '€' }}
+          </p>
+        </ng-container>
+        <ng-template #outOfStock>
+          <p class="sold-out">
+            Nie Je Na Sklade!
+          </p>
+        </ng-template>
       </div>
     </ng-container>
   </div>

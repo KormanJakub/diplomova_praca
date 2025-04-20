@@ -84,19 +84,6 @@ export class LeftNavigateComponent implements OnInit{
           ]
         },
         {
-          label: 'Profil',
-          items: [
-            {
-              label: 'Nastavenia',
-              icon: 'pi pi-cog',
-            },
-            {
-              label: 'Správy',
-              icon: 'pi pi-inbox',
-            }
-          ]
-        },
-        {
           separator: true
         }
       ];

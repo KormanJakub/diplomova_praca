@@ -25,11 +25,24 @@
 
     <div class="flex flex-column gap-1">
       <h3>Veľkosť</h3>
-      <select [(ngModel)]="selectedSize">
-        <option *ngFor="let size of product.Colors[0].Sizes" [value]="size.Size">
-          {{ size.Size }} ({{ size.Quantity }})
-        </option>
-      </select>
+
+      <ng-container *ngIf="hasSizes; else soldOut">
+        <p-dropdown
+          [options]="sizeOptions"
+          [(ngModel)]="selectedSize"
+          placeholder="Vyberte veľkosť..."
+          filterPlaceholder="Hľadať veľkosť"
+          [disabled]="!hasSizes"
+          appendTo="body"
+          inputId="sizeDropdown"
+        ></p-dropdown>
+      </ng-container>
+
+      <ng-template #soldOut>
+        <p class="sold-out-message">
+          Tento Produkt Je Momentálne Vypredaný!
+        </p>
+      </ng-template>
     </div>
 
     <div class="flex flex-column gap-1">
@@ -61,7 +74,10 @@
       ></textarea>
     </div>
     <p-toast styleClass="my-toast"></p-toast>
-    <button (click)="saveCustomization()">Pridať Do Košika!</button>
+    <button
+      (click)="saveCustomization()"
+      [disabled]="!hasSizes"
+      >Pridať Do Košika!</button>
   </div>
 </div>
 <app-galery-card></app-galery-card>

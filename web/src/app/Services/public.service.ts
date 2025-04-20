@@ -18,11 +18,11 @@ export class PublicService {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/receive-news`, { email });
   }
 
-  public bestThreeProducts(product: Product): Observable<any> {
+  public bestThreeProducts(): Observable<any> {
     return this.httpClient.get<Product[]>(`${environment.apiUrl}/public/best-three-products`);
   }
 
-  public galleryShowCaseForHome(gallery: Gallery): Observable<any> {
+  public galleryShowCaseForHome(): Observable<any> {
     return this.httpClient.get<Gallery[]>(`${environment.apiUrl}/public/all-gallery`);
   }
 

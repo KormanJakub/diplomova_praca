@@ -1,23 +1,30 @@
-<body>
 <div class="container">
-  <div class="intro-echo">
-    <div class="header">
-      <h1>Najpredávanejšie</h1>
-    </div>
+  <div class="intro">
+    <h1>Najpredávanejšie</h1>
     <p>Toto sú najpredávanejšie produkty!</p>
   </div>
 
-  <div class="first-row">
-    <div *ngFor="let product of products; let i = index" class="product-card-{{i+1}}">
-      <div class="image-card">
-        <img *ngIf="product.Colors.length > 0" [src]="environment.apiUrl + product.Colors[0].PathOfFile" [alt]="product.Name">
+  <div class="products-grid">
+    <div *ngFor="let product of displayedProducts" class="card">
+      <div class="image-wrapper">
+        <img [src]="imageUrl(product)"
+             [alt]="product.Name || 'Placeholder'">
       </div>
-      <p>{{ product.Name }}</p>
-      <div class="price-card">
-        <p>{{ product.Price }}€</p>
+      <div class="info">
+        <h2 class="name">
+          {{ product.Name || 'Produkt nie je k dispozícii' }}
+        </h2>
+        <p class="price" *ngIf="product.Price">
+          {{ product.Price | number:'1.2-2' }} €
+        </p>
+        <button
+          class="cta"
+          [routerLink]="['/product', product.Id]"
+          [queryParams]="{ color: product.Colors[0]?.Name }"
+          [disabled]="!product.Name">
+          Upraviť Produkt
+        </button>
       </div>
-      <a href="#" class="cta-button">Pridať do košíka</a>
     </div>
   </div>
 </div>
-</body>

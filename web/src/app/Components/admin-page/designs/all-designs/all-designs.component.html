@@ -59,7 +59,7 @@
             <img [src]="environment.apiUrl + design.PathOfFile" alt="Obrazok" width="50"/>
           </td>
           <td>{{ design.Name }}</td>
-          <td>{{ design.Price | currency }}</td>
+          <td>{{ design.Price | number:'1.2-2' }} €</td>
           <td>{{ design.CreatedAt | date:'short' }}</td>
           <td>{{ design.UpdatedAt | date:'short' }}</td>
           <td>
@@ -77,32 +77,74 @@
     </p-table>
   </div>
 
-  <p-dialog header="{{ designDialogHeader }}" [(visible)]="designDialog" [modal]="true"
-            [style]="{width: '30vw'}" [closable]="false">
-    <div class="flex flex-column gap-5">
-      <div class="p-field">
-      <span class="p-float-label">
-        <input id="name" type="text" pInputText [(ngModel)]="design.Name" style="width: 300px; height: 2.5rem;"/>
-        <label for="name">Meno</label>
-      </span>
+  <p-dialog
+    header="{{ designDialogHeader }}"
+    [(visible)]="designDialog"
+    [modal]="true"
+    [closable]="false"
+    [style]="{ width: '30vw', maxWidth: '95vw' }"
+    class="design-dialog"
+  >
+    <div class="fluid formgrid grid">
+      <div class="field mt-3 col-12">
+        <p-floatLabel>
+          <input
+            id="name"
+            pInputText
+          placeholder=" "
+          [(ngModel)]="design.Name"
+          class="dialog-input"
+          />
+          <label for="name">Meno</label>
+        </p-floatLabel>
       </div>
-      <div class="p-field">
-      <span class="p-float-label">
-        <input id="price" type="number" pInputText [(ngModel)]="design.Price" style="width: 300px; height: 2.5rem;"/>
-        <label for="price">Cena</label>
-      </span>
+
+      <div class="field mt-2 col-12">
+        <p-floatLabel>
+          <input
+            id="price"
+            type="number"
+            pInputText
+            placeholder=" "
+            min="0"
+            step="0.01"
+            [(ngModel)]="design.Price"
+            class="dialog-input"
+          />
+          <label for="price">Cena (€)</label>
+        </p-floatLabel>
       </div>
-      <div class="p-field">
-      <span class="p-float-label">
-        <input id="colorImage" type="file" accept="image/*" (change)="onImageSelected($event)" style="width:300px;">
-        <label for="colorImage">Obrázok</label>
-      </span>
+
+      <div class="field col-12">
+        <label for="colorImage" class="upload-label">Obrázok</label>
+        <input
+          id="colorImage"
+          type="file"
+          accept="image/*"
+          (change)="onImageSelected($event)"
+          class="upload-input"
+        />
       </div>
     </div>
+
     <p-footer>
-      <p-button label="Cancel" severity="danger" icon="pi pi-times" class="p-button-text"
-                (onClick)="hideDialog()"></p-button>
-      <p-button label="Submit" icon="pi pi-check" (onClick)="saveDesign()"></p-button>
+      <button
+        pButton
+        type="button"
+        label="Zrušiť"
+        icon="pi pi-times"
+        severity="danger"
+        class="p-button-text mt-2"
+        (click)="hideDialog()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Uložiť"
+        icon="pi pi-check"
+        (click)="saveDesign()"
+      ></button>
     </p-footer>
   </p-dialog>
+
 </div>

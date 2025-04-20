@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {HeaderComponent} from "../../header/header.component";
 import {FooterComponent} from "../../footer/footer.component";
 import {GaleryCardComponent} from "../../home-page/galery-card/galery-card.component";
-import {Product} from "../../../Models/product.model";
+import {Product, Size} from "../../../Models/product.model";
 import {Design} from "../../../Models/design.model";
 import {ActivatedRoute} from "@angular/router";
 import {PublicService} from "../../../Services/public.service";
@@ -14,6 +14,7 @@ import {CookieService} from "ngx-cookie-service";
 import {CustomizationRequest} from "../../../Requests/customizationrequest";
 import {MessageService} from "primeng/api";
 import {ToastModule} from "primeng/toast";
+import {DropdownModule} from "primeng/dropdown";
 
 @Component({
   selector: 'app-product-detail',
@@ -28,6 +29,7 @@ import {ToastModule} from "primeng/toast";
     SlicePipe,
     QuestionsByCardComponent,
     ToastModule,
+    DropdownModule,
     NgIf
   ],
   templateUrl: './product-detail.component.html',
@@ -39,6 +41,8 @@ export class ProductDetailComponent implements OnInit {
   customReqs: CookiesCustomizationRequest[] = [];
   product!: Product;
   designs: Design[] = [];
+
+  sizeOptions: { label: string; value: string }[] = [];
 
   selectedDesignId: string = '';
   selectedDesign?: Design;
@@ -64,9 +68,11 @@ export class ProductDetailComponent implements OnInit {
       this.publicService.productDetail(id, color).subscribe({
         next: (prod: Product) => {
           this.product = prod;
+          this.updateSizeOptions();
         },
         error: err => {
           console.error('Chyba pri načítavaní produktu:', err);
+          this.updateSizeOptions();
         }
       });
     } else {
@@ -155,6 +161,28 @@ export class ProductDetailComponent implements OnInit {
       summary: 'Úspech',
       detail: 'Produkt pridaný do košíka!'
     });
+  }
+
+  get availableSizes() {
+    return (
+      this.product?.Colors?.[0]?.Sizes
+        ?.filter(s => s.Quantity > 0)
+      ?? []
+    );
+  }
+
+  get hasSizes(): boolean {
+    return this.availableSizes.length > 0;
+  }
+
+  private updateSizeOptions() {
+    this.sizeOptions = this.availableSizes.map(s => ({
+      label: `${s.Size} (${s.Quantity})`,
+      value: s.Size
+    }));
+    if (!this.availableSizes.find(s => s.Size === this.selectedSize)) {
+      this.selectedSize = '';
+    }
   }
 
   protected readonly environment = environment;

@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {Color, Product, Size} from "../../../../Models/product.model";
 import {TableModule} from "primeng/table";
-import {CurrencyPipe, DatePipe, NgClass, NgIf} from "@angular/common";
+import {CurrencyPipe, DatePipe, DecimalPipe, NgClass, NgIf} from "@angular/common";
 import {AdminService} from "../../../../Services/admin.service";
 import {MessageService} from "primeng/api";
 import {Button} from "primeng/button";
@@ -13,6 +13,8 @@ import {FileService} from "../../../../Services/file.service";
 import { Tag } from '../../../../Models/tag.model';
 import {environment} from "../../../../../Environments/environment";
 import {DropdownModule} from "primeng/dropdown";
+import {InputTextareaModule} from "primeng/inputtextarea";
+import {ChipsModule} from "primeng/chips";
 
 @Component({
   selector: 'app-all-products',
@@ -28,7 +30,10 @@ import {DropdownModule} from "primeng/dropdown";
     ToolbarModule,
     DialogModule,
     FormsModule,
-    DropdownModule
+    DropdownModule,
+    InputTextareaModule,
+    ChipsModule,
+    DecimalPipe
   ],
   templateUrl: './all-products.component.html',
   styleUrl: './all-products.component.css',

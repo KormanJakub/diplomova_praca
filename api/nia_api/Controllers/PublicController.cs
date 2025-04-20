@@ -118,18 +118,17 @@ namespace nia_api.Controllers
             return Ok(dbDesigns);
         }
         
-        //TODO: Keď bude analyze, upraviť
         [HttpGet("best-three-products")]
         public async Task<IActionResult> BestThreeProducts()
         {
             var dbProducts = await _products
-                .Find(_ => true)
-                .Limit(3)
+                .Aggregate()
+                .Sample(3)
                 .ToListAsync();
-            
+
             if (dbProducts == null || dbProducts.Count == 0)
                 return NotFound(new { error = "No products found!" });
-            
+
             return Ok(dbProducts);
         }
 

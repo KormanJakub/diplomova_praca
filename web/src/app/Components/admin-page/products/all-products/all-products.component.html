@@ -39,7 +39,7 @@
           </td>
           <td>{{ product.TagName }}</td>
           <td>{{ product.Name }}</td>
-          <td>{{ product.Price | currency }}</td>
+          <td>{{ product.Price | number:'1.2-2' }} €</td>
           <td>{{ product.CreatedAt | date:'short' }}</td>
           <td>{{ product.UpdatedAt | date:'short' }}</td>
         </tr>
@@ -155,7 +155,7 @@
         </span>
       </div>
       <div class="p-field">
-        <span class="p-float-label">
+        <span class="p-float-label mt-5">
           <input id="quantity" type="number" pInputText [(ngModel)]="currentSize.Quantity" style="width:300px; height:2.5rem;">
           <label for="quantity">Množstvo</label>
         </span>
