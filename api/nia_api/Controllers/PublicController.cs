@@ -175,6 +175,13 @@ namespace nia_api.Controllers
             return Ok(new { message = "You sent a request!" });
         }
 
+
+        [HttpPost("control")]
+        public async Task<IActionResult> ControlData()
+        {
+            return Ok(new { message = "IDE TO!" });
+        }
+
         [HttpPost("receive-news")]
         public async Task<IActionResult> ReceiveNews([FromBody] EmailDto request)
         {

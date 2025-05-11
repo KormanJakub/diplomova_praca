@@ -5,7 +5,7 @@ import {FormControl, FormsModule, FormGroup, Validators, ReactiveFormsModule, Fo
 import {Router, RouterModule} from "@angular/router";
 import {AuthService} from "../../Services/auth.service";
 import {RegisterRequest} from "../../Requests/registerrequest";
-import {Button} from "primeng/button";
+import {Button, ButtonDirective} from "primeng/button";
 import { PasswordModule } from 'primeng/password';
 import {DividerModule} from "primeng/divider";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -13,6 +13,7 @@ import {CommonModule} from "@angular/common";
 import {BrowserModule} from "@angular/platform-browser";
 import {HeaderComponent} from "../header/header.component";
 import {FooterComponent} from "../footer/footer.component";
+import {DialogModule} from "primeng/dialog";
 
 //TODO: Urob validaciu
 
@@ -30,7 +31,9 @@ import {FooterComponent} from "../footer/footer.component";
     DividerModule,
     PasswordModule,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    ButtonDirective,
+    DialogModule
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
@@ -39,6 +42,9 @@ import {FooterComponent} from "../footer/footer.component";
 export class RegisterComponent implements OnInit{
   user: RegisterRequest = new RegisterRequest();
   registerForm!: FormGroup;
+
+  errorDialogVisible = false;
+  errorDialogMessage = '';
 
   constructor(
     private router: Router,
@@ -102,7 +108,8 @@ export class RegisterComponent implements OnInit{
         this.router.navigate(['/login']);
       },
       error: (err) => {
-        alert('Registration failed: ' + err.error.error);
+        this.errorDialogMessage = 'Uživateľ už je registrovaný! Skúste sa prihlásiť';
+        this.errorDialogVisible = true;
       }
     })
   }

@@ -24,12 +24,12 @@
           <input pInputText id="address" type="text" formControlName="address" placeholder="Ulica č. domu" />
         </div>
         <div class="p-col-12 p-md-6">
-          <label for="zip" class="form-label">PSČ</label>
-          <input pInputText id="zip" type="text" formControlName="zip" placeholder="PSČ" />
+          <label for="country" class="form-label">Mesto</label>
+          <input pInputText id="country" type="text" formControlName="country" placeholder="Mesto" />
         </div>
         <div class="p-col-12 p-md-6">
-          <label for="country" class="form-label">Krajina</label>
-          <input pInputText id="country" type="text" formControlName="country" placeholder="Krajina" />
+          <label for="zip" class="form-label">PSČ</label>
+          <input pInputText id="zip" type="text" formControlName="zip" placeholder="PSČ" />
         </div>
         <div class="p-col-12 p-md-6">
           <label for="email" class="form-label">Email</label>
@@ -64,11 +64,9 @@
           </ng-container>
           <ng-template #noDesign></ng-template>
         </td>
-
         <td>
           <img [src]="item.ProductURL" alt="Produkt" class="cart-image" />
         </td>
-
         <td>{{ item.ProductSize }}</td>
         <td>{{ item.UserDescription }}</td>
         <td>
@@ -82,17 +80,13 @@
       </tr>
       </tbody>
     </table>
-
     <div class="total-order">
       Celková suma: {{ totalOverall | currency:'€' }}
     </div>
   </div>
 
-
-
   <div class="payment-options">
     <h2>Zvoľte Spôsob Platby</h2>
-
     <div class="field-radiobutton flex mb-3" style="text-align: left;">
       <div class="flex" style="align-items: baseline;">
         <p-radioButton
@@ -118,7 +112,6 @@
       </div>
     </div>
 
-
     <div class="field-radiobutton flex ai-center">
       <p-radioButton name="payment" value="iban" [(ngModel)]="selectedPaymentMethod" inputId="iban"></p-radioButton>
       <div class="payment-logos flex ml-3" style="gap: 8px; margin-top: 4px;">
@@ -131,12 +124,7 @@
         </label>
       </div>
     </div>
-
   </div>
-
-
-
-
   <div class="proceed">
     <p-button label="Pokračovať do platby" (onClick)="proceedToPayment()" [disabled]="isProcessing" class="checkout-btn"></p-button>
   </div>

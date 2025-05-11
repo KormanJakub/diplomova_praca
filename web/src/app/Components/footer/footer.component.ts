@@ -1,21 +1,27 @@
-import { Component } from '@angular/core';
-import {Router, RouterLink} from "@angular/router";
+import {Component, NgModule} from '@angular/core';
+import {ExtraOptions, RouterLink, RouterModule, Routes} from "@angular/router";
 import {FormsModule} from "@angular/forms";
-import {AuthService} from "../../Services/auth.service";
 import {PublicService} from "../../Services/public.service";
+import {ButtonModule} from "primeng/button";
+import {DialogModule} from "primeng/dialog";
 
 @Component({
   selector: 'app-footer',
   standalone: true,
   imports: [
     RouterLink,
-    FormsModule
+    FormsModule,
+    DialogModule,
+    ButtonModule
   ],
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.css'
 })
 export class FooterComponent {
-  email: string = "";
+  email = '';
+  displaySuccess = false;
+  displayError = false;
+  errorMessage = '';
 
   constructor(
     private publicService: PublicService
@@ -24,11 +30,16 @@ export class FooterComponent {
   receiveNews() {
     this.publicService.receiveNews(this.email).subscribe({
       next: () => {
-        alert('Úspešne budete príjmať novinky!');
+        this.displaySuccess = true;
       },
-      error: (err) => {
-        alert('Registration failed: ' + err.error.error);
+      error: err => {
+        this.errorMessage = err.error?.error || 'Neznáma chyba';
+        this.displayError = true;
       }
-    })
+    });
+  }
+
+  closeDialogs() {
+    this.displaySuccess = this.displayError = false;
   }
 }

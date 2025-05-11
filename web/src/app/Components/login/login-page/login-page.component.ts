@@ -8,6 +8,8 @@ import {PublicService} from "../../../Services/public.service";
 import {AuthService} from "../../../Services/auth.service";
 import {Router} from "@angular/router";
 import {CookieService} from "ngx-cookie-service";
+import {DialogModule} from "primeng/dialog";
+import {ButtonDirective} from "primeng/button";
 
 @Component({
   selector: 'app-login-page',
@@ -16,7 +18,9 @@ import {CookieService} from "ngx-cookie-service";
     FloatLabelModule,
     InputTextModule,
     ReactiveFormsModule,
-    NgIf
+    NgIf,
+    DialogModule,
+    ButtonDirective
   ],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.css'
@@ -25,6 +29,9 @@ export class LoginPageComponent implements OnInit{
 
   loginForm: FormGroup = new FormGroup({});
   user: LoginRequest = new LoginRequest();
+
+  errorDialogVisible = false;
+  errorDialogMessage = '';
 
   constructor(
     private router: Router,
@@ -70,8 +77,9 @@ export class LoginPageComponent implements OnInit{
 
           this.router.navigate(['/']);
         },
-        error: (error) => {
-          alert("Error: " + error.message);
+        error: () => {
+          this.errorDialogMessage = 'Uživateľ nie je registrovaný, alebo ste zadali zlé heslo! Skuste to znova';
+          this.errorDialogVisible = true;
         }
       })
     }

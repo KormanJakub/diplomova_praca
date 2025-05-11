@@ -74,3 +74,21 @@
   </div>
 </div>
 </form>
+
+<p-dialog
+  header="Chyba pri prihlásení"
+  [(visible)]="errorDialogVisible"
+  modal="true"
+  [closable]="true"
+  [dismissableMask]="true"
+>
+  <p>{{ errorDialogMessage }}</p>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="OK"
+      (click)="errorDialogVisible = false"
+    ></button>
+  </ng-template>
+</p-dialog>

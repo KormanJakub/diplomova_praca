@@ -33,6 +33,8 @@ export class GaleryCardComponent implements OnInit {
 
   currentIndex = 0;
 
+  productsUrl = `${environment.feUrl}/products`;
+
   get translatePercent(): number {
     return (this.currentIndex * 100) / this.slidesPerView;
   }

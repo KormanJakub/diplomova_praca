@@ -9,21 +9,19 @@
         <div class="column-one">
           <h4>Užitočné Odkazy</h4>
           <div class="column-one-links">
-            <p>Domov</p>
-            <p>Najpredávanejšie</p>
-            <p>Proces</p>
-            <p>O nás</p>
-            <p>Galéria</p>
+            <p routerLink="/">Domov</p>
+            <p routerLink="/products">Produkty</p>
+            <p routerLink="/about-me">O nás</p>
+            <p routerLink="/my-gallery">Galéria</p>
           </div>
         </div>
 
         <div class="column-two">
           <h4>Dôležité Odkazy</h4>
           <div class="column-two-links">
-            <p>Zásady ochrany</p>
-            <p>Obchodné <br> Podmienky</p>
-            <p>Nastavenie Cookies</p>
-            <p>FAQ</p>
+            <p routerLink="/contact">Zásady ochrany</p>
+            <p routerLink="/contact">Obchodné <br> Podmienky</p>
+            <p routerLink="/contact">FAQ</p>
           </div>
         </div>
 
@@ -72,4 +70,18 @@
       </div>
     </div>
   </div>
+
+  <p-dialog header="Ďakujeme!" [(visible)]="displaySuccess" modal="true" [closable]="false">
+    <p>Úspešne budete prijímať novinky!</p>
+    <ng-template pTemplate="footer">
+      <button pButton label="OK" (click)="closeDialogs()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog header="Chyba" [(visible)]="displayError" modal="true" [closable]="false">
+    <p>Pri registrácii nastala chyba: {{ errorMessage }}</p>
+    <ng-template pTemplate="footer">
+      <button pButton label="OK" (click)="closeDialogs()"></button>
+    </ng-template>
+  </p-dialog>
 </body>

@@ -8,8 +8,10 @@ import {TableModule} from "primeng/table";
 import {Product} from "../../../Models/product.model";
 import {Design} from "../../../Models/design.model";
 import {environment} from "../../../../Environments/environment";
-import {Button} from "primeng/button";
+import {Button, ButtonDirective} from "primeng/button";
 import {MessageService} from "primeng/api";
+import {ToastModule} from "primeng/toast";
+import {User} from "../../../Models/user.model";
 
 interface ManualStatus {
   value: number;
@@ -25,7 +27,9 @@ interface ManualStatus {
     TableModule,
     DatePipe,
     NgIf,
-    Button
+    Button,
+    ToastModule,
+    ButtonDirective
   ],
   templateUrl: './order-information.component.html',
   styleUrl: './order-information.component.css',
@@ -39,6 +43,7 @@ export class OrderInformationComponent implements OnInit {
   customizations: Customization[] = [];
   products: Product[] = [];
   designs: Design[] = [];
+  user!: User;
   orderId!: number;
 
   manualStatuses: ManualStatus[] = [
@@ -68,6 +73,18 @@ export class OrderInformationComponent implements OnInit {
       this.customizations = response.customizations;
       this.products = response.products;
       this.designs = response.designs;
+
+      this.adminService.getUserInformation(this.order.UserId)
+        .subscribe({
+          next: (env: UserEnvelope) => {
+            if (env.userType === 'Normal') {
+              this.user = env.data as User;
+            } else {
+              this.user = env.data as User;
+            }
+          },
+          error: err => console.error(err)
+        })
     });
   }
 
@@ -123,7 +140,7 @@ export class OrderInformationComponent implements OnInit {
       this.messageService.add({
         severity: 'success',
         summary: 'Success',
-        detail: 'Stav znýžený!',
+        detail: 'Stav znížený!',
         life: 3000
       });
       this.loadOrderInformation();
@@ -142,4 +159,9 @@ export class OrderInformationComponent implements OnInit {
       this.loadOrderInformation();
     });
   }
+}
+
+interface UserEnvelope {
+  userType: 'Normal' | 'Guest';
+  data: any;
 }

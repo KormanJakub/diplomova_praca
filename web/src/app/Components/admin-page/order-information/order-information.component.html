@@ -9,14 +9,16 @@
       <div class="grid mb-2">
         <div class="col-12 md-6">
           <p><strong>Faktúra ID:</strong> {{ order.Id }}</p>
-          <p><strong>Uživateľ ID:</strong> {{ order.UserId }}</p>
+          <p><strong>Uživateľské Meno a Priezvisko:</strong> {{ user.FirstName }} {{ user.LastName }}</p>
+          <p><strong>Uživateľské Adresa č. domu, PSČ Mesto:</strong> {{ user.Address }}, {{ user.Zip }} {{ user.Country }}</p>
+          <p><strong>Uživateľský Email:</strong> {{ user.Email }}</p>
+          <p><strong>Uživateľské Tel. číslo:</strong> {{ user.PhoneNumber }}</p>
           <p><strong>Suma:</strong> {{ order.TotalPrice | currency:'€' }}</p>
           <p><strong>Status:</strong> {{ getManualStatusLabel(order.StatusOrder) }}</p>
         </div>
         <div class="col-12 md-6">
-          <p><strong>Payment ID:</strong> {{ order.PaymentId }}</p>
-          <p><strong>Payment Status:</strong> {{ order.PaymentStatus }}</p>
-          <p><strong>Cancellation Token:</strong> {{ order.CancellationToken }}</p>
+          <p><strong>Token na ukončenie objednávky:</strong> {{ order.CancellationToken }}</p>
+          <p><strong>Token na sledovanie objednávky:</strong> {{ order.FollowToken }}</p>
         </div>
       </div>
       <div class="grid">
@@ -79,4 +81,5 @@
   <ng-template #loading>
     <p class="text-center">Loading order information...</p>
   </ng-template>
+  <p-toast></p-toast>
 </div>

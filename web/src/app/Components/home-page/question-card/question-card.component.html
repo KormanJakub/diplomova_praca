@@ -1,55 +1,71 @@
-<body>
-  <div class="container">
-    <div class="images-wrapper">
-      <div class="container-two-images">
-        <img src="fotka1.jpg" alt="Prvý obrázok">
-        <img src="fotka2.JPG" alt="Druhý obrázok">
-      </div>
-      <div class="container-three-images">
-        <img src="fotka3.jpg" alt="Prvý obrázok">
-        <img src="fotka1.jpg" alt="Druhý obrázok">
-      </div>
+<div class="container">
+  <div class="images-wrapper">
+    <div class="container-two-images">
+      <img src="fotka1.jpg" alt="Prvý obrázok">
+      <img src="fotka2.JPG" alt="Druhý obrázok">
     </div>
-
-    <div class="question">
-      <h1>Máte otázky alebo ste <br> pripravení si objednať?</h1>
-      <p>Pokiaľ máte záujem špecifický dizajn neváhajte ma kontaktovať. <br>
-        Budem sa snažiť vám čím skôr odpovedať.
-      </p>
-
-      <div class="name">
-        <p-floatLabel>
-          <input id="name_label" pInputText/>
-          <label for="name_label">Meno</label>
-        </p-floatLabel>
-      </div>
-
-      <div class="email">
-        <p-floatLabel>
-          <input id="email_label" pInputText/>
-          <label for="email_label">Email</label>
-        </p-floatLabel>
-      </div>
-
-      <div class="text-area">
-        <p-floatLabel>
-      <textarea
-        id="message"
-        rows="10"
-        pInputTextarea
-        autoResize="true"
-        placeholder=" "></textarea>
-          <label for="message">Vaša správa</label>
-        </p-floatLabel>
-      </div>
-
-      <div class="drag-and-drop">
-        <i class="pi pi-cloud-upload"></i>
-        <p>Drag and drop files to here to upload.</p>
-      </div>
-
-      <a href="#" class="cta-button">Odoslať ></a>
-
+    <div class="container-three-images">
+      <img src="fotka3.jpg" alt="Tretí obrázok">
+      <img src="fotka1.jpg" alt="Štvrtý obrázok">
     </div>
   </div>
-</body>
+
+  <div class="question">
+    <h1>Máte otázky alebo ste <br> pripravení si objednať?</h1>
+    <p>Pokiaľ máte záujem o špecifický dizajn, neváhajte ma kontaktovať.<br>Budem sa snažiť vám čo najskôr odpovedať.</p>
+
+    <div class="name">
+      <p-floatLabel>
+        <input id="name_label" pInputText [(ngModel)]="name" name="name" />
+        <label for="name_label">Meno</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="email">
+      <p-floatLabel>
+        <input id="email_label" pInputText [(ngModel)]="email" name="email" />
+        <label for="email_label">Email</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="text-area">
+      <p-floatLabel>
+        <textarea id="message" rows="5" pInputTextarea autoResize="true" placeholder=" "
+                  [(ngModel)]="message" name="message"></textarea>
+        <label for="message">Vaša správa</label>
+      </p-floatLabel>
+    </div>
+
+    <div *ngIf="files.length" class="selected-files">
+      <p>Vybrané súbory:</p>
+      <ul>
+        <li *ngFor="let file of files; let i = index">
+          {{ file.name }}
+          <button type="button" class="delete-btn" (click)="removeFile(i)">×</button>
+        </li>
+      </ul>
+    </div>
+
+    <input type="file" #fileInput multiple hidden (change)="onFileSelect($event)">
+
+    <div class="drag-and-drop"
+         [class.dragover]="dragOver"
+         (click)="fileInput.click()"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onFileDrop($event)">
+      <i class="pi pi-cloud-upload"></i>
+      <p *ngIf="!files.length">Drag and drop files here or click to upload.</p>
+      <p *ngIf="files.length">Chcete pridať ďalšie súbory? Kliknite sem alebo požltajte.</p>
+    </div>
+
+    <button type="button" class="cta-button" (click)="onSubmit()">Odoslať &gt;</button>
+
+    <p-dialog header="Odoslané" [(visible)]="displayDialog" modal="true" [closable]="false">
+      <p>Súbor(y) boli úspešne odoslané.</p>
+      <ng-template pTemplate="footer">
+        <button type="button" pButton label="OK" (click)="onDialogClose()"></button>
+      </ng-template>
+    </p-dialog>
+  </div>
+</div>

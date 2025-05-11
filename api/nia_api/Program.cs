@@ -57,12 +57,13 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
+
 var corsPolicy = "WafflWeb";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

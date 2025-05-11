@@ -197,4 +197,7 @@ export class AdminService {
     }>(`${environment.apiUrl}/admin/kpi`);
   }
 
+  getUserInformation(userId : string): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/admin/user/${userId}`);
+  }
 }

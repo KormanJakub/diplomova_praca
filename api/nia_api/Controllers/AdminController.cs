@@ -19,6 +19,8 @@ public class AdminController : ControllerBase
     private readonly IMongoCollection<PairedDesign> _pairedDesigns;
     private readonly IMongoCollection<Customization> _customizations;
     private readonly IMongoCollection<Order> _orders;
+    private readonly IMongoCollection<User> _users;
+    private readonly IMongoCollection<GuestUser> _guestUsers;
     
     public AdminController(NiaDbContext context)
     {
@@ -28,6 +30,8 @@ public class AdminController : ControllerBase
         _pairedDesigns = context.PairedDesigns;
         _customizations = context.Customizations;
         _orders = context.Orders;
+        _users = context.Users;
+        _guestUsers = context.GuestUsers;
     }
 
     [HttpGet("tag/getAll")]
@@ -777,4 +781,33 @@ public class AdminController : ControllerBase
         });
     }
 
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUserInformation(string userId)
+    {
+        var _userId = Guid.Parse(userId);
+
+        var dbUser = await _users.Find(u => u.Id == _userId).FirstOrDefaultAsync();
+
+        if (dbUser != null)
+        {
+            return Ok(new {
+                userType = "Normal",
+                data     = dbUser
+            });
+        }
+
+        var guestUser = await _guestUsers
+            .Find(g => g.Id == _userId)
+            .FirstOrDefaultAsync();
+
+        if (guestUser != null)
+        {
+            return Ok(new {
+                userType = "Guest",
+                data     = guestUser
+            });
+        }
+
+        return NotFound(new { error = "User not found" });
+    }
 }
