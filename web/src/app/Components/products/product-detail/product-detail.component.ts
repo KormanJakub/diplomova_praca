@@ -14,7 +14,7 @@ import {CookieService} from "ngx-cookie-service";
 import {CustomizationRequest} from "../../../Requests/customizationrequest";
 import {MessageService} from "primeng/api";
 import {ToastModule} from "primeng/toast";
-import {DropdownModule} from "primeng/dropdown";
+import {SelectModule} from "primeng/select";
 
 @Component({
   selector: 'app-product-detail',
@@ -29,7 +29,7 @@ import {DropdownModule} from "primeng/dropdown";
     SlicePipe,
     QuestionsByCardComponent,
     ToastModule,
-    DropdownModule,
+    SelectModule,
     NgIf
   ],
   templateUrl: './product-detail.component.html',

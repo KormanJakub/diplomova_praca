@@ -80,7 +80,7 @@
             </span>
           </td>
           <td>
-            <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
+            <p-button icon="pi pi-pencil" severity="warn" class="p-button-rounded p-button-text"
                       (onClick)="editDesign(pairedDesign)"></p-button>
           </td>
         </tr>
@@ -103,7 +103,7 @@
       </div>
       <div class="p-field">
         <label for="newDesign1">Prvý dizajn</label>
-        <p-dropdown id="newDesign1"
+        <p-select id="newDesign1"
                     [options]="availableDesigns"
                     [(ngModel)]="newPairedDesign.Designs[0]"
                     optionLabel="Name"
@@ -114,11 +114,11 @@
               <span>{{ design.Name }}</span>
             </div>
           </ng-template>
-        </p-dropdown>
+        </p-select>
       </div>
       <div class="p-field">
         <label for="newDesign2">Druhý dizajn</label>
-        <p-dropdown id="newDesign2"
+        <p-select id="newDesign2"
                     [options]="availableDesigns"
                     [(ngModel)]="newPairedDesign.Designs[1]"
                     optionLabel="Name"
@@ -129,12 +129,12 @@
               <span>{{ design.Name }}</span>
             </div>
           </ng-template>
-        </p-dropdown>
+        </p-select>
       </div>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" severity="danger" icon="pi pi-times" (onClick)="closeNewDialog()"></p-button>
       <p-button label="Create" severity="primary" icon="pi pi-check" (onClick)="saveNew()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 </div>

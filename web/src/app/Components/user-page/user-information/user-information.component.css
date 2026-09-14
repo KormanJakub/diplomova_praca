@@ -25,7 +25,8 @@
   height: 2.5rem;
 }
 
-p-footer {
+.user-dialog-footer {
+  display: flex;
   flex-direction: column !important;
   align-items: stretch;
   gap: 1rem;

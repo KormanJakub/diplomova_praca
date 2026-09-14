@@ -48,7 +48,7 @@
             <div class="p-ml-4 flex gap-3 pt-3">
               <div class="flex flex-column gap-4">
                 <p-button label="Pridať farbu" severity="help" icon="pi pi-plus" class="p-mb-2" (onClick)="openNewColor(product)"></p-button>
-                <p-button label="Upraviť produkt" severity="warning" icon="pi pi-plus" class="p-mb-2" (onClick)="openEditProduct(product)"></p-button>
+                <p-button label="Upraviť produkt" severity="warn" icon="pi pi-plus" class="p-mb-2" (onClick)="openEditProduct(product)"></p-button>
                 <p-button label="Odstraniť produkt" severity="danger" icon="pi pi-trash" class="p-mb-2" (onClick)="deleteSelectedProduct(product)"></p-button>
               </div>
               <p-table [value]="product.Colors" dataKey="Name">
@@ -137,11 +137,11 @@
         </div>
       </div>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
                 (click)="hideColorDialog()"></p-button>
       <p-button label="Submit" icon="pi pi-check" (click)="saveColor()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 
 
@@ -161,11 +161,11 @@
         </span>
       </div>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
                 (click)="hideSizeDialog()"></p-button>
       <p-button label="Submit" icon="pi pi-check" (click)="saveSize()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 
   <p-dialog header="Uprav Product" [(visible)]="productDialog" [modal]="true"
@@ -179,13 +179,13 @@
       </div>
       <div class="p-field">
       <span class="p-float-label">
-        <textarea id="description" pInputTextarea [(ngModel)]="currentProduct.Description" style="width:300px; height:5rem;"></textarea>
+        <textarea id="description" pTextarea [(ngModel)]="currentProduct.Description" style="width:300px; height:5rem;"></textarea>
         <label for="description">Popis produktu</label>
       </span>
       </div>
       <div class="p-field">
       <span class="p-float-label">
-       <p-dropdown
+       <p-select
          [options]="tags"
          optionLabel="Name"
          placeholder="Vyber tag"
@@ -193,7 +193,7 @@
          (onChange)="onTagChange($event)"
          styleClass="w-full"
        >
-       </p-dropdown>
+       </p-select>
         <label for="tag">Tag</label>
       </span>
       </div>
@@ -204,11 +204,11 @@
       </span>
       </div>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
                 (click)="hideProductDialog()"></p-button>
       <p-button label="Save" icon="pi pi-check" (click)="saveProduct()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 
 
@@ -223,13 +223,13 @@
       </div>
       <div class="p-field">
       <span class="p-float-label">
-        <textarea id="newdescription" pInputTextarea [(ngModel)]="newProduct.Description" style="width:300px; height:5rem;"></textarea>
+        <textarea id="newdescription" pTextarea [(ngModel)]="newProduct.Description" style="width:300px; height:5rem;"></textarea>
         <label for="description">Popis produktu</label>
       </span>
       </div>
       <div class="p-field">
       <span class="p-float-label">
-       <p-dropdown
+       <p-select
          [options]="tags"
          optionLabel="Name"
          placeholder="Vyber tag"
@@ -237,7 +237,7 @@
          (onChange)="onTagCreate($event)"
          styleClass="w-full"
        >
-       </p-dropdown>
+       </p-select>
         <label for="tag">Tag</label>
       </span>
       </div>
@@ -248,10 +248,10 @@
       </span>
       </div>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" icon="pi pi-times" severity="danger" class="p-button-text"
                 (click)="hideCreateProductDialog()"></p-button>
       <p-button label="Save" icon="pi pi-check" (click)="createProduct()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 </div>

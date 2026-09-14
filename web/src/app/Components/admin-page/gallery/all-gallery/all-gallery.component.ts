@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Button} from "primeng/button";
 import {CurrencyPipe, DatePipe} from "@angular/common";
 import {DialogModule} from "primeng/dialog";
-import {Footer, MessageService, PrimeTemplate} from "primeng/api";
+import {MessageService, PrimeTemplate} from "primeng/api";
 import {PaginatorModule} from "primeng/paginator";
 import {TableModule} from "primeng/table";
 import {ToastModule} from "primeng/toast";
@@ -19,7 +19,6 @@ import {FileModel} from "../../../../Models/file.model";
     CurrencyPipe,
     DatePipe,
     DialogModule,
-    Footer,
     PaginatorModule,
     PrimeTemplate,
     TableModule,

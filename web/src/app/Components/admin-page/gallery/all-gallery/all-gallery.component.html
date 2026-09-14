@@ -48,7 +48,7 @@
           </td>
           <td>{{ file.Name }}</td>
           <td>
-            <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
+            <p-button icon="pi pi-pencil" severity="warn" class="p-button-rounded p-button-text"
                       (onClick)="editGallery(file)"></p-button>
           </td>
         </tr>
@@ -72,11 +72,11 @@
       </span>
       </div>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" severity="danger" icon="pi pi-times" class="p-button-text"
                 (onClick)="hideDialog()"></p-button>
       <p-button label="Submit" icon="pi pi-check" (onClick)="saveGallery()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 </div>
 

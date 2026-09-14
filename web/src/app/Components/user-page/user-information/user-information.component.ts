@@ -3,10 +3,8 @@ import {UserService} from "../../../Services/user.service";
 import {User} from "../../../Models/user.model";
 import {CurrencyPipe, DatePipe} from "@angular/common";
 import {Button, ButtonDirective} from "primeng/button";
-import {Footer} from "primeng/api";
 import {FormsModule} from "@angular/forms";
 import {DialogModule} from "primeng/dialog";
-import {ChipsModule} from "primeng/chips";
 
 @Component({
   selector: 'app-user-information',
@@ -15,10 +13,8 @@ import {ChipsModule} from "primeng/chips";
     CurrencyPipe,
     DatePipe,
     Button,
-    Footer,
     FormsModule,
     DialogModule,
-    ChipsModule,
     ButtonDirective
   ],
   templateUrl: './user-information.component.html',

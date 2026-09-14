@@ -62,10 +62,12 @@
         </span>
       </div>
     </div>
-    <p-footer>
-      <p-button label="Vypnúť" severity="danger" icon="pi pi-times" class="p-button-text" (onClick)="hideUserDialog()"></p-button>
-      <p-button label="Potvrdiť" icon="pi pi-check" (onClick)="updateUserProfile()"></p-button>
-    </p-footer>
+    <ng-template #footer>
+      <div class="user-dialog-footer">
+        <p-button label="Vypnúť" severity="danger" icon="pi pi-times" class="p-button-text" (onClick)="hideUserDialog()"></p-button>
+        <p-button label="Potvrdiť" icon="pi pi-check" (onClick)="updateUserProfile()"></p-button>
+      </div>
+    </ng-template>
   </p-dialog>
 
 </div>

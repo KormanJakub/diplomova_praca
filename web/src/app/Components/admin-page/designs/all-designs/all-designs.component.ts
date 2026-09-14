@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {Design} from "../../../../Models/design.model";
 import {AdminService} from "../../../../Services/admin.service";
-import {Footer, MessageService, PrimeTemplate} from "primeng/api";
+import {MessageService, PrimeTemplate} from "primeng/api";
 import {Button, ButtonDirective} from "primeng/button";
 import {CurrencyPipe, DatePipe, DecimalPipe} from "@angular/common";
 import {DialogModule} from "primeng/dialog";
@@ -13,6 +13,7 @@ import {environment} from "../../../../../Environments/environment";
 import {FileService} from "../../../../Services/file.service";
 import {FloatLabelModule} from "primeng/floatlabel";
 import {InputTextModule} from "primeng/inputtext";
+import {FormsModule} from "@angular/forms";
 
 @Component({
   selector: 'app-all-designs',
@@ -21,7 +22,6 @@ import {InputTextModule} from "primeng/inputtext";
     Button,
     DatePipe,
     DialogModule,
-    Footer,
     PaginatorModule,
     PrimeTemplate,
     TableModule,
@@ -30,6 +30,7 @@ import {InputTextModule} from "primeng/inputtext";
     CurrencyPipe,
     FloatLabelModule,
     InputTextModule,
+    FormsModule,
     ButtonDirective,
     DecimalPipe
   ],

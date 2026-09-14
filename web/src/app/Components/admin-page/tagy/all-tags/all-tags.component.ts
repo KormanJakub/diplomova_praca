@@ -10,7 +10,6 @@ import {MessageService} from "primeng/api";
 import {Router} from "@angular/router";
 import {DialogModule} from "primeng/dialog";
 import {FormsModule} from "@angular/forms";
-import {ChipsModule} from "primeng/chips";
 
 @Component({
   selector: 'app-all-tags',
@@ -22,8 +21,7 @@ import {ChipsModule} from "primeng/chips";
     TableModule,
     DatePipe,
     DialogModule,
-    FormsModule,
-    ChipsModule
+    FormsModule
   ],
   templateUrl: './all-tags.component.html',
   styleUrl: './all-tags.component.css',

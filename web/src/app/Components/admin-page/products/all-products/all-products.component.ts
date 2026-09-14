@@ -12,9 +12,8 @@ import {FormsModule} from "@angular/forms";
 import {FileService} from "../../../../Services/file.service";
 import { Tag } from '../../../../Models/tag.model';
 import {environment} from "../../../../../Environments/environment";
-import {DropdownModule} from "primeng/dropdown";
-import {InputTextareaModule} from "primeng/inputtextarea";
-import {ChipsModule} from "primeng/chips";
+import {SelectModule} from "primeng/select";
+import {TextareaModule} from "primeng/textarea";
 
 @Component({
   selector: 'app-all-products',
@@ -30,9 +29,8 @@ import {ChipsModule} from "primeng/chips";
     ToolbarModule,
     DialogModule,
     FormsModule,
-    DropdownModule,
-    InputTextareaModule,
-    ChipsModule,
+    SelectModule,
+    TextareaModule,
     DecimalPipe
   ],
   templateUrl: './all-products.component.html',

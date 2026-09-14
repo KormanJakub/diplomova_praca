@@ -63,7 +63,7 @@
           <td>{{ design.CreatedAt | date:'short' }}</td>
           <td>{{ design.UpdatedAt | date:'short' }}</td>
           <td>
-            <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
+            <p-button icon="pi pi-pencil" severity="warn" class="p-button-rounded p-button-text"
                       (onClick)="editDesign(design)"></p-button>
           </td>
         </tr>
@@ -127,7 +127,7 @@
       </div>
     </div>
 
-    <p-footer>
+    <ng-template #footer>
       <button
         pButton
         type="button"
@@ -144,7 +144,7 @@
         icon="pi pi-check"
         (click)="saveDesign()"
       ></button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 
 </div>

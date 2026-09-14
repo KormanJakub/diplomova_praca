@@ -27,7 +27,7 @@
       <h3>Veľkosť</h3>
 
       <ng-container *ngIf="hasSizes; else soldOut">
-        <p-dropdown
+        <p-select
           [options]="sizeOptions"
           [(ngModel)]="selectedSize"
           placeholder="Vyberte veľkosť..."
@@ -35,7 +35,7 @@
           [disabled]="!hasSizes"
           appendTo="body"
           inputId="sizeDropdown"
-        ></p-dropdown>
+        ></p-select>
       </ng-container>
 
       <ng-template #soldOut>

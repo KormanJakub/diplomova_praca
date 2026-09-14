@@ -2,7 +2,7 @@ import {Component, ElementRef, ViewChild} from '@angular/core';
 import {FloatLabelModule} from "primeng/floatlabel";
 import {InputTextModule} from "primeng/inputtext";
 import {FormsModule} from "@angular/forms";
-import {InputTextareaModule} from "primeng/inputtextarea";
+import {TextareaModule} from "primeng/textarea";
 import {NgForOf, NgIf} from "@angular/common";
 import {DialogModule} from "primeng/dialog";
 
@@ -12,7 +12,7 @@ import {DialogModule} from "primeng/dialog";
   imports: [
     FloatLabelModule,
     InputTextModule,
-    InputTextareaModule,
+    TextareaModule,
     FormsModule,
     NgIf,
     NgForOf,

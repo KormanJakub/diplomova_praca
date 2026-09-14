@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Amazon.Runtime.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;

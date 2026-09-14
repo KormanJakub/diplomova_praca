@@ -52,7 +52,7 @@
           <td>{{ tag.CreatedAt | date:'short' }}</td>
           <td>{{ tag.UpdatedAt | date:'short' }}</td>
           <td>
-            <p-button icon="pi pi-pencil" severity="warning" class="p-button-rounded p-button-text"
+            <p-button icon="pi pi-pencil" severity="warn" class="p-button-rounded p-button-text"
                       (onClick)="editTag(tag)"></p-button>
           </td>
         </tr>
@@ -74,10 +74,10 @@
         <label for="name">Meno</label>
       </span>
     </div>
-    <p-footer>
+    <ng-template #footer>
       <p-button label="Cancel" severity="danger" icon="pi pi-times" class="p-button-text"
                 (onClick)="hideDialog()"></p-button>
       <p-button label="Submit" icon="pi pi-check" (onClick)="submitTag()"></p-button>
-    </p-footer>
+    </ng-template>
   </p-dialog>
 </div>

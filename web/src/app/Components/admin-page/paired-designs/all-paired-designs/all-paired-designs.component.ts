@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {AdminService} from "../../../../Services/admin.service";
-import {Footer, MessageService, PrimeTemplate} from "primeng/api";
+import {MessageService, PrimeTemplate} from "primeng/api";
 import {AllPairedDesignsResponse, PairedDesign, PairedDesignWithDesigns} from "../../../../Models/paired-design.model";
 import {Design} from "../../../../Models/design.model";
 import {CurrencyPipe, DatePipe, NgForOf, NgIf} from "@angular/common";
@@ -11,6 +11,8 @@ import {PaginatorModule} from "primeng/paginator";
 import {TableModule} from "primeng/table";
 import {ToastModule} from "primeng/toast";
 import {ToolbarModule} from "primeng/toolbar";
+import {SelectModule} from "primeng/select";
+import {FormsModule} from "@angular/forms";
 
 @Component({
   selector: 'app-all-paired-designs',
@@ -21,12 +23,13 @@ import {ToolbarModule} from "primeng/toolbar";
     CurrencyPipe,
     DatePipe,
     DialogModule,
-    Footer,
     PaginatorModule,
     PrimeTemplate,
     TableModule,
     ToastModule,
     ToolbarModule,
+    SelectModule,
+    FormsModule,
     NgIf
   ],
   templateUrl: './all-paired-designs.component.html',
