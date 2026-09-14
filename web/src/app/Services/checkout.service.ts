@@ -43,12 +43,4 @@ export class CheckoutService {
     return this.http.post<any>(`${this.baseUrl}/guest/make-order-without-register`, orderRequest);
   }
 
-  createStripeSession(paymentRequest: { orderId: number, amount: number }): Observable<any> {
-    const token = this.cookieService.get('uiAppToken');
-
-    const headers = new HttpHeaders()
-      .set('Authorization', `Bearer ${token}`);
-
-    return this.http.post<any>(`${this.baseUrl}/payment/create-checkout-session`, paymentRequest, { headers });
-  }
 }

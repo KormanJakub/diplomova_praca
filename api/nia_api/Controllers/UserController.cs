@@ -23,11 +23,13 @@ public class UserController : ControllerBase
     private readonly IMongoCollection<Order> _orders;
 
     private readonly HeaderReaderService _headerReader;
+    private readonly OrderService _orderService;
 
-    public UserController(NiaDbContext context, HeaderReaderService headerReader)
+    public UserController(NiaDbContext context, HeaderReaderService headerReader, OrderService orderService)
     {
         _users = context.Users;
         _headerReader = headerReader;
+        _orderService = orderService;
         _customizations = context.Customizations;
         _designs = context.Designs;
         _products = context.Products;
@@ -46,7 +48,7 @@ public class UserController : ControllerBase
         if (dbUser == null)
             return NotFound(new { error = "User not found!" });
 
-        return Ok(dbUser);
+        return Ok(UserResponse.From(dbUser));
     }
     
     [HttpGet("my-customizations")]
@@ -57,7 +59,7 @@ public class UserController : ControllerBase
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var dbUserCustomization = _customizations.Find(c => c.UserId == userId.Value.ToString()).ToListAsync();
+        var dbUserCustomization = await _customizations.Find(c => c.UserId == userId.Value.ToString()).ToListAsync();
 
         if (dbUserCustomization == null)
             return NotFound(new { error = "Customization for this user not founded!" });
@@ -117,7 +119,7 @@ public class UserController : ControllerBase
 
         var dbUser = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
 
-        var order = await _orders.Find(o => o.Id == Id).FirstOrDefaultAsync();
+        var order = await _orders.Find(o => o.Id == Id && o.UserId == userId.Value).FirstOrDefaultAsync();
         if (order == null)
             return NotFound(new { error = "Order not found" });
         
@@ -162,7 +164,7 @@ public class UserController : ControllerBase
             customizations,
             designs,
             products = filteredProducts,
-            user = dbUser
+            user = dbUser == null ? null : UserResponse.From(dbUser)
         });
     }
 
@@ -175,31 +177,14 @@ public class UserController : ControllerBase
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var dbCustomization = await _customizations.Find(c => customizationsIds.Contains(c.Id)).ToListAsync();
+        var result = await _orderService.CreateAsync(userId.Value, customizationsIds);
+        if (result.Error == OrderCreationError.InvalidItems)
+            return BadRequest(new { error = "Invalid customizations." });
+        if (result.Error == OrderCreationError.NumberConflict)
+            return Conflict(new { error = "Could not allocate order number." });
 
-        var totalPrice = dbCustomization.Sum(c => c.Price);
-
-        var lastOrder = await _orders.Find(FilterDefinition<Order>.Empty)
-            .SortByDescending(o => o.Id) 
-            .FirstOrDefaultAsync();
-
-        int newIntId = lastOrder != null ? lastOrder.Id + 1 : 1;
-
-        var lcOrder = new Order
-        {
-            Id = newIntId,
-            Customizations = customizationsIds,
-            TotalPrice = totalPrice,
-            UserId = userId.Value,
-            StatusOrder = EStatus.PRIJATA,
-            CancellationToken = Guid.NewGuid().ToString(),
-            FollowToken = Guid.NewGuid().ToString(),
-            CreatedAt = LocalTimeService.LocalTime()
-        };
-
-        await _orders.InsertOneAsync(lcOrder);
-
-        return Ok(new { OrderId = lcOrder.Id, CancellationToken = lcOrder.CancellationToken});
+        var order = result.Order!;
+        return Ok(new { OrderId = order.Id, order.TotalPrice, order.CancellationToken, order.FollowToken });
     }
 
     [HttpPost("cancel-order/{OrderId}")]
@@ -217,7 +202,8 @@ public class UserController : ControllerBase
         
         var filterOrder = Builders<Order>.Filter.And(
             Builders<Order>.Filter.Eq(o => o.Id, OrderId),
-            Builders<Order>.Filter.Eq(o => o.UserId, userId.Value)
+            Builders<Order>.Filter.Eq(o => o.UserId, userId.Value),
+            Builders<Order>.Filter.Eq(o => o.StatusOrder, EStatus.PRIJATA)
         );
 
         var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
@@ -230,7 +216,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("update")]
-    public async Task<IActionResult> UpdateUserProfile(User user)
+    public async Task<IActionResult> UpdateUserProfile(nia_api.Requests.UpdateProfileRequest user)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
 
@@ -238,7 +224,15 @@ public class UserController : ControllerBase
             return Unauthorized(new { error = "User ID not found in token!" });
 
         var filterUser = Builders<User>.Filter.Eq(u => u.Id, userId.Value);
-        var resultUser = await _users.ReplaceOneAsync(filterUser, user);
+        var update = Builders<User>.Update
+            .Set(u => u.FirstName, user.FirstName)
+            .Set(u => u.LastName, user.LastName)
+            .Set(u => u.Country, user.Country)
+            .Set(u => u.PhoneNumber, user.PhoneNumber)
+            .Set(u => u.Address, user.Address)
+            .Set(u => u.Zip, user.Zip)
+            .Set(u => u.UpdatedAt, DateTime.UtcNow);
+        var resultUser = await _users.UpdateOneAsync(filterUser, update);
         
         if (resultUser.MatchedCount == 0)
             return NotFound(new { error = "User not found!" });

@@ -30,6 +30,7 @@ public class GuestUserController : ControllerBase
     }
     
     [HttpPost("make-customization-without-register")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
     public async Task<IActionResult> MakeCustomizationWithoutRegister(GuestCustomizationRequest request)
     {
         var guestUser = new GuestUser
@@ -129,11 +130,25 @@ public class GuestUserController : ControllerBase
     }
 
     [HttpPost("make-order-without-register")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
     public async Task<IActionResult> MakeOrderWithoutRegister(GuestOrderRequest request)
     {
+        if (request.CustomizationsId == null || request.CustomizationsId.Count == 0 ||
+            request.CustomizationsId.Count != request.CustomizationsId.Distinct().Count() ||
+            !Guid.TryParse(request.GuestUserId, out var guestUserId))
+            return BadRequest(new { error = "Invalid order request." });
+
+        var guestUser = await _guestUsers.Find(g => g.Id == guestUserId).FirstOrDefaultAsync();
+        if (guestUser == null) return BadRequest(new { error = "Invalid guest." });
+
         var dbCustomization = await _customizations.Find(c => request.CustomizationsId.Contains(c.Id)).ToListAsync();
 
+        if (dbCustomization.Count != request.CustomizationsId.Count ||
+            dbCustomization.Any(c => c.UserId != guestUserId.ToString()))
+            return BadRequest(new { error = "Invalid customizations." });
+
         var totalPrice = dbCustomization.Sum(c => c.Price);
+        if (totalPrice <= 0) return BadRequest(new { error = "Invalid order total." });
 
         var lastOrder = await _orders.Find(FilterDefinition<Order>.Empty)
             .SortByDescending(o => o.Id) 
@@ -148,25 +163,37 @@ public class GuestUserController : ControllerBase
             Id = newIntId,
             Customizations = request.CustomizationsId,
             TotalPrice = totalPrice,
-            UserId = Guid.Parse(request.GuestUserId),
+            UserId = guestUserId,
             StatusOrder = EStatus.PRIJATA,
             CancellationToken = cancellationToken,
             FollowToken = Guid.NewGuid().ToString(),
             CreatedAt = LocalTimeService.LocalTime()
         };
 
-        await _orders.InsertOneAsync(lcOrder);
-
-        return Ok(new
+        for (var attempt = 0; attempt < 10; attempt++)
         {
-            OrderId = lcOrder.Id, 
-            CancellationToken = lcOrder.CancellationToken,
-            FollowToken = lcOrder.FollowToken
-        });
+            try
+            {
+                await _orders.InsertOneAsync(lcOrder);
+                return Ok(new
+                {
+                    OrderId = lcOrder.Id,
+                    CancellationToken = lcOrder.CancellationToken,
+                    FollowToken = lcOrder.FollowToken
+                });
+            }
+            catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+            {
+                var newest = await _orders.Find(FilterDefinition<Order>.Empty)
+                    .SortByDescending(o => o.Id).FirstOrDefaultAsync();
+                lcOrder.Id = (newest?.Id ?? 0) + 1;
+            }
+        }
+        return Conflict(new { error = "Could not allocate order number." });
 
     }
     
-    [HttpPost("cancel-order/{OrderId}")]
+    [NonAction]
     public async Task<IActionResult> CancelOrder(int OrderId)
     {
         var dbOrder = _orders.Find(o => o.Id == OrderId).FirstOrDefault();
@@ -192,7 +219,9 @@ public class GuestUserController : ControllerBase
         if (dbOrder == null)
             return NotFound(new { error = "Invalid or expired token!" });
 
-        var filterOrder = Builders<Order>.Filter.Eq(o => o.CancellationToken, token);
+        var filterOrder = Builders<Order>.Filter.And(
+            Builders<Order>.Filter.Eq(o => o.CancellationToken, token),
+            Builders<Order>.Filter.Eq(o => o.StatusOrder, EStatus.PRIJATA));
         var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
         var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
 
@@ -202,7 +231,7 @@ public class GuestUserController : ControllerBase
         return Ok(new { message = "Order canceled successfully!" });
     }
     
-    [HttpDelete("decrement-product-quantity")]
+    [NonAction]
     public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
     {
         Guid.TryParse(request.ProductId, out var _productId);
@@ -246,7 +275,9 @@ public class GuestUserController : ControllerBase
         if (string.IsNullOrWhiteSpace(cancellationToken))
             return BadRequest("Cancellation is required!");
         
-        var filter = Builders<Order>.Filter.Eq(o => o.CancellationToken, cancellationToken);
+        var filter = Builders<Order>.Filter.And(
+            Builders<Order>.Filter.Eq(o => o.CancellationToken, cancellationToken),
+            Builders<Order>.Filter.Eq(o => o.StatusOrder, EStatus.PRIJATA));
         var update = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
         
         var updateResult = await _orders.UpdateOneAsync(filter, update);
@@ -257,7 +288,7 @@ public class GuestUserController : ControllerBase
         return Ok(new { message = "Objednávka bola úspešne zrušená." });
     }
     
-    [HttpPost("confirm-payment")]
+    [NonAction]
     public async Task<IActionResult> ConfirmPayment([FromQuery] int orderId)
     {
         var filter = Builders<Order>.Filter.Eq(o => o.Id, orderId);
@@ -317,7 +348,7 @@ public class GuestUserController : ControllerBase
 
         return Ok(new 
         {
-            order,
+            order = new { order.Id, order.TotalPrice, order.StatusOrder, order.CreatedAt },
             customizations,
             designs,
             products = filteredProducts,
@@ -326,10 +357,11 @@ public class GuestUserController : ControllerBase
     }
 
     [HttpGet("order/{OrderId}")]
-    public async Task<IActionResult> OrderInformationById(int OrderId)
+    public async Task<IActionResult> OrderInformationById(int OrderId, [FromQuery] string followToken)
     {
-        var dbOrder = await _orders.Find(o => o.Id == OrderId).FirstOrDefaultAsync();
+        if (string.IsNullOrWhiteSpace(followToken)) return BadRequest();
+        var dbOrder = await _orders.Find(o => o.Id == OrderId && o.FollowToken == followToken).FirstOrDefaultAsync();
 
-        return Ok(dbOrder);
+        return dbOrder == null ? NotFound() : Ok(new { dbOrder.Id, dbOrder.TotalPrice, dbOrder.StatusOrder, dbOrder.CreatedAt, dbOrder.FollowToken });
     }
 }

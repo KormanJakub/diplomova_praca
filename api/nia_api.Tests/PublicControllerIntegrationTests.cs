@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -27,8 +27,8 @@ public class PublicControllerIntegrationTests : IClassFixture<WebApplicationFact
     {
         var settings = new NiaDbSettings
         {
-            ConnectionString = "mongodb+srv://admin:CV_1234_2001_PW@niadb.nfhrxz8.mongodb.net/?retryWrites=true&w=majority&appName=niadb",
-            DatabaseName = "niadb"
+            ConnectionString = "mongodb://127.0.0.1:27017",
+            DatabaseName = "nia_api_tests"
         };
 
         var options = Options.Create(settings);
@@ -36,7 +36,7 @@ public class PublicControllerIntegrationTests : IClassFixture<WebApplicationFact
         _users = _dbContext.Users;
         
         var inMemorySettings = new Dictionary<string, string> {
-            { "JwtConfig:Key", "bx6VLvhgpXytr92qbx6VLvhgpXytr92q" },
+            { "JwtConfig:Key", "test-only-key-32-characters-minimum" },
             { "JwtConfig:Issuer", "http://localhost" },
             { "JwtConfig:Audience", "http://localhost" }
         };

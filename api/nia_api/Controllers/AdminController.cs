@@ -11,6 +11,7 @@ namespace nia_api.Controllers;
 
 [ApiController]
 [Route("admin")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
 public class AdminController : ControllerBase
 {
     private readonly IMongoCollection<Design> _designs;
@@ -754,11 +755,12 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> GetKpiData()
     {
         var filter = Builders<Order>.Filter.Ne(o => o.StatusOrder, EStatus.ZRUSENA);
+        var paidFilter = Builders<Order>.Filter.Eq(o => o.PaymentStatus, "Paid");
     
         var totalOrders = await _orders.CountDocumentsAsync(filter);
 
         var revenueAggregate = await _orders.Aggregate()
-            .Match(filter)
+            .Match(paidFilter)
             .Group(new BsonDocument 
             { 
                 { "_id", BsonNull.Value }, 
@@ -767,7 +769,8 @@ public class AdminController : ControllerBase
             .FirstOrDefaultAsync();
         
         decimal totalRevenue = revenueAggregate != null ? revenueAggregate["totalRevenue"].ToDecimal() : 0;
-        decimal averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+        var paidOrders = await _orders.CountDocumentsAsync(paidFilter);
+        decimal averageOrderValue = paidOrders > 0 ? totalRevenue / paidOrders : 0;
 
         var distinctUserIds = await _orders.DistinctAsync<Guid>("UserId", filter);
         int newCustomers = distinctUserIds.ToList().Count;
@@ -792,7 +795,7 @@ public class AdminController : ControllerBase
         {
             return Ok(new {
                 userType = "Normal",
-                data     = dbUser
+                data     = UserResponse.From(dbUser)
             });
         }
 

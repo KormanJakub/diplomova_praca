@@ -26,8 +26,26 @@ export class AuthService {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/login`, user);
   }
 
+  public requestPasswordReset(email: string): Observable<any> {
+    return this.httpClient.put<any>(`${environment.apiUrl}/public/forgot-password`, null, {params: {email}});
+  }
+
+  public resetPassword(email: string, token: string, newPassword: string, repeatNewPassword: string): Observable<any> {
+    return this.httpClient.put<any>(`${environment.apiUrl}/public/new-password`,
+      {Email: email, Token: token, NewPassword: newPassword, RepeatNewPassword: repeatNewPassword});
+  }
+
+  public verifyEmailCode(email: string, verificationCode: number): Observable<any> {
+    return this.httpClient.post<any>(`${environment.apiUrl}/public/verification-code`,
+      {Email: email, VerificationCode: verificationCode});
+  }
+
+  public resendEmailCode(email: string): Observable<any> {
+    return this.httpClient.post<any>(`${environment.apiUrl}/public/new-verification-code`, {Email: email});
+  }
+
   public isLoggedIn() {
-    return this.cookieService.get("uiAppToken") != null;
+    return !!this.cookieService.get("uiAppToken");
   }
 
   isLoggedInUser(): Observable<boolean> {
@@ -51,10 +69,10 @@ export class AuthService {
   }
 
   public isAdminLoggedIn() {
-    return this.cookieService.get('uiAppAdmin') === 'admin';
+    return this.cookieService.get('uiAppRole') === 'admin';
   }
 
   public isEmailConfirmed() {
-    return JSON.parse(this.cookieService.get("uiAppEmailConfirmation") || 'true');
+    return JSON.parse(this.cookieService.get("uiAppEmailConfirmation") || 'false');
   }
 }

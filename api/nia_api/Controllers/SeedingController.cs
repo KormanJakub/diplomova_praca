@@ -31,7 +31,8 @@ public class SeedingController : ControllerBase
         _customizations = context.Customizations;
     }
     
-    [HttpGet("data")]
+    // Seeding belongs in an offline development tool, never in HTTP routing.
+    [NonAction]
     public async Task SeedDatabase()
     {
         await _designs.DeleteManyAsync(FilterDefinition<Design>.Empty);

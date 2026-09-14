@@ -1,1 +1,14 @@
-<p>verify-email works!</p>
+<main class="verify-page">
+  <h1>Potvrdenie emailu</h1>
+  <p>Zadajte šesťmiestny kód z emailu. Platí 10 minút.</p>
+  <form (ngSubmit)="verifyCode()">
+    <label for="verify-email">Email</label>
+    <input id="verify-email" name="email" type="email" autocomplete="email" [(ngModel)]="email" required>
+    <label for="verify-code">Overovací kód</label>
+    <input id="verify-code" name="code" inputmode="numeric" autocomplete="one-time-code"
+           maxlength="6" [(ngModel)]="code" required>
+    <button type="submit" [disabled]="busy || !email || !code">Potvrdiť email</button>
+  </form>
+  <button type="button" (click)="resendCode()" [disabled]="busy || !email">Poslať nový kód</button>
+  <p role="status" aria-live="polite">{{message}}</p>
+</main>

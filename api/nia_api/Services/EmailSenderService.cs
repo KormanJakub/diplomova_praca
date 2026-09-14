@@ -21,14 +21,12 @@ public class EmailSenderService : IEmailSender
         try
         {
             var smtpSettings = _configuration.GetSection("Smtp");
-            var smtpClient = new SmtpClient(smtpSettings["Host"])
+            using var smtpClient = new SmtpClient(smtpSettings["Host"])
             {
                 Port = int.Parse(smtpSettings["Port"]),
                 Credentials = new NetworkCredential(smtpSettings["Username"], smtpSettings["Password"]),
                 EnableSsl = true,
             };
-
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
             var registrationBody = GenerateRegistarionEmailBody(firstName, lastName, verificationCode);
             var verificationBody = GenerateVerificationEmailBody(firstName, lastName, verificationCode);
@@ -40,7 +38,7 @@ public class EmailSenderService : IEmailSender
             if (emailType == EEmail.VERIFICATION)
                 body = verificationBody;
 
-            var mailMessage = new MailMessage
+            using var mailMessage = new MailMessage
             {
                 From = new MailAddress(smtpSettings["Username"]),
                 Subject = subject,
@@ -62,6 +60,9 @@ public class EmailSenderService : IEmailSender
 
     private string GenerateRegistarionEmailBody(string firstName, string lastName, string verificationCode)
     {
+        firstName = WebUtility.HtmlEncode(firstName);
+        lastName = WebUtility.HtmlEncode(lastName);
+        verificationCode = WebUtility.HtmlEncode(verificationCode);
         return $@"
         <head>
             <meta charset='UTF-8'>
@@ -121,6 +122,9 @@ public class EmailSenderService : IEmailSender
     
     private string GenerateVerificationEmailBody(string firstName, string lastName, string verificationCode)
     {
+        firstName = WebUtility.HtmlEncode(firstName);
+        lastName = WebUtility.HtmlEncode(lastName);
+        verificationCode = WebUtility.HtmlEncode(verificationCode);
         return $@"
         <head>
             <meta charset='UTF-8'>

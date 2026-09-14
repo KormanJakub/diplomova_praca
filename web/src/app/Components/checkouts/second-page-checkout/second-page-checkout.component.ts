@@ -21,6 +21,7 @@ export class SecondPageCheckoutComponent implements OnInit {
   orderId: string | null = null;
 
   numOrderId!: number;
+  followToken = '';
 
   order!: Order
 
@@ -36,6 +37,7 @@ export class SecondPageCheckoutComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.orderId = params['orderId'];
       this.numOrderId = Number(params['orderId']);
+      this.followToken = params['followToken'] || '';
     });
 
     this.cookieService.delete('CartCustomizations');
@@ -43,7 +45,7 @@ export class SecondPageCheckoutComponent implements OnInit {
   }
 
   loadOrderData(): void {
-    this.guestService.orderInformation(this.numOrderId).subscribe(res => {
+    this.guestService.orderInformation(this.numOrderId, this.followToken).subscribe(res => {
       this.order = res;
     })
   }

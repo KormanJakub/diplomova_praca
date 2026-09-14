@@ -104,8 +104,7 @@ export class RegisterComponent implements OnInit{
 
     this.authService.register(this.user).subscribe({
       next: () => {
-        alert('Registrácia prebehla úspešne. Prihlaste sa!');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/verify-email'], {queryParams: {email: this.user.email}});
       },
       error: (err) => {
         this.errorDialogMessage = 'Uživateľ už je registrovaný! Skúste sa prihlásiť';

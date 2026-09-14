@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using nia_api.Data;
@@ -27,9 +29,12 @@ builder.Services.AddAuthentication(x =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["JwtConfig:Key"])
         ),
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ClockSkew = TimeSpan.FromMinutes(5),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["JwtConfig:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["JwtConfig:Audience"],
+        RoleClaimType = "Role",
+        ClockSkew = TimeSpan.FromMinutes(1),
     };
 
     x.Events = new JwtBearerEvents
@@ -59,13 +64,15 @@ builder.Services.AddAuthentication(x =>
 
 
 var corsPolicy = "WafflWeb";
+var webOrigin = builder.Configuration["Hosting:Web-Url"]?.TrimEnd('/');
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicy, policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        var origins = new List<string>();
+        if (!string.IsNullOrWhiteSpace(webOrigin)) origins.Add(webOrigin);
+        if (builder.Environment.IsDevelopment()) origins.Add("http://localhost:4200");
+        policy.WithOrigins(origins.ToArray()).AllowAnyHeader().AllowAnyMethod();
     });
 });
 
@@ -77,6 +84,19 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("sensitive", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        }));
+});
 
 builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddSingleton<NiaDbContext>();
@@ -84,6 +104,7 @@ builder.Services.AddSingleton<LocalTimeService>();
 builder.Services.AddSingleton<HeaderReaderService>();
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<OrderService>();
 builder.Services.AddSingleton<PasswordService>();
 
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
@@ -101,6 +122,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseCors(corsPolicy);
 

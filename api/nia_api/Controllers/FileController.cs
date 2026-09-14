@@ -21,6 +21,7 @@ public class FileController : ControllerBase
     }
 
     [HttpPost("uploadFile")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
     public async Task<IActionResult> UploadFile([FromForm] NewResource resource)
     {
         try
@@ -29,18 +30,28 @@ public class FileController : ControllerBase
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded!");
 
-            var uploadFileFolder = Path.Combine(_environment.WebRootPath + "/Files/");
+            const long maxUploadBytes = 5 * 1024 * 1024;
+            var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName);
+            if (file.Length > maxUploadBytes || !allowedExtensions.Contains(extension))
+                return BadRequest("Unsupported file type or size.");
+            if (!await HasExpectedSignature(file, extension))
+                return BadRequest("Unsupported file content.");
+
+            var uploadFileFolder = Path.Combine(_environment.WebRootPath, "Files");
             Directory.CreateDirectory(uploadFileFolder);
 
-            using FileStream fileStream = System.IO.File.Create(uploadFileFolder + file.FileName);
-            file.CopyToAsync(fileStream);
-            fileStream.Flush();
+            var safeName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+            await using (var fileStream = System.IO.File.Create(Path.Combine(uploadFileFolder, safeName)))
+            {
+                await file.CopyToAsync(fileStream);
+            }
 
             var newFile = new File()
             {
                 Id = Guid.NewGuid(),
-                Name = file.FileName,
-                Path = "/Files/" + file.FileName,
+                Name = safeName,
+                Path = "/Files/" + safeName,
                 CreatedAt = LocalTimeService.LocalTime()
             };
             
@@ -48,13 +59,14 @@ public class FileController : ControllerBase
 
             return Ok(new { id = newFile.Id, path = newFile.Path });
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return StatusCode(500, "Internal server error: " + e);
+            return StatusCode(500, "Internal server error.");
         }
     }
 
     [HttpDelete("removeFile/{id}")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
     public async Task<IActionResult> RemoveFile(Guid id)
     {
         try
@@ -64,7 +76,7 @@ public class FileController : ControllerBase
             if (file == null)
                 return NotFound("File not found!");
             
-            var filePath = Path.Combine(_environment.WebRootPath, file.Path.TrimStart('/'));
+            var filePath = Path.Combine(_environment.WebRootPath, "Files", Path.GetFileName(file.Path));
 
             if (System.IO.File.Exists(filePath))
             {
@@ -75,13 +87,14 @@ public class FileController : ControllerBase
 
             return Ok(new { message = "File deleted successfully!" });
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            return StatusCode(500, "Internal server error: " + e);
+            return StatusCode(500, "Internal server error.");
         }
     }
     
     [HttpDelete("move")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
     public async Task<IActionResult> RemoveTags([FromBody] List<File> files)
     {
         if (files == null || !files.Any())
@@ -107,4 +120,21 @@ public class FileController : ControllerBase
     }
     
     public record NewResource(IFormFile Files);
+
+    private static async Task<bool> HasExpectedSignature(IFormFile file, string extension)
+    {
+        var header = new byte[12];
+        await using var stream = file.OpenReadStream();
+        var bytesRead = await stream.ReadAsync(header.AsMemory());
+        if (bytesRead < 12) return false;
+
+        return extension.ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+            ".png" => header.AsSpan(0, 8).SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+            ".webp" => header.AsSpan(0, 4).SequenceEqual("RIFF"u8) &&
+                         header.AsSpan(8, 4).SequenceEqual("WEBP"u8),
+            _ => false
+        };
+    }
 }

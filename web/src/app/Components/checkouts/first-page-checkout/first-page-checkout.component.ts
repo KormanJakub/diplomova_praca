@@ -184,9 +184,7 @@ export class FirstPageCheckoutComponent implements OnInit {
       this.checkoutService.createOrder(customizationIds).subscribe((orderResponse : any) => {
         if (this.selectedPaymentMethod === 'stripe') {
           const paymentRequest: PaymentRequestModel = {
-            ProductName: orderResponse.OrderId.toString(),
-            Amount: this.totalOverall,
-            Quantity: 1,
+            OrderId: orderResponse.OrderId,
             CancellationToken: orderResponse.CancellationToken.toString()
           };
 
@@ -202,7 +200,7 @@ export class FirstPageCheckoutComponent implements OnInit {
             });
           });
         } else {
-          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId} });
+          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId, followToken: orderResponse.FollowToken } });
         }
       }, err => {
         this.isProcessing = false;
@@ -250,9 +248,6 @@ export class FirstPageCheckoutComponent implements OnInit {
           .subscribe((orderResponse: any) => {
             if (this.selectedPaymentMethod === 'stripe') {
               const paymentRequest: PaymentRequestModel = {
-                ProductName: orderResponse.OrderId.toString(),
-                Amount: this.totalOverall,
-                Quantity: 1,
                 CancellationToken: orderResponse.CancellationToken.toString()
               };
 
@@ -269,7 +264,7 @@ export class FirstPageCheckoutComponent implements OnInit {
                   });
                 });
             } else {
-              this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId } });
+              this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId, followToken: orderResponse.FollowToken } });
             }
           }, err => {
             this.isProcessing = false;

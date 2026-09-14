@@ -204,6 +204,7 @@ namespace nia_api.Controllers
         }
         
         [HttpPost("register")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest user)
         {
             if (user == null)
@@ -246,6 +247,7 @@ namespace nia_api.Controllers
                 LastName = user.LastName,
                 IsEmailConfirmed = false,
                 VerificationCode = verificationCode,
+                VerificationCodeExpiresAt = DateTime.UtcNow.AddMinutes(10),
                 CreatedAt = LocalTimeService.LocalTime()
             };
             
@@ -258,13 +260,12 @@ namespace nia_api.Controllers
                 EEmail.REGISTRACION
                 );
         
-            ScheduleVerificationCodeDeletion(newUser);
-            
             await _users.InsertOneAsync(newUser);
             return Ok(new { message = "Register successful and verification email sent successfully!", email = newUser.Id});
         }
 
         [HttpPost("login")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
         {
             if (user == null)
@@ -273,12 +274,19 @@ namespace nia_api.Controllers
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
 
             if (dbUser == null)
-                return Unauthorized(new { error = "User is not registered!"});
+                return Unauthorized(new { error = "Invalid credentials." });
 
-            var hashPassword = _service.HashPassword(user.Password);
+            if (!_service.VerifyPassword(user.Password, dbUser.Password))
+                return Unauthorized(new { error = "Invalid credentials." });
 
-            if (dbUser.Password != hashPassword)
-                return Unauthorized(new { error = "Password's do not match!" });
+            if (!dbUser.IsEmailConfirmed)
+                return StatusCode(403, new { error = "Email is not confirmed." });
+
+            if (_service.IsLegacyHash(dbUser.Password))
+            {
+                await _users.UpdateOneAsync(u => u.Id == dbUser.Id,
+                    Builders<User>.Update.Set(u => u.Password, _service.HashPassword(user.Password)));
+            }
             
             string token;
             if (dbUser.IsAdmin)
@@ -294,35 +302,29 @@ namespace nia_api.Controllers
         }
 
         [HttpPut("forgot-password")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> ForgotPassword(string email)
         {
             var dbUser = await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
             
             if (dbUser == null)
-                return Unauthorized(new { error = "User is not registered!"});
+                return Ok(new { message = "Ak účet existuje, poslali sme pokyny na obnovu hesla." });
 
-            var generateNewVerificationCode = GenerateVerificationCode();
-            
-            var update = Builders<User>.Update.Set(u => u.VerificationCode, generateNewVerificationCode);
+            var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+            var tokenHash = HashResetToken(token);
+            var update = Builders<User>.Update
+                .Set(u => u.PasswordResetTokenHash, tokenHash)
+                .Set(u => u.PasswordResetExpiresAt, DateTime.UtcNow.AddMinutes(15));
+            await _users.UpdateOneAsync(u => u.Id == dbUser.Id, update);
 
-            await _users.FindOneAndUpdateAsync(
-                u => u.Id == dbUser.Id,
-                update 
-            );
-            
-            await _emailSender.SendEmailAsync(
-                dbUser.Email,
-                "Zabudnute heslo!",
-                dbUser.FirstName,
-                dbUser.LastName,
-                dbUser.ToString(),
-                EEmail.VERIFICATION
-            );
-            
-            return Ok( new { message = "Verification code for Forgot Password sent successfully.!"});
+            await _emailSender.SendEmailAsync(dbUser.Email, "Obnova hesla",
+                dbUser.FirstName, dbUser.LastName, token, EEmail.VERIFICATION);
+
+            return Ok(new { message = "Ak účet existuje, poslali sme pokyny na obnovu hesla." });
         }
 
         [HttpPost("verification-code")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> VerificateCode([FromBody] VerificateCodeRequest user)
         {
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
@@ -330,17 +332,31 @@ namespace nia_api.Controllers
             if (dbUser == null)
                 return Unauthorized(new { error = "User is not registered!"});
 
-            if (user.VerificationCode <= 100000 & user.VerificationCode >= 1000000)
+            if (user.VerificationCode < 100000 || user.VerificationCode > 999999)
                 return BadRequest(new { error = "Wrong verification code!"});
 
-            if (user.VerificationCode != dbUser.VerificationCode)
+            if (user.VerificationCode != dbUser.VerificationCode ||
+                dbUser.VerificationCodeExpiresAt == null ||
+                dbUser.VerificationCodeExpiresAt <= DateTime.UtcNow)
                 return BadRequest(new {error = "You entered bad code"});
+
+            var verificationFilter = Builders<User>.Filter.And(
+                Builders<User>.Filter.Eq(u => u.Id, dbUser.Id),
+                Builders<User>.Filter.Eq(u => u.VerificationCode, user.VerificationCode),
+                Builders<User>.Filter.Gt(u => u.VerificationCodeExpiresAt, DateTime.UtcNow));
+            var verificationUpdate = Builders<User>.Update
+                .Set(u => u.IsEmailConfirmed, true)
+                .Set(u => u.VerificationCode, 0)
+                .Unset(u => u.VerificationCodeExpiresAt);
+            if ((await _users.UpdateOneAsync(verificationFilter, verificationUpdate)).MatchedCount == 0)
+                return BadRequest(new { error = "Code expired." });
             
             
             return Ok(new {message = "You entered good code! Write new password!" });
         }
 
         [HttpPost("new-verification-code")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> NewVerificationCode([FromBody] EmailRequest user)
         {
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
@@ -349,22 +365,28 @@ namespace nia_api.Controllers
                 return Unauthorized(new { error = "User is not registered!"});
             
             var generateNewVerificationCode = GenerateVerificationCode();
-            var update = Builders<User>.Update.Set(u => u.VerificationCode, generateNewVerificationCode);
+            var update = Builders<User>.Update
+                .Set(u => u.VerificationCode, generateNewVerificationCode)
+                .Set(u => u.VerificationCodeExpiresAt, DateTime.UtcNow.AddMinutes(10));
             
             await _users.FindOneAndUpdateAsync(
                 u => u.Id == dbUser.Id,
                 update 
             );
             
-            ScheduleVerificationCodeDeletion(dbUser);
+            await _emailSender.SendEmailAsync(dbUser.Email, "Nový overovací kód",
+                dbUser.FirstName, dbUser.LastName, generateNewVerificationCode.ToString(), EEmail.REGISTRACION);
             
             return Ok(new {message = "You should receive new verification code!" });
         }
 
         [HttpPut("new-password")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> NewPassword([FromBody] NewPasswordRequest user)
         {
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
+            if (dbUser == null || string.IsNullOrWhiteSpace(user.Token))
+                return BadRequest(new { error = "Invalid reset request." });
 
             if (user.NewPassword.Length < 6)
                 return BadRequest(new { error = "Password is too short! Min 6 Lenght" });
@@ -378,42 +400,31 @@ namespace nia_api.Controllers
             if (user.NewPassword != user.RepeatNewPassword)
                 return BadRequest(new { error = "Password's are not same!"});
 
-            var hashedNewPassword = _service.HashPassword(dbUser.Password);
+            var hashedNewPassword = _service.HashPassword(user.NewPassword);
 
-            if (hashedNewPassword == dbUser.Password)
-                return BadRequest(new { error = "You entered old password!"});
-
-            var update = Builders<User>.Update.Set(u => u.Password, hashedNewPassword);
-            
-            await _users.FindOneAndUpdateAsync(
-                u => u.Id == dbUser.Id,
-                update 
-            );
+            var resetFilter = Builders<User>.Filter.And(
+                Builders<User>.Filter.Eq(u => u.Id, dbUser.Id),
+                Builders<User>.Filter.Eq(u => u.PasswordResetTokenHash, HashResetToken(user.Token)),
+                Builders<User>.Filter.Gt(u => u.PasswordResetExpiresAt, DateTime.UtcNow));
+            var update = Builders<User>.Update
+                .Set(u => u.Password, hashedNewPassword)
+                .Unset(u => u.PasswordResetTokenHash)
+                .Unset(u => u.PasswordResetExpiresAt);
+            if ((await _users.UpdateOneAsync(resetFilter, update)).MatchedCount == 0)
+                return BadRequest(new { error = "Invalid or expired reset token." });
             
             return Ok(new {message = "You have new password!"});
         }
         
         private int GenerateVerificationCode()
         {
-            var random = new Random();
-            var verificationCode = random.Next(100000, 999999);
+            var verificationCode = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000);
             return verificationCode;
         }
 
-        private void ScheduleVerificationCodeDeletion(User user)
-        {
-            Task.Run((Func<Task>)(async () =>
-            {
-                await Task.Delay(TimeSpan.FromMinutes(10));
+        private static string HashResetToken(string token) => Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
 
-                var lcUser = await _users.Find(u => u.Id == user.Id).FirstOrDefaultAsync();
-                if (lcUser != null && !lcUser.IsEmailConfirmed)
-                {
-                    lcUser.VerificationCode = 0;
-                    await _users.ReplaceOneAsync(u => u.Id == lcUser.Id, lcUser);
-                }
-            }));
-        }
     }
     
     public class EmailDto

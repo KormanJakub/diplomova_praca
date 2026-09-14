@@ -32,6 +32,9 @@ namespace nia_api.Models
         public bool IsAdmin {  get; set; }
         [BsonElement("verification_code"), BsonRepresentation(BsonType.Int32)]
         public int VerificationCode {  get; set; }
+        public DateTime? VerificationCodeExpiresAt { get; set; }
+        public string? PasswordResetTokenHash { get; set; }
+        public DateTime? PasswordResetExpiresAt { get; set; }
         [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
         public DateTime? CreatedAt { get; set; }
         [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]

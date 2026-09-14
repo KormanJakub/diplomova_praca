@@ -1,25 +1,39 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using nia_api.Models;
 
-namespace nia_api.Services
+namespace nia_api.Services;
+
+public class PasswordService
 {
-    public class PasswordService
+    private readonly PasswordHasher<User> _hasher = new();
+
+    public string HashPassword(string password) => _hasher.HashPassword(new User(), password);
+
+    public bool VerifyPassword(string enteredPassword, string storedHash)
     {
-        public string HashPassword(string password)
+        if (string.IsNullOrWhiteSpace(storedHash)) return false;
+        if (IsLegacyHash(storedHash))
         {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                byte[] bytes = Encoding.UTF8.GetBytes(password);
-                byte[] hash = sha256.ComputeHash(bytes);
-
-                return Convert.ToBase64String(hash);
-            }
+            var legacyHash = SHA256.HashData(Encoding.UTF8.GetBytes(enteredPassword));
+            return CryptographicOperations.FixedTimeEquals(legacyHash, Convert.FromBase64String(storedHash));
         }
 
-        public bool VerifyPassword(string enteredPassword, string storedHash)
+        try
         {
-            string newHash = HashPassword(enteredPassword);
-            return newHash == storedHash;
+            return _hasher.VerifyHashedPassword(new User(), storedHash, enteredPassword)
+                != PasswordVerificationResult.Failed;
         }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    public bool IsLegacyHash(string storedHash)
+    {
+        try { return Convert.FromBase64String(storedHash).Length == 32; }
+        catch (FormatException) { return false; }
     }
 }

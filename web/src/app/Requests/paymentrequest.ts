@@ -1,6 +1,4 @@
 export interface PaymentRequestModel {
-  ProductName: string;
-  Amount: number;
-  Quantity: number;
+  OrderId: number;
   CancellationToken: string;
 }

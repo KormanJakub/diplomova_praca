@@ -16,7 +16,7 @@ import {PaymentService} from "../../../Services/payment.service";
   styleUrl: './third-page-checkout.component.css'
 })
 export class ThirdPageCheckoutComponent implements OnInit  {
-  orderId: string = "";
+  status = 'Overujeme platbu…';
 
   constructor(
     private route: ActivatedRoute,
@@ -25,12 +25,17 @@ export class ThirdPageCheckoutComponent implements OnInit  {
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.orderId = params['order_id'];
+    const sessionId = this.route.snapshot.queryParamMap.get('session_id');
+    if (!sessionId) {
+      this.status = 'Platbu sa nepodarilo overiť.';
+      return;
+    }
+    this.paymentService.verifyPayment(sessionId).subscribe({
+      next: () => {
+        this.status = '✅ Objednávka bola úspešne zaplatená!';
+        this.cookieService.delete('CartCustomizations');
+      },
+      error: () => this.status = 'Platbu sa nepodarilo overiť. Kontaktujte nás s údajmi zo Stripe.'
     });
-
-    this.paymentService.confirmPayment(this.orderId).subscribe();
-
-    this.cookieService.delete('CartCustomizations');
   }
 }
