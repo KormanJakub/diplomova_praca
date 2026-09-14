@@ -20,6 +20,31 @@
     </div>
   </div>
 
+  <div class="settings-card mb-5 p-4 shadow-2 border-round surface-card" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem; padding: 1.5rem;">
+    <h2 style="margin-top: 0; margin-bottom: 1.25rem; font-size: 1.4rem;">Nastavenia e-shopu</h2>
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <label for="codFee" style="font-weight: 600; font-size: 1rem; min-width: 220px;">Poplatok za dobierku:</label>
+          <p-inputNumber id="codFee" [(ngModel)]="cashOnDeliveryFee" [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0" mode="currency" currency="EUR" locale="sk-SK"></p-inputNumber>
+        </div>
+        <small style="display: block; margin-top: 0.4rem; color: #666;">Tento poplatok sa automaticky pripočíta k objednávke pri voľbe platby na dobierku.</small>
+      </div>
+
+      <div>
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <label for="packetaKey" style="font-weight: 600; font-size: 1rem; min-width: 220px;">Packeta API kľúč:</label>
+          <input pInputText id="packetaKey" type="text" [(ngModel)]="packetaApiKey" placeholder="Napr. 16-znakový API kľúč Packeta" style="width: 320px;" />
+        </div>
+        <small style="display: block; margin-top: 0.4rem; color: #666;">API kľúč z klientskej sekcie Packeta pre zobrazenie mapy výdajných miest a Z-BOXov.</small>
+      </div>
+
+      <div>
+        <p-button label="Uložiť nastavenia" icon="pi pi-check" (onClick)="saveSettings()" [loading]="isSavingSettings" severity="success"></p-button>
+      </div>
+    </div>
+  </div>
+
   <div class="chart-section">
     <canvas #salesChart></canvas>
   </div>
@@ -45,4 +70,5 @@
       </ng-template>
     </p-table>
   </div>
+  <p-toast></p-toast>
 </div>

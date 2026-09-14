@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -19,14 +19,16 @@ public class GuestUserController : ControllerBase
     private readonly IMongoCollection<Design> _designs;
     private readonly IMongoCollection<Customization> _customizations;
     private readonly IMongoCollection<Order> _orders;
+    private readonly OrderService _orderService;
 
-    public GuestUserController(NiaDbContext context)
+    public GuestUserController(NiaDbContext context, OrderService orderService)
     {
         _products = context.Products;
         _guestUsers = context.GuestUsers;
         _designs = context.Designs;
         _customizations = context.Customizations;
         _orders = context.Orders;
+        _orderService = orderService;
     }
     
     [HttpPost("make-customization-without-register")]
@@ -134,63 +136,34 @@ public class GuestUserController : ControllerBase
     public async Task<IActionResult> MakeOrderWithoutRegister(GuestOrderRequest request)
     {
         if (request.CustomizationsId == null || request.CustomizationsId.Count == 0 ||
-            request.CustomizationsId.Count != request.CustomizationsId.Distinct().Count() ||
             !Guid.TryParse(request.GuestUserId, out var guestUserId))
             return BadRequest(new { error = "Invalid order request." });
 
         var guestUser = await _guestUsers.Find(g => g.Id == guestUserId).FirstOrDefaultAsync();
         if (guestUser == null) return BadRequest(new { error = "Invalid guest." });
 
-        var dbCustomization = await _customizations.Find(c => request.CustomizationsId.Contains(c.Id)).ToListAsync();
-
-        if (dbCustomization.Count != request.CustomizationsId.Count ||
-            dbCustomization.Any(c => c.UserId != guestUserId.ToString()))
+        var result = await _orderService.CreateAsync(
+            guestUserId,
+            request.CustomizationsId,
+            request.PaymentMethod,
+            request.DeliveryMethod,
+            request.PacketaPointId,
+            request.PacketaPointName,
+            request.PacketaPointAddress);
+        if (result.Error == OrderCreationError.InvalidItems)
             return BadRequest(new { error = "Invalid customizations." });
+        if (result.Error == OrderCreationError.OutOfStock)
+            return BadRequest(new { error = "Položka nie je na sklade." });
+        if (result.Error == OrderCreationError.NumberConflict)
+            return Conflict(new { error = "Could not allocate order number." });
 
-        var totalPrice = dbCustomization.Sum(c => c.Price);
-        if (totalPrice <= 0) return BadRequest(new { error = "Invalid order total." });
-
-        var lastOrder = await _orders.Find(FilterDefinition<Order>.Empty)
-            .SortByDescending(o => o.Id) 
-            .FirstOrDefaultAsync();
-
-        int newIntId = lastOrder != null ? lastOrder.Id + 1 : 1;
-        
-        var cancellationToken = Guid.NewGuid().ToString();
-
-        var lcOrder = new Order
+        var order = result.Order!;
+        return Ok(new
         {
-            Id = newIntId,
-            Customizations = request.CustomizationsId,
-            TotalPrice = totalPrice,
-            UserId = guestUserId,
-            StatusOrder = EStatus.PRIJATA,
-            CancellationToken = cancellationToken,
-            FollowToken = Guid.NewGuid().ToString(),
-            CreatedAt = LocalTimeService.LocalTime()
-        };
-
-        for (var attempt = 0; attempt < 10; attempt++)
-        {
-            try
-            {
-                await _orders.InsertOneAsync(lcOrder);
-                return Ok(new
-                {
-                    OrderId = lcOrder.Id,
-                    CancellationToken = lcOrder.CancellationToken,
-                    FollowToken = lcOrder.FollowToken
-                });
-            }
-            catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
-            {
-                var newest = await _orders.Find(FilterDefinition<Order>.Empty)
-                    .SortByDescending(o => o.Id).FirstOrDefaultAsync();
-                lcOrder.Id = (newest?.Id ?? 0) + 1;
-            }
-        }
-        return Conflict(new { error = "Could not allocate order number." });
-
+            OrderId = order.Id,
+            CancellationToken = order.CancellationToken,
+            FollowToken = order.FollowToken
+        });
     }
     
     [NonAction]
@@ -214,19 +187,9 @@ public class GuestUserController : ControllerBase
     [HttpPost("cancel-order-by-token")]
     public async Task<IActionResult> CancelOrderByToken(string token)
     {
-        var dbOrder = await _orders.Find(o => o.CancellationToken == token).FirstOrDefaultAsync();
-
-        if (dbOrder == null)
+        var success = await _orderService.CancelByTokenAsync(token);
+        if (!success)
             return NotFound(new { error = "Invalid or expired token!" });
-
-        var filterOrder = Builders<Order>.Filter.And(
-            Builders<Order>.Filter.Eq(o => o.CancellationToken, token),
-            Builders<Order>.Filter.Eq(o => o.StatusOrder, EStatus.PRIJATA));
-        var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
-        var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
-
-        if (resultOrder.MatchedCount == 0)
-            return NotFound(new { error = "Order not found!" });
 
         return Ok(new { message = "Order canceled successfully!" });
     }
@@ -274,17 +237,11 @@ public class GuestUserController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(cancellationToken))
             return BadRequest("Cancellation is required!");
-        
-        var filter = Builders<Order>.Filter.And(
-            Builders<Order>.Filter.Eq(o => o.CancellationToken, cancellationToken),
-            Builders<Order>.Filter.Eq(o => o.StatusOrder, EStatus.PRIJATA));
-        var update = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
-        
-        var updateResult = await _orders.UpdateOneAsync(filter, update);
-        
-        if (updateResult.MatchedCount == 0)
+
+        var success = await _orderService.CancelByTokenAsync(cancellationToken);
+        if (!success)
             return NotFound("Order not found.");
-        
+
         return Ok(new { message = "Objednávka bola úspešne zrušená." });
     }
     

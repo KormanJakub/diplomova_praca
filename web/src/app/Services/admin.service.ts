@@ -200,4 +200,16 @@ export class AdminService {
   getUserInformation(userId : string): Observable<any> {
     return this.http.get(`${environment.apiUrl}/admin/user/${userId}`);
   }
+
+  getSettings(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/admin/settings`);
+  }
+
+  updateSettings(cashOnDeliveryFee: number, packetaApiKey?: string): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/admin/settings`, { cashOnDeliveryFee, packetaApiKey });
+  }
+
+  markOrderAsPaid(orderId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/admin/orders/mark-paid/${orderId}`, {});
+  }
 }

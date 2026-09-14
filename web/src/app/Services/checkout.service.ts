@@ -22,14 +22,33 @@ export class CheckoutService {
     return this.http.post<any>(`${this.baseUrl}/user/make-customization`, customizations, { headers });
   }
 
-  createOrder(customizationIds: string[]): Observable<any> {
+  createOrder(
+    customizationIds: string[],
+    paymentMethod: string = 'Stripe',
+    deliveryMethod: string = 'HomeDelivery',
+    packetaPointId?: string,
+    packetaPointName?: string,
+    packetaPointAddress?: string
+  ): Observable<any> {
     const token = this.cookieService.get('uiAppToken');
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
+
+    let url = `${this.baseUrl}/user/make-order?paymentMethod=${encodeURIComponent(paymentMethod)}&deliveryMethod=${encodeURIComponent(deliveryMethod)}`;
+    if (packetaPointId) {
+      url += `&packetaPointId=${encodeURIComponent(packetaPointId)}`;
+    }
+    if (packetaPointName) {
+      url += `&packetaPointName=${encodeURIComponent(packetaPointName)}`;
+    }
+    if (packetaPointAddress) {
+      url += `&packetaPointAddress=${encodeURIComponent(packetaPointAddress)}`;
+    }
+
     return this.http.post<any>(
-      `${this.baseUrl}/user/make-order`,
+      url,
       JSON.stringify(customizationIds),
       { headers }
     );

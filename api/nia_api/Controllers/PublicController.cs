@@ -22,6 +22,7 @@ namespace nia_api.Controllers
         private readonly IMongoCollection<Questions> _questions;
         private readonly IMongoCollection<Tag> _tags;
         private readonly IMongoCollection<Design> _designs;
+        private readonly IMongoCollection<StoreSettings> _storeSettings;
         
         private readonly PasswordService _service;
         private readonly JwtTokenService _token;
@@ -36,6 +37,7 @@ namespace nia_api.Controllers
             _questions = context.Questions;
             _tags = context.Tags;
             _designs = context.Designs;
+            _storeSettings = context.StoreSettings;
             
             _emailSender = emailSender;
             _service = service;
@@ -416,6 +418,17 @@ namespace nia_api.Controllers
             return Ok(new {message = "You have new password!"});
         }
         
+        [HttpGet("store-settings")]
+        public async Task<IActionResult> GetStoreSettings()
+        {
+            var settings = await _storeSettings.Find(s => s.Id == "store_settings").FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new StoreSettings { Id = "store_settings", CashOnDeliveryFee = 1.00m };
+            }
+            return Ok(settings);
+        }
+
         private int GenerateVerificationCode()
         {
             var verificationCode = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000);

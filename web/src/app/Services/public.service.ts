@@ -48,4 +48,8 @@ export class PublicService {
   public getDesigns(): Observable<Design[]> {
     return this.httpClient.get<Design[]>(`${environment.apiUrl}/public/all-designs`);
   }
+
+  public getStoreSettings(): Observable<any> {
+    return this.httpClient.get<any>(`${environment.apiUrl}/public/store-settings`);
+  }
 }

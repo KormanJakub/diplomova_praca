@@ -159,6 +159,28 @@ export class OrderInformationComponent implements OnInit {
       this.loadOrderInformation();
     });
   }
+
+  markAsPaid(orderId: number): void {
+    this.adminService.markOrderAsPaid(orderId).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Platba prijatá',
+          detail: 'Platba bola úspešne zaznamenaná!',
+          life: 3000
+        });
+        this.loadOrderInformation();
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Chyba',
+          detail: err?.error?.error || 'Nepodarilo sa zaznamenať platbu.',
+          life: 3000
+        });
+      }
+    });
+  }
 }
 
 interface UserEnvelope {

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
@@ -22,8 +22,10 @@ public class AdminController : ControllerBase
     private readonly IMongoCollection<Order> _orders;
     private readonly IMongoCollection<User> _users;
     private readonly IMongoCollection<GuestUser> _guestUsers;
+    private readonly IMongoCollection<StoreSettings> _storeSettings;
+    private readonly OrderService _orderService;
     
-    public AdminController(NiaDbContext context)
+    public AdminController(NiaDbContext context, OrderService orderService)
     {
         _designs = context.Designs;
         _products = context.Products;
@@ -33,6 +35,8 @@ public class AdminController : ControllerBase
         _orders = context.Orders;
         _users = context.Users;
         _guestUsers = context.GuestUsers;
+        _storeSettings = context.StoreSettings;
+        _orderService = orderService;
     }
 
     [HttpGet("tag/getAll")]
@@ -577,10 +581,16 @@ public class AdminController : ControllerBase
         if (order == null)
             return NotFound(new { error = "Order not found!" });
 
-        if (order.StatusOrder < EStatus.ZRUSENA) 
+        if (order.StatusOrder < EStatus.POSLANA) 
+        {
             order.StatusOrder++;
-
-        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+            if (order.StatusOrder >= EStatus.ZAPLATENA && order.PaymentStatus != "Paid")
+            {
+                order.PaymentStatus = "Paid";
+            }
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+        }
 
         return Ok(new { message = "Order status increased!", order });
     }
@@ -592,10 +602,12 @@ public class AdminController : ControllerBase
         if (order == null)
             return NotFound(new { error = "Order not found!" });
 
-        if (order.StatusOrder > EStatus.PRIJATA)
+        if (order.StatusOrder > EStatus.PRIJATA && order.StatusOrder <= EStatus.POSLANA)
+        {
             order.StatusOrder--;
-
-        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+        }
 
         return Ok(new { message = "Order status decreased!", order });
     }
@@ -614,13 +626,11 @@ public class AdminController : ControllerBase
     [HttpPost("orders/cancel/{orderId}")]
     public async Task<IActionResult> CancelOrder(int orderId)
     {
+        var success = await _orderService.CancelByAdminAsync(orderId);
+        if (!success)
+            return NotFound(new { error = "Order not found or already cancelled!" });
+
         var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
-        if (order == null)
-            return NotFound(new { error = "Order not found!" });
-
-        order.StatusOrder = EStatus.ZRUSENA;
-        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
-
         return Ok(new { message = "Order cancelled!", order });
     }
     
@@ -813,4 +823,60 @@ public class AdminController : ControllerBase
 
         return NotFound(new { error = "User not found" });
     }
+
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetSettings()
+    {
+        var settings = await _storeSettings.Find(s => s.Id == "store_settings").FirstOrDefaultAsync();
+        if (settings == null)
+        {
+            settings = new StoreSettings { Id = "store_settings", CashOnDeliveryFee = 1.00m };
+        }
+        return Ok(settings);
+    }
+
+    [HttpPut("settings")]
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsRequest request)
+    {
+        if (request.CashOnDeliveryFee < 0)
+            return BadRequest(new { error = "Poplatok za dobierku nemôže byť záporný." });
+
+        var update = Builders<StoreSettings>.Update
+            .Set(s => s.CashOnDeliveryFee, request.CashOnDeliveryFee)
+            .Set(s => s.PacketaApiKey, request.PacketaApiKey)
+            .Set(s => s.UpdatedAt, DateTime.UtcNow);
+
+        var options = new UpdateOptions { IsUpsert = true };
+        await _storeSettings.UpdateOneAsync(s => s.Id == "store_settings", update, options);
+
+        var settings = await _storeSettings.Find(s => s.Id == "store_settings").FirstOrDefaultAsync();
+        return Ok(new { message = "Nastavenia boli úspešne uložené.", settings });
+    }
+
+    [HttpPost("orders/mark-paid/{orderId}")]
+    public async Task<IActionResult> MarkOrderAsPaid(int orderId)
+    {
+        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        if (order == null)
+            return NotFound(new { error = "Order not found!" });
+
+        if (order.StatusOrder == EStatus.ZRUSENA)
+            return BadRequest(new { error = "Zrušenú objednávku nie je možné označiť ako zaplatenú." });
+
+        order.PaymentStatus = "Paid";
+        if (order.StatusOrder == EStatus.PRIJATA)
+        {
+            order.StatusOrder = EStatus.ZAPLATENA;
+        }
+        order.UpdatedAt = DateTime.UtcNow;
+        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+
+        return Ok(new { message = "Platba objednávky bola úspešne potvrdená.", order });
+    }
+}
+
+public class UpdateSettingsRequest
+{
+    public decimal CashOnDeliveryFee { get; set; }
+    public string? PacketaApiKey { get; set; }
 }

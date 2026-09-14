@@ -81,7 +81,58 @@
       </tbody>
     </table>
     <div class="total-order">
+      <div *ngIf="selectedPaymentMethod === 'dobierka'" style="font-size: 0.95rem; color: #555; margin-bottom: 4px;">
+        Poplatok za dobierku: {{ codFee | currency:'€' }}
+      </div>
       Celková suma: {{ totalOverall | currency:'€' }}
+    </div>
+  </div>
+
+  <div class="delivery-options mt-4 mb-4">
+    <h2>Zvoľte Spôsob Doručenia</h2>
+    
+    <div class="field-radiobutton flex ai-center mb-3">
+      <p-radioButton name="delivery" value="HomeDelivery" [(ngModel)]="selectedDeliveryMethod" inputId="deliveryHome"></p-radioButton>
+      <div class="payment-logos flex ml-3" style="gap: 8px;">
+        <i class="pi pi-home" style="font-size: 1.3rem; color: #495057;"></i>
+      </div>
+      <div class="ml-2 d-flex ai-center">
+        <label for="deliveryHome" style="font-size: 1.15rem; cursor: pointer;">
+          Kuriér na adresu (doručenie na zadanú adresu)
+        </label>
+      </div>
+    </div>
+
+    <div class="field-radiobutton flex ai-center mb-2">
+      <p-radioButton name="delivery" value="Packeta" [(ngModel)]="selectedDeliveryMethod" inputId="deliveryPacketa"></p-radioButton>
+      <div class="payment-logos flex ml-3" style="gap: 8px;">
+        <i class="pi pi-map-marker" style="font-size: 1.3rem; color: #d32f2f;"></i>
+      </div>
+      <div class="ml-2 d-flex ai-center">
+        <label for="deliveryPacketa" style="font-size: 1.15rem; cursor: pointer;">
+          Zásielkovňa / Packeta (výdajné miesto alebo Z-BOX)
+        </label>
+      </div>
+    </div>
+
+    <div *ngIf="selectedDeliveryMethod === 'Packeta'" class="packeta-picker-container ml-4 mt-3 p-3 border-round shadow-1" style="background-color: #fafafa; border: 1px solid #e0e0e0; max-width: 550px; border-radius: 8px;">
+      <div *ngIf="!selectedPacketaPoint" class="flex flex-column gap-2">
+        <p style="margin: 0; color: #555; font-size: 0.95rem;">Zvoľte si výdajné miesto alebo Z-BOX, na ktoré chcete tovar doručiť:</p>
+        <div>
+          <p-button label="Vybrať výdajné miesto Packeta" icon="pi pi-map-marker" severity="danger" (onClick)="openPacketaWidget()"></p-button>
+        </div>
+      </div>
+      <div *ngIf="selectedPacketaPoint" class="flex flex-column gap-2">
+        <div class="flex ai-center justify-content-between" style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: bold; font-size: 1.05rem; color: #d32f2f;">
+            <i class="pi pi-check-circle mr-1"></i> Vybrané výdajné miesto:
+          </span>
+          <p-button label="Zmeniť" icon="pi pi-pencil" [outlined]="true" size="small" severity="secondary" (onClick)="openPacketaWidget()"></p-button>
+        </div>
+        <div style="font-size: 1rem; font-weight: 600;">{{ selectedPacketaPoint.name }}</div>
+        <div style="font-size: 0.95rem; color: #666;">{{ selectedPacketaPoint.address }}</div>
+        <small style="color: #888;">ID miesta: {{ selectedPacketaPoint.id }}</small>
+      </div>
     </div>
   </div>
 
@@ -121,6 +172,18 @@
         <i class="pi pi-bank mr-2" style="font-size: 1.2rem;"></i>
         <label for="iban" style="font-size: 1.2rem">
           Prevodom na účet
+        </label>
+      </div>
+    </div>
+
+    <div class="field-radiobutton flex ai-center mt-3">
+      <p-radioButton name="payment" value="dobierka" [(ngModel)]="selectedPaymentMethod" inputId="dobierka"></p-radioButton>
+      <div class="payment-logos flex ml-3" style="gap: 8px; margin-top: 4px;">
+        <i class="pi pi-truck" style="font-size: 1.4rem; color: #495057;"></i>
+      </div>
+      <div class="ml-2 d-flex ai-center">
+        <label for="dobierka" style="font-size: 1.2rem">
+          Na dobierku (+ {{ codFee | currency:'€' }})
         </label>
       </div>
     </div>

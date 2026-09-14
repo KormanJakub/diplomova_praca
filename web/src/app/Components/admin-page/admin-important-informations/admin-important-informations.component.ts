@@ -5,7 +5,13 @@ import {FooterComponent} from "../../footer/footer.component";
 import {HeaderComponent} from "../../header/header.component";
 import {CurrencyPipe, NgForOf} from "@angular/common";
 import {TableModule} from "primeng/table";
+import {FormsModule} from "@angular/forms";
+import {InputNumberModule} from "primeng/inputnumber";
+import {Button} from "primeng/button";
+import {ToastModule} from "primeng/toast";
+import {MessageService} from "primeng/api";
 
+import {InputTextModule} from "primeng/inputtext";
 
 @Component({
   selector: 'app-admin-important-informations',
@@ -15,10 +21,16 @@ import {TableModule} from "primeng/table";
     HeaderComponent,
     NgForOf,
     TableModule,
-    CurrencyPipe
+    CurrencyPipe,
+    FormsModule,
+    InputNumberModule,
+    InputTextModule,
+    Button,
+    ToastModule
   ],
   templateUrl: './admin-important-informations.component.html',
-  styleUrl: './admin-important-informations.component.css'
+  styleUrl: './admin-important-informations.component.css',
+  providers: [MessageService]
 })
 export class AdminImportantInformationsComponent implements OnInit {
   @ViewChild('salesChart') salesChartRef!: ElementRef;
@@ -37,12 +49,65 @@ export class AdminImportantInformationsComponent implements OnInit {
   cancelOrders: number = 0;
   lowStockProducts: any[] = [];
 
-  constructor(private adminService: AdminService) {}
+  cashOnDeliveryFee: number = 1.0;
+  packetaApiKey: string = '';
+  isSavingSettings: boolean = false;
+
+  constructor(
+    private adminService: AdminService,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
     this.loadKpiData();
     this.loadSalesSummaryAll();
     this.loadLowStockProducts();
+    this.loadSettings();
+  }
+
+  loadSettings(): void {
+    this.adminService.getSettings().subscribe({
+      next: (settings: any) => {
+        if (settings && typeof settings.cashOnDeliveryFee === 'number') {
+          this.cashOnDeliveryFee = settings.cashOnDeliveryFee;
+        }
+        if (settings && settings.packetaApiKey) {
+          this.packetaApiKey = settings.packetaApiKey;
+        }
+      },
+      error: (err) => console.error(err)
+    });
+  }
+
+  saveSettings(): void {
+    if (this.cashOnDeliveryFee < 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Chyba',
+        detail: 'Poplatok za dobierku nemôže byť záporný.'
+      });
+      return;
+    }
+
+    this.isSavingSettings = true;
+    this.adminService.updateSettings(this.cashOnDeliveryFee, this.packetaApiKey).subscribe({
+      next: () => {
+        this.isSavingSettings = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Úspech',
+          detail: 'Nastavenia boli úspešne uložené.'
+        });
+      },
+      error: (err) => {
+        this.isSavingSettings = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Chyba',
+          detail: err?.error?.error || 'Nepodarilo sa uložiť nastavenia.'
+        });
+      }
+    });
   }
 
   loadKpiData(): void {

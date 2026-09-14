@@ -20,6 +20,9 @@ import {UserService} from "../../../Services/user.service";
 import {GuestService} from "../../../Services/guest.service";
 import {GuestOrderRequest} from "../../../Requests/guestorderrequest";
 import {CustomizationGuestRequest} from "../../../Requests/customizationguestrequest";
+import {PublicService} from "../../../Services/public.service";
+
+declare const Packeta: any;
 
 @Component({
   selector: 'app-first-page-checkout',
@@ -52,6 +55,10 @@ export class FirstPageCheckoutComponent implements OnInit {
   cartItems: any[] = [];
   totalOrderPrice: number = 0;
   selectedPaymentMethod: string = 'stripe';
+  codFee: number = 1.0;
+  selectedDeliveryMethod: string = 'HomeDelivery';
+  packetaApiKey: string = '';
+  selectedPacketaPoint: { id: string; name: string; address: string } | null = null;
   isProcessing: boolean = false;
   productData: any[] = [];
   cookieName: string = 'CartCustomizations';
@@ -66,7 +73,8 @@ export class FirstPageCheckoutComponent implements OnInit {
     private router: Router,
     private paymentService: PaymentService,
     private cookieService: CookieService,
-    private guestService: GuestService
+    private guestService: GuestService,
+    private publicService: PublicService
   ) {
     this.billingForm = this.fb.group({
       firstName: ['', Validators.required],
@@ -106,6 +114,20 @@ export class FirstPageCheckoutComponent implements OnInit {
       const decoded = decodeURIComponent(this.cookieValue);
       this.productData = JSON.parse(decoded);
     }
+
+    this.publicService.getStoreSettings().subscribe({
+      next: (settings: any) => {
+        if (settings && typeof settings.cashOnDeliveryFee === 'number') {
+          this.codFee = settings.cashOnDeliveryFee;
+        }
+        if (settings && settings.packetaApiKey) {
+          this.packetaApiKey = settings.packetaApiKey;
+        }
+      },
+      error: () => {
+        this.codFee = 1.0;
+      }
+    });
   }
 
   isUserLoginIn() {
@@ -146,16 +168,69 @@ export class FirstPageCheckoutComponent implements OnInit {
   }
 
   get totalOverall(): number {
-    return this.totalProductPrice + this.totalDesignPrice + this.totalUserDescPrice;
+    const base = this.totalProductPrice + this.totalDesignPrice + this.totalUserDescPrice;
+    return this.selectedPaymentMethod === 'dobierka' ? (base + this.codFee) : base;
   }
 
   onPaymentMethodChange(method: string): void {
     this.selectedPaymentMethod = method;
   }
 
+  onDeliveryMethodChange(method: string): void {
+    this.selectedDeliveryMethod = method;
+  }
+
+  openPacketaWidget(): void {
+    if (!this.packetaApiKey) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Packeta API kľúč nenastavený',
+        detail: 'V systéme zatiaľ nie je zadaný Packeta API kľúč. Administrátor ho môže nastaviť v administrácii e-shopu.'
+      });
+      return;
+    }
+
+    if (typeof Packeta === 'undefined' || !Packeta.Widget) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Chyba knižnice',
+        detail: 'Knižnicu Packeta sa nepodarilo načítať. Skontrolujte internetové pripojenie.'
+      });
+      return;
+    }
+
+    const options = {
+      country: 'sk',
+      language: 'sk'
+    };
+
+    Packeta.Widget.pick(this.packetaApiKey, (point: any) => {
+      if (point) {
+        const address = point.street
+          ? `${point.street}, ${point.city}`
+          : (point.formatedValue || point.name || '');
+
+        this.selectedPacketaPoint = {
+          id: point.id?.toString() || '',
+          name: point.name || '',
+          address: address
+        };
+      }
+    }, options);
+  }
+
   proceedToPayment(): void {
     if (this.billingForm.invalid) {
       this.messageService.add({ severity: 'error', summary: 'Chyba', detail: 'Vyplňte prosím všetky fakturačné údaje.' });
+      return;
+    }
+
+    if (this.selectedDeliveryMethod === 'Packeta' && !this.selectedPacketaPoint) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Výdajné miesto',
+        detail: 'Zvoľte prosím výdajné miesto alebo Z-BOX Zásielkovne / Packety.'
+      });
       return;
     }
 
@@ -181,7 +256,14 @@ export class FirstPageCheckoutComponent implements OnInit {
       const successCustomizations = customResponse.SuccessCustomization;
       const customizationIds = successCustomizations.map((cust: any) => cust.Id);
 
-      this.checkoutService.createOrder(customizationIds).subscribe((orderResponse : any) => {
+      this.checkoutService.createOrder(
+        customizationIds,
+        this.selectedPaymentMethod,
+        this.selectedDeliveryMethod,
+        this.selectedPacketaPoint?.id,
+        this.selectedPacketaPoint?.name,
+        this.selectedPacketaPoint?.address
+      ).subscribe((orderResponse : any) => {
         if (this.selectedPaymentMethod === 'stripe') {
           const paymentRequest: PaymentRequestModel = {
             OrderId: orderResponse.OrderId,
@@ -199,8 +281,10 @@ export class FirstPageCheckoutComponent implements OnInit {
               detail: 'Chyba pri vytváraní Stripe platby.'
             });
           });
-        } else {
+        } else if (this.selectedPaymentMethod === 'iban') {
           this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId, followToken: orderResponse.FollowToken } });
+        } else {
+          this.router.navigate(['/follow-order'], { queryParams: { followToken: orderResponse.FollowToken } });
         }
       }, err => {
         this.isProcessing = false;
@@ -241,7 +325,12 @@ export class FirstPageCheckoutComponent implements OnInit {
 
         const guestOrderRequest: GuestOrderRequest = {
           GuestUserId: customResponse.GuestUserId,
-          CustomizationsId: customizationIds
+          CustomizationsId: customizationIds,
+          PaymentMethod: this.selectedPaymentMethod,
+          DeliveryMethod: this.selectedDeliveryMethod,
+          PacketaPointId: this.selectedPacketaPoint?.id,
+          PacketaPointName: this.selectedPacketaPoint?.name,
+          PacketaPointAddress: this.selectedPacketaPoint?.address
         };
 
         this.guestService.makeOrderWithoutRegister(guestOrderRequest)
@@ -264,8 +353,10 @@ export class FirstPageCheckoutComponent implements OnInit {
                     detail: 'Chyba pri vytváraní Stripe platby.'
                   });
                 });
-            } else {
+            } else if (this.selectedPaymentMethod === 'iban') {
               this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId, followToken: orderResponse.FollowToken } });
+            } else {
+              this.router.navigate(['/follow-order'], { queryParams: { followToken: orderResponse.FollowToken } });
             }
           }, err => {
             this.isProcessing = false;

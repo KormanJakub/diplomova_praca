@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -170,16 +170,31 @@ public class UserController : ControllerBase
 
 
     [HttpPost("make-order")]
-    public async Task<IActionResult> MakeOrder(List<Guid> customizationsIds)
+    public async Task<IActionResult> MakeOrder(
+        List<Guid> customizationsIds,
+        [FromQuery] string? paymentMethod = "Stripe",
+        [FromQuery] string? deliveryMethod = "HomeDelivery",
+        [FromQuery] string? packetaPointId = null,
+        [FromQuery] string? packetaPointName = null,
+        [FromQuery] string? packetaPointAddress = null)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
 
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var result = await _orderService.CreateAsync(userId.Value, customizationsIds);
+        var result = await _orderService.CreateAsync(
+            userId.Value,
+            customizationsIds,
+            paymentMethod,
+            deliveryMethod,
+            packetaPointId,
+            packetaPointName,
+            packetaPointAddress);
         if (result.Error == OrderCreationError.InvalidItems)
             return BadRequest(new { error = "Invalid customizations." });
+        if (result.Error == OrderCreationError.OutOfStock)
+            return BadRequest(new { error = "Položka nie je na sklade." });
         if (result.Error == OrderCreationError.NumberConflict)
             return Conflict(new { error = "Could not allocate order number." });
 
@@ -195,21 +210,8 @@ public class UserController : ControllerBase
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var dbOrder = _orders.Find(o => o.Id == OrderId).FirstOrDefault();
-
-        if (dbOrder == null)
-            return NotFound(new { error = "Order not founded!" });
-        
-        var filterOrder = Builders<Order>.Filter.And(
-            Builders<Order>.Filter.Eq(o => o.Id, OrderId),
-            Builders<Order>.Filter.Eq(o => o.UserId, userId.Value),
-            Builders<Order>.Filter.Eq(o => o.StatusOrder, EStatus.PRIJATA)
-        );
-
-        var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
-        var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
-
-        if (resultOrder.MatchedCount == 0)
+        var success = await _orderService.CancelByUserAsync(OrderId, userId.Value);
+        if (!success)
             return NotFound(new { error = "Order not found!" });
 
         return Ok(new { message = "Order is updated!" });

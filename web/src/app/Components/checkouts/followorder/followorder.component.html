@@ -18,7 +18,16 @@
         </div>
         <div class="col-12 md-6">
           <p><strong>Suma:</strong> {{ order.TotalPrice | currency:'€' }}</p>
-          <p><strong>Status:</strong> {{ getManualStatusLabel(order.StatusOrder) }}</p>
+          <p><strong>Spôsob platby:</strong> {{ order.PaymentMethod || 'Stripe' }}</p>
+          <p><strong>Stav platby:</strong> {{ order.PaymentStatus }}</p>
+          <p *ngIf="order.PaymentFee"><strong>Poplatok za dobierku:</strong> {{ order.PaymentFee | currency:'€' }}</p>
+          <p><strong>Spôsob doručenia:</strong> {{ order.DeliveryMethod === 'Packeta' ? 'Zásielkovňa / Packeta' : 'Kuriér na adresu' }}</p>
+          <div *ngIf="order.DeliveryMethod === 'Packeta' && order.PacketaPointName" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 0.5rem 0.75rem; margin-bottom: 0.5rem;">
+            <p style="margin: 0 0 2px 0;"><strong>Výdajné miesto:</strong> {{ order.PacketaPointName }}</p>
+            <p style="margin: 0 0 2px 0;"><strong>Adresa:</strong> {{ order.PacketaPointAddress }}</p>
+            <small style="color: #6c757d;">ID výdajného miesta: {{ order.PacketaPointId }}</small>
+          </div>
+          <p><strong>Status objednávky:</strong> {{ getManualStatusLabel(order.StatusOrder) }}</p>
         </div>
       </div>
       <div class="grid">

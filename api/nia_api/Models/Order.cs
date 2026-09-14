@@ -1,4 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Bson;
 using nia_api.Enums;
@@ -26,6 +26,18 @@ public class Order
 
     [BsonElement("paymentStatus"), BsonRepresentation(BsonType.String)]
     public string PaymentStatus { get; set; }
+    [BsonElement("paymentMethod"), BsonRepresentation(BsonType.String)]
+    public string PaymentMethod { get; set; } = "Stripe";
+    [BsonElement("paymentFee"), BsonRepresentation(BsonType.Decimal128)]
+    public decimal PaymentFee { get; set; } = 0.00m;
+    [BsonElement("deliveryMethod"), BsonRepresentation(BsonType.String)]
+    public string DeliveryMethod { get; set; } = "HomeDelivery";
+    [BsonElement("packetaPointId"), BsonRepresentation(BsonType.String)]
+    public string? PacketaPointId { get; set; }
+    [BsonElement("packetaPointName"), BsonRepresentation(BsonType.String)]
+    public string? PacketaPointName { get; set; }
+    [BsonElement("packetaPointAddress"), BsonRepresentation(BsonType.String)]
+    public string? PacketaPointAddress { get; set; }
     [BsonElement("cancellationToken"), BsonRepresentation(BsonType.String)]
     public string CancellationToken { get; set; }
     [BsonElement("followToken"), BsonRepresentation(BsonType.String)]

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using nia_api.Models;
 using File = nia_api.Models.File;
@@ -41,5 +41,7 @@ namespace nia_api.Data
         public IMongoCollection<Gallery> Gallery => _database.GetCollection<Gallery>("Gallery");
 
         public IMongoCollection<Questions> Questions => _database.GetCollection<Questions>("Questions");
+
+        public IMongoCollection<StoreSettings> StoreSettings => _database.GetCollection<StoreSettings>("StoreSettings");
     }
 }

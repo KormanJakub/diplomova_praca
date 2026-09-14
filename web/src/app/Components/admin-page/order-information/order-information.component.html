@@ -17,6 +17,16 @@
           <p><strong>Status:</strong> {{ getManualStatusLabel(order.StatusOrder) }}</p>
         </div>
         <div class="col-12 md-6">
+          <p><strong>Spôsob platby:</strong> {{ order.PaymentMethod || 'Stripe' }}</p>
+          <p><strong>Stav platby:</strong> <span [class]="order.PaymentStatus === 'Paid' ? 'text-green-600 font-bold' : 'text-orange-500 font-bold'">{{ order.PaymentStatus }}</span></p>
+          <p *ngIf="order.PaymentFee"><strong>Poplatok za platbu:</strong> {{ order.PaymentFee | currency:'€' }}</p>
+          <p><strong>Spôsob doručenia:</strong> {{ order.DeliveryMethod === 'Packeta' ? 'Zásielkovňa / Packeta' : 'Kuriér na adresu' }}</p>
+          <div *ngIf="order.DeliveryMethod === 'Packeta' && order.PacketaPointName" style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; padding: 0.5rem 0.75rem; margin-bottom: 0.5rem;">
+            <p style="margin: 0 0 2px 0; font-weight: bold; color: #856404;"><i class="pi pi-map-marker mr-1"></i> Výdajné miesto / Z-BOX:</p>
+            <p style="margin: 0 0 2px 0;"><strong>Názov:</strong> {{ order.PacketaPointName }}</p>
+            <p style="margin: 0 0 2px 0;"><strong>Adresa:</strong> {{ order.PacketaPointAddress }}</p>
+            <small style="color: #856404;"><strong>Packeta ID:</strong> {{ order.PacketaPointId }}</small>
+          </div>
           <p><strong>Token na ukončenie objednávky:</strong> {{ order.CancellationToken }}</p>
           <p><strong>Token na sledovanie objednávky:</strong> {{ order.FollowToken }}</p>
         </div>
@@ -28,7 +38,11 @@
       </div>
     </div>
 
-    <div class="flex gap-3 mb-4 jc-center">
+    <div class="flex gap-3 mb-4 jc-center flex-wrap">
+      <p-button *ngIf="order.PaymentStatus !== 'Paid'" pButton type="button" icon="pi pi-check" label="Potvrdiť prijatie platby"
+                severity="info" class="button-info button-sm"
+                (click)="markAsPaid(order.Id)">
+      </p-button>
       <p-button pButton type="button" icon="pi pi-plus" label="Zvýšenie"
                 severity="success" class="button-success button-sm"
                 (click)="increaseStatus(order.Id)">
