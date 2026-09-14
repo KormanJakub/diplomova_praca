@@ -248,6 +248,7 @@ export class FirstPageCheckoutComponent implements OnInit {
           .subscribe((orderResponse: any) => {
             if (this.selectedPaymentMethod === 'stripe') {
               const paymentRequest: PaymentRequestModel = {
+                OrderId: orderResponse.OrderId,
                 CancellationToken: orderResponse.CancellationToken.toString()
               };
 
