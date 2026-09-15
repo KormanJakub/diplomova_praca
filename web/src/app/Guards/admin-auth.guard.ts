@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import {CookieService} from "ngx-cookie-service";
+import {AuthService} from '../Services/auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,11 +8,11 @@ import {CookieService} from "ngx-cookie-service";
 export class AdminAuthGuard implements CanActivate {
   constructor(
     private router: Router,
-    private cookieService: CookieService,
+    private authService: AuthService,
   ) {}
 
   isAdminLogged(): boolean {
-    return this.cookieService.get('uiAppRole') === 'admin';
+    return this.authService.isAdminLoggedIn();
   }
 
   canActivate(): boolean {

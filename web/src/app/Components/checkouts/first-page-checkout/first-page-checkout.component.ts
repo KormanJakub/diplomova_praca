@@ -22,7 +22,6 @@ import {GuestOrderRequest} from "../../../Requests/guestorderrequest";
 import {CustomizationGuestRequest} from "../../../Requests/customizationguestrequest";
 import {PublicService} from "../../../Services/public.service";
 
-declare const Packeta: any;
 
 @Component({
   selector: 'app-first-page-checkout',
@@ -131,8 +130,7 @@ export class FirstPageCheckoutComponent implements OnInit {
   }
 
   isUserLoginIn() {
-    const token = this.cookieService.get('uiAppToken');
-    return !!token;
+    return this.authService.isLoggedIn();
   }
 
   calculateTotal(): void {
@@ -180,7 +178,7 @@ export class FirstPageCheckoutComponent implements OnInit {
     this.selectedDeliveryMethod = method;
   }
 
-  openPacketaWidget(): void {
+  async openPacketaWidget(): Promise<void> {
     if (!this.packetaApiKey) {
       this.messageService.add({
         severity: 'warn',
@@ -190,7 +188,9 @@ export class FirstPageCheckoutComponent implements OnInit {
       return;
     }
 
-    if (typeof Packeta === 'undefined' || !Packeta.Widget) {
+    try {
+      await this.loadPacketaWidget();
+    } catch {
       this.messageService.add({
         severity: 'error',
         summary: 'Chyba knižnice',
@@ -199,12 +199,14 @@ export class FirstPageCheckoutComponent implements OnInit {
       return;
     }
 
+    const packeta = (window as any).Packeta;
+
     const options = {
       country: 'sk',
       language: 'sk'
     };
 
-    Packeta.Widget.pick(this.packetaApiKey, (point: any) => {
+    packeta.Widget.pick(this.packetaApiKey, (point: any) => {
       if (point) {
         const address = point.street
           ? `${point.street}, ${point.city}`
@@ -217,6 +219,29 @@ export class FirstPageCheckoutComponent implements OnInit {
         };
       }
     }, options);
+  }
+
+  private loadPacketaWidget(): Promise<void> {
+    const existing = (window as any).Packeta;
+    if (existing?.Widget) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+      const previous = document.querySelector<HTMLScriptElement>('script[data-packeta-widget]');
+      if (previous) {
+        previous.addEventListener('load', () => resolve(), {once: true});
+        previous.addEventListener('error', () => reject(), {once: true});
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://widget.packeta.com/v6/www/js/library.js';
+      script.async = true;
+      script.referrerPolicy = 'no-referrer';
+      script.dataset['packetaWidget'] = 'true';
+      script.onload = () => (window as any).Packeta?.Widget ? resolve() : reject();
+      script.onerror = () => reject();
+      document.head.appendChild(script);
+    });
   }
 
   proceedToPayment(): void {
@@ -282,9 +307,9 @@ export class FirstPageCheckoutComponent implements OnInit {
             });
           });
         } else if (this.selectedPaymentMethod === 'iban') {
-          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId, followToken: orderResponse.FollowToken } });
+          this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId }, fragment: orderResponse.FollowToken });
         } else {
-          this.router.navigate(['/follow-order'], { queryParams: { followToken: orderResponse.FollowToken } });
+          this.router.navigate(['/follow-order'], { fragment: orderResponse.FollowToken });
         }
       }, err => {
         this.isProcessing = false;
@@ -354,9 +379,9 @@ export class FirstPageCheckoutComponent implements OnInit {
                   });
                 });
             } else if (this.selectedPaymentMethod === 'iban') {
-              this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId, followToken: orderResponse.FollowToken } });
+              this.router.navigate(['/iban-payment'], { queryParams: { orderId: orderResponse.OrderId }, fragment: orderResponse.FollowToken });
             } else {
-              this.router.navigate(['/follow-order'], { queryParams: { followToken: orderResponse.FollowToken } });
+              this.router.navigate(['/follow-order'], { fragment: orderResponse.FollowToken });
             }
           }, err => {
             this.isProcessing = false;

@@ -1,78 +1,81 @@
-import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {RegisterRequest} from "../Requests/registerrequest";
-import {catchError, Observable, of} from "rxjs";
-import {environment} from "../../Environments/environment";
-import {LoginRequest} from "../Requests/loginrequest";
-import {VerificateCodeRequest} from "../Requests/verificatecoderequest";
-import {NewPasswordRequest} from "../Requests/newpasswordrequest";
-import {CookieService} from "ngx-cookie-service";
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable, finalize, of, tap} from 'rxjs';
+import {environment} from '../../Environments/environment';
+import {RegisterRequest} from '../Requests/registerrequest';
+import {LoginRequest} from '../Requests/loginrequest';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface UiSession {
+  role: 'admin' | 'user';
+  firstName: string;
+  email_confirmation: boolean;
+}
+
+@Injectable({providedIn: 'root'})
 export class AuthService {
+  private readonly sessionKey = 'waffl_ui_session';
 
-  constructor(
-    private httpClient: HttpClient,
-    private cookieService: CookieService
-  ) { }
+  constructor(private httpClient: HttpClient) {}
 
-  public register(user: RegisterRequest): Observable<any> {
+  register(user: RegisterRequest): Observable<any> {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/register`, user);
   }
 
-  public login(user: LoginRequest): Observable<any> {
-    return this.httpClient.post<any>(`${environment.apiUrl}/public/login`, user);
+  login(user: LoginRequest): Observable<UiSession> {
+    return this.httpClient.post<UiSession>(`${environment.apiUrl}/public/login`, user).pipe(
+      tap(session => this.saveSession(session))
+    );
   }
 
-  public requestPasswordReset(email: string): Observable<any> {
+  logout(): Observable<void> {
+    return this.httpClient.post<void>(`${environment.apiUrl}/public/logout`, {}).pipe(
+      finalize(() => localStorage.removeItem(this.sessionKey))
+    );
+  }
+
+  refreshSession(): Observable<UiSession> {
+    return this.httpClient.get<UiSession>(`${environment.apiUrl}/public/session`).pipe(
+      tap(session => this.saveSession(session))
+    );
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
     return this.httpClient.put<any>(`${environment.apiUrl}/public/forgot-password`, null, {params: {email}});
   }
 
-  public resetPassword(email: string, token: string, newPassword: string, repeatNewPassword: string): Observable<any> {
+  resetPassword(email: string, token: string, newPassword: string, repeatNewPassword: string): Observable<any> {
     return this.httpClient.put<any>(`${environment.apiUrl}/public/new-password`,
       {Email: email, Token: token, NewPassword: newPassword, RepeatNewPassword: repeatNewPassword});
   }
 
-  public verifyEmailCode(email: string, verificationCode: number): Observable<any> {
+  verifyEmailCode(email: string, verificationCode: number): Observable<any> {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/verification-code`,
       {Email: email, VerificationCode: verificationCode});
   }
 
-  public resendEmailCode(email: string): Observable<any> {
+  resendEmailCode(email: string): Observable<any> {
     return this.httpClient.post<any>(`${environment.apiUrl}/public/new-verification-code`, {Email: email});
   }
 
-  public isLoggedIn() {
-    return !!this.cookieService.get("uiAppToken");
-  }
-
-  isLoggedInUser(): Observable<boolean> {
-    const token = this.cookieService.get('uiAppToken');
-    return of(!!token);
+  isLoggedIn(): boolean { return this.getSession() !== null; }
+  isLoggedInUser(): Observable<boolean> { return of(this.isLoggedIn()); }
+  isAdminLoggedIn(): boolean { return this.getSession()?.role === 'admin'; }
+  isEmailConfirmed(): boolean { return this.getSession()?.email_confirmation === true; }
+  getSession(): UiSession | null {
+    try {
+      const value = localStorage.getItem(this.sessionKey);
+      return value ? JSON.parse(value) as UiSession : null;
+    } catch {
+      localStorage.removeItem(this.sessionKey);
+      return null;
+    }
   }
 
   getUserProfile(): Observable<any> {
-    const token = this.cookieService.get('uiAppToken');
-
-    const headers = new HttpHeaders()
-      .set('Authorization', `Bearer ${token}`);
-
-    return this.httpClient.get<any>(`${environment.apiUrl}/user/profile`, { headers }).pipe(
-      catchError(err => of(null))
-    );
+    return this.httpClient.get<any>(`${environment.apiUrl}/user/profile`);
   }
 
-  public returnToken() {
-    return this.cookieService.get("uiAppToken");
-  }
-
-  public isAdminLoggedIn() {
-    return this.cookieService.get('uiAppRole') === 'admin';
-  }
-
-  public isEmailConfirmed() {
-    return JSON.parse(this.cookieService.get("uiAppEmailConfirmation") || 'false');
+  private saveSession(session: UiSession): void {
+    localStorage.setItem(this.sessionKey, JSON.stringify(session));
   }
 }

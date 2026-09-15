@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Domain.Configuration;
+using nia_api.Domain.Orders;
 using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
+using nia_api.Security;
 using nia_api.Services;
 
 namespace nia_api.Controllers;
@@ -18,23 +21,41 @@ public class GuestUserController : ControllerBase
     private readonly IMongoCollection<GuestUser> _guestUsers;
     private readonly IMongoCollection<Design> _designs;
     private readonly IMongoCollection<Customization> _customizations;
-    private readonly IMongoCollection<Order> _orders;
+    private readonly IOrderStore _orderStore;
+    private readonly IOrderLifecycleService _orderLifecycleService;
     private readonly OrderService _orderService;
+    private readonly IMerchantConfigurationService _configService;
 
-    public GuestUserController(NiaDbContext context, OrderService orderService)
+    public GuestUserController(
+        NiaDbContext context,
+        OrderService orderService,
+        IOrderStore orderStore,
+        IOrderLifecycleService orderLifecycleService,
+        IMerchantConfigurationService? configService = null)
     {
         _products = context.Products;
         _guestUsers = context.GuestUsers;
         _designs = context.Designs;
         _customizations = context.Customizations;
-        _orders = context.Orders;
+        _orderStore = orderStore;
+        _orderLifecycleService = orderLifecycleService;
         _orderService = orderService;
+        _configService = configService ?? new MerchantConfigurationService(context);
     }
     
     [HttpPost("make-customization-without-register")]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
     public async Task<IActionResult> MakeCustomizationWithoutRegister(GuestCustomizationRequest request)
     {
+        var personalizationEnabled = await _configService.IsPersonalizationEnabledAsync();
+        if (!personalizationEnabled)
+        {
+            if (request.Customizations.Any(c => !string.IsNullOrEmpty(c.DesignId) || !string.IsNullOrWhiteSpace(c.UserDescription)))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+            }
+        }
+
         var guestUser = new GuestUser
         {
             Id = Guid.NewGuid(),
@@ -57,16 +78,20 @@ public class GuestUserController : ControllerBase
 
         foreach (var req in request.Customizations)
         {
-            if (!Guid.TryParse(req.DesignId, out var designGuid))
+            Design? dbDesign = null;
+            if (!string.IsNullOrEmpty(req.DesignId))
             {
-                failedCustomizations.Add($"Neplatný DesignId: {req.DesignId}");
-                continue;
-            }
-            var dbDesign = await _designs.Find(d => d.Id == designGuid).FirstOrDefaultAsync();
-            if (dbDesign == null)
-            {
-                failedCustomizations.Add($"Design not found: {req.DesignId}");
-                continue;
+                if (!Guid.TryParse(req.DesignId, out var designGuid))
+                {
+                    failedCustomizations.Add($"Neplatný DesignId: {req.DesignId}");
+                    continue;
+                }
+                dbDesign = await _designs.Find(d => d.Id == designGuid).FirstOrDefaultAsync();
+                if (dbDesign == null)
+                {
+                    failedCustomizations.Add($"Design not found: {req.DesignId}");
+                    continue;
+                }
             }
 
             if (!Guid.TryParse(req.ProductId, out var productGuid))
@@ -82,7 +107,7 @@ public class GuestUserController : ControllerBase
             }
 
             var additionalPrice = !string.IsNullOrEmpty(req.UserDescription) ? 2.0M : 0.0M;
-            var price = dbDesign.Price + dbProduct.Price + additionalPrice;
+            var price = (dbDesign?.Price ?? 0.0M) + dbProduct.Price + additionalPrice;
 
             var newCustomization = new Customization
             {
@@ -99,7 +124,7 @@ public class GuestUserController : ControllerBase
 
             customizations.Add(newCustomization);
 
-            if (!designDictionary.ContainsKey(req.DesignId))
+            if (dbDesign != null && !string.IsNullOrEmpty(req.DesignId) && !designDictionary.ContainsKey(req.DesignId))
                 designDictionary.Add(req.DesignId, dbDesign);
 
             if (!productDictionary.ContainsKey(req.ProductId))
@@ -133,7 +158,9 @@ public class GuestUserController : ControllerBase
 
     [HttpPost("make-order-without-register")]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
-    public async Task<IActionResult> MakeOrderWithoutRegister(GuestOrderRequest request)
+    public async Task<IActionResult> MakeOrderWithoutRegister(
+        GuestOrderRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyHeader = null)
     {
         if (request.CustomizationsId == null || request.CustomizationsId.Count == 0 ||
             !Guid.TryParse(request.GuestUserId, out var guestUserId))
@@ -142,6 +169,10 @@ public class GuestUserController : ControllerBase
         var guestUser = await _guestUsers.Find(g => g.Id == guestUserId).FirstOrDefaultAsync();
         if (guestUser == null) return BadRequest(new { error = "Invalid guest." });
 
+        var effectiveIdempotencyKey = !string.IsNullOrWhiteSpace(request.IdempotencyKey)
+            ? request.IdempotencyKey
+            : idempotencyHeader;
+
         var result = await _orderService.CreateAsync(
             guestUserId,
             request.CustomizationsId,
@@ -149,7 +180,8 @@ public class GuestUserController : ControllerBase
             request.DeliveryMethod,
             request.PacketaPointId,
             request.PacketaPointName,
-            request.PacketaPointAddress);
+            request.PacketaPointAddress,
+            effectiveIdempotencyKey);
         if (result.Error == OrderCreationError.InvalidItems)
             return BadRequest(new { error = "Invalid customizations." });
         if (result.Error == OrderCreationError.OutOfStock)
@@ -161,110 +193,82 @@ public class GuestUserController : ControllerBase
         return Ok(new
         {
             OrderId = order.Id,
-            CancellationToken = order.CancellationToken,
-            FollowToken = order.FollowToken
+            OrderNumber = order.OrderNumber,
+            CancellationToken = result.CancellationToken ?? order.CancellationToken,
+            FollowToken = result.FollowToken ?? order.FollowToken
         });
     }
     
-    [NonAction]
-    public async Task<IActionResult> CancelOrder(int OrderId)
-    {
-        var dbOrder = _orders.Find(o => o.Id == OrderId).FirstOrDefault();
-
-        if (dbOrder == null)
-            return NotFound(new { error = "Order not founded!" });
-        
-        var filterOrder = Builders<Order>.Filter.Eq(o => o.Id, OrderId);
-        var updateDefinition = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZRUSENA);
-        var resultOrder = await _orders.UpdateOneAsync(filterOrder, updateDefinition);
-
-        if (resultOrder.MatchedCount == 0)
-            return NotFound(new { error = "Order not found!" });
-
-        return Ok(new { message = "Order is updated!" });
-    }
-    
     [HttpPost("cancel-order-by-token")]
-    public async Task<IActionResult> CancelOrderByToken(string token)
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-write")]
+    public async Task<IActionResult> CancelOrderByToken([FromBody] CapabilityTokenRequest request)
     {
-        var success = await _orderService.CancelByTokenAsync(token);
-        if (!success)
+        if (string.IsNullOrWhiteSpace(request.Token))
+            return NotFound(new { error = "Invalid or expired token!" });
+
+        var result = await _orderLifecycleService.CancelOrderAsync(0, OrderActor.Guest(request.Token), request.Token);
+        if (!result.IsSuccess)
             return NotFound(new { error = "Invalid or expired token!" });
 
         return Ok(new { message = "Order canceled successfully!" });
     }
     
-    [NonAction]
-    public async Task<IActionResult> DecrementProductQuantity(CustomizationRequest request)
-    {
-        Guid.TryParse(request.ProductId, out var _productId);
-        var dbProduct = await _products.Find(p => p.Id == _productId).FirstOrDefaultAsync();
-        
-        if (dbProduct == null)
-            return NotFound(new { error = "Product not found" });
-        
-        var filter = Builders<Product>.Filter.And(
-            Builders<Product>.Filter.Eq(p => p.Id, _productId),
-            Builders<Product>.Filter.ElemMatch(p => p.Colors, c => c.Name == request.ProductColorName && c.Sizes.Any(s => s.Size == request.ProductSize && s.Quantity > 0))
-        );
-        
-        var update = Builders<Product>.Update.Inc("colors.$[color].sizes.$[size].quantity", -1);
-
-        var arrayFilters = new[]
-        {
-            new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("color.name", request.ProductColorName)),
-            new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("size.size", request.ProductSize))
-        };
-
-        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters };
-        var updateResult = await _products.UpdateOneAsync(filter, update, updateOptions);
-
-        if (updateResult.MatchedCount == 0)
-        {
-            return NotFound(new { error = "Color or size not found, or quantity is already zero." });
-        }
-
-        if (updateResult.ModifiedCount == 0)
-        {
-            return BadRequest(new { error = "Failed to decrement quantity." });
-        }
-        
-        return Ok(new { message = "Product quantity decremented successfully!" });
-    }
-    
     [HttpPost("cancel")]
-    public async Task<IActionResult> CancelOrder([FromQuery] string cancellationToken)
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-write")]
+    public async Task<IActionResult> CancelOrder([FromBody] CapabilityTokenRequest request)
     {
-        if (string.IsNullOrWhiteSpace(cancellationToken))
+        if (string.IsNullOrWhiteSpace(request.Token))
             return BadRequest("Cancellation is required!");
 
-        var success = await _orderService.CancelByTokenAsync(cancellationToken);
-        if (!success)
+        var result = await _orderLifecycleService.CancelOrderAsync(0, OrderActor.Guest(request.Token), request.Token);
+        if (!result.IsSuccess)
             return NotFound("Order not found.");
 
         return Ok(new { message = "Objednávka bola úspešne zrušená." });
     }
     
-    [NonAction]
-    public async Task<IActionResult> ConfirmPayment([FromQuery] int orderId)
-    {
-        var filter = Builders<Order>.Filter.Eq(o => o.Id, orderId);
-        var update = Builders<Order>.Update.Set(o => o.StatusOrder, EStatus.ZAPLATENA);
-        
-        var updateResult = await _orders.UpdateOneAsync(filter, update);
-        
-        if (updateResult.MatchedCount == 0)
-            return NotFound("Order not found.");
-        
-        return Ok(new { message = "Objednávka bola úspešne zaplatená." });
-    }
-    
     [HttpPost("follow-order")]
-    public async Task<IActionResult> ConfirmPayment([FromQuery] string followToken)
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-read")]
+    public async Task<IActionResult> ConfirmPayment([FromBody] CapabilityTokenRequest request)
     {
-        var order = await _orders.Find(o => o.FollowToken == followToken).FirstOrDefaultAsync();
-        if (order == null)
+        if (string.IsNullOrWhiteSpace(request.Token)) return BadRequest();
+        var tokenHash = CapabilityToken.Hash(request.Token);
+        var order = await _orderStore.GetByFollowTokenHashAsync(tokenHash);
+        if (order == null || (order.FollowTokenExpiresAt.HasValue && order.FollowTokenExpiresAt.Value <= DateTime.UtcNow))
             return NotFound(new { error = "Order not found" });
+
+        var guestUser = await _guestUsers.Find(g => g.Id == order.UserId).FirstOrDefaultAsync();
+
+        if (OrderSnapshotPresentation.HasSnapshots(order))
+        {
+            var (snapshotCustomizations, snapshotProducts, snapshotDesigns) = OrderSnapshotPresentation.MaterializeDetails(order);
+            return Ok(new 
+            {
+                order = new { order.Id, order.OrderNumber, order.TotalPrice, order.StatusOrder, order.CreatedAt },
+                customizations = snapshotCustomizations,
+                designs = snapshotDesigns,
+                products = snapshotProducts,
+                user = guestUser != null ? new
+                {
+                    FirstName = (string?)guestUser.FirstName,
+                    LastName = (string?)guestUser.LastName,
+                    Email = (string?)guestUser.Email,
+                    PhoneNumber = guestUser.PhoneNumber,
+                    Address = guestUser.Address,
+                    Country = guestUser.Country,
+                    Zip = guestUser.Zip
+                } : (order.CustomerSnapshot != null ? new
+                {
+                    FirstName = (string?)order.CustomerSnapshot.FirstName,
+                    LastName = (string?)order.CustomerSnapshot.LastName,
+                    Email = (string?)order.CustomerSnapshot.Email,
+                    PhoneNumber = order.CustomerSnapshot.PhoneNumber,
+                    Address = order.CustomerSnapshot.Address,
+                    Country = order.CustomerSnapshot.Country,
+                    Zip = order.CustomerSnapshot.Zip
+                } : null)
+            });
+        }
         
         var customizationIds = order.Customizations;
         var customizations = await _customizations.Find(c => customizationIds.Contains(c.Id)).ToListAsync();
@@ -301,24 +305,42 @@ public class GuestUserController : ControllerBase
         var designGuids = designIds.Select(id => Guid.Parse(id)).ToList();
         var designs = await _designs.Find(d => designGuids.Contains(d.Id)).ToListAsync();
 
-        var guestUser = await _guestUsers.Find(g => g.Id == order.UserId).FirstOrDefaultAsync();
-
         return Ok(new 
         {
-            order = new { order.Id, order.TotalPrice, order.StatusOrder, order.CreatedAt },
+            order = new { order.Id, order.OrderNumber, order.TotalPrice, order.StatusOrder, order.CreatedAt },
             customizations,
             designs,
             products = filteredProducts,
-            user = guestUser
+            user = guestUser == null ? null : new
+            {
+                guestUser.FirstName,
+                guestUser.LastName,
+                guestUser.Email,
+                guestUser.PhoneNumber,
+                guestUser.Address,
+                guestUser.Country,
+                guestUser.Zip
+            }
         });
     }
 
-    [HttpGet("order/{OrderId}")]
-    public async Task<IActionResult> OrderInformationById(int OrderId, [FromQuery] string followToken)
+    [HttpPost("order/{OrderId}")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-read")]
+    public async Task<IActionResult> OrderInformationById(int OrderId, [FromBody] CapabilityTokenRequest request)
     {
-        if (string.IsNullOrWhiteSpace(followToken)) return BadRequest();
-        var dbOrder = await _orders.Find(o => o.Id == OrderId && o.FollowToken == followToken).FirstOrDefaultAsync();
+        if (string.IsNullOrWhiteSpace(request.Token)) return BadRequest();
+        var tokenHash = CapabilityToken.Hash(request.Token);
+        var dbOrder = await _orderStore.GetByIdAsync(OrderId);
+        if (dbOrder == null || dbOrder.FollowToken != tokenHash || (dbOrder.FollowTokenExpiresAt.HasValue && dbOrder.FollowTokenExpiresAt.Value <= DateTime.UtcNow))
+            return NotFound();
 
-        return dbOrder == null ? NotFound() : Ok(new { dbOrder.Id, dbOrder.TotalPrice, dbOrder.StatusOrder, dbOrder.CreatedAt, dbOrder.FollowToken });
+        return Ok(new { dbOrder.Id, dbOrder.OrderNumber, dbOrder.TotalPrice, dbOrder.StatusOrder, dbOrder.CreatedAt });
     }
+}
+
+public sealed class CapabilityTokenRequest
+{
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 32)]
+    public string Token { get; set; } = string.Empty;
 }

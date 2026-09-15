@@ -37,11 +37,11 @@ export class SecondPageCheckoutComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.orderId = params['orderId'];
       this.numOrderId = Number(params['orderId']);
-      this.followToken = params['followToken'] || '';
     });
+    this.route.fragment.subscribe(fragment => this.followToken = fragment || '');
 
     this.cookieService.delete('CartCustomizations');
-    this.loadOrderData();
+    if (this.followToken) this.loadOrderData();
   }
 
   loadOrderData(): void {

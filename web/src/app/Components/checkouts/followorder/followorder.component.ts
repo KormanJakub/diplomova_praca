@@ -46,10 +46,10 @@ export class FolloworderComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.followToken = params['followToken'];
+    this.route.fragment.subscribe(fragment => {
+      this.followToken = fragment || '';
+      if (this.followToken) this.loadOrderInformation();
     });
-    this.loadOrderInformation();
   }
 
   constructor(

@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {environment} from "../../Environments/environment";
 import {Observable} from "rxjs";
-import {CookieService} from "ngx-cookie-service";
 
 @Injectable({
   providedIn: 'root'
@@ -11,15 +10,10 @@ export class CheckoutService {
 
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private cookieService: CookieService) { }
+  constructor(private http: HttpClient) { }
 
   createCustomizations(customizations: any[]): Observable<any> {
-    const token = this.cookieService.get('uiAppToken');
-
-    const headers = new HttpHeaders()
-      .set('Authorization', `Bearer ${token}`);
-
-    return this.http.post<any>(`${this.baseUrl}/user/make-customization`, customizations, { headers });
+    return this.http.post<any>(`${this.baseUrl}/user/make-customization`, customizations);
   }
 
   createOrder(
@@ -30,10 +24,8 @@ export class CheckoutService {
     packetaPointName?: string,
     packetaPointAddress?: string
   ): Observable<any> {
-    const token = this.cookieService.get('uiAppToken');
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Content-Type': 'application/json'
     });
 
     let url = `${this.baseUrl}/user/make-order?paymentMethod=${encodeURIComponent(paymentMethod)}&deliveryMethod=${encodeURIComponent(deliveryMethod)}`;

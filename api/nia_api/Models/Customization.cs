@@ -24,6 +24,8 @@ public class Customization
     public string? UserId { get; set; }
     [BsonElement("price"), BsonRepresentation(BsonType.Decimal128)]
     public decimal Price { get; set; }
+    [BsonElement("isOrdered"), BsonRepresentation(BsonType.Boolean)]
+    public bool IsOrdered { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]

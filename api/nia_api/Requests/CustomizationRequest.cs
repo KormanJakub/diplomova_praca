@@ -1,10 +1,12 @@
-﻿namespace nia_api.Requests;
+using System.ComponentModel.DataAnnotations;
+
+namespace nia_api.Requests;
 
 public class CustomizationRequest
 {
-    public string? DesignId { get; set; }
-    public string? ProductId { get; set; }
-    public string? UserDescription { get; set; }
-    public string? ProductColorName { get; set; }
-    public string? ProductSize { get; set; }
+    [StringLength(36)] public string? DesignId { get; set; }
+    [Required, StringLength(36)] public string? ProductId { get; set; }
+    [StringLength(500)] public string? UserDescription { get; set; }
+    [Required, StringLength(80)] public string? ProductColorName { get; set; }
+    [Required, StringLength(20)] public string? ProductSize { get; set; }
 }

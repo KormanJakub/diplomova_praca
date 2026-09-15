@@ -14,7 +14,7 @@ public class JwtTokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(Guid userId, string email, string firstName, string lastName, string? role)
+    public string GenerateToken(Guid userId, string email, string firstName, string lastName, string? role, int tokenVersion = 0)
     {
         var jwtKey = _configuration["JwtConfig:Key"];
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -25,6 +25,7 @@ public class JwtTokenService
             new Claim("UserEmail", email),
             new Claim("FirstName", firstName),
             new Claim("LastName", lastName),
+            new Claim("TokenVersion", tokenVersion.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -39,7 +40,7 @@ public class JwtTokenService
             issuer: _configuration["JwtConfig:Issuer"],
             audience: _configuration["JwtConfig:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(10),
+            expires: DateTime.UtcNow.Add(nia_api.Security.AuthCookie.Lifetime),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

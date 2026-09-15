@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {CookieService} from "ngx-cookie-service";
+import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {User} from "../Models/user.model";
 import {environment} from "../../Environments/environment";
@@ -15,32 +14,15 @@ import {Product} from "../Models/product.model";
 })
 export class UserService {
 
-  private getAuthHeaders(): HttpHeaders {
-    const token = this.cookieService.get('uiAppToken') || '';
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-  }
-
-  constructor(
-    private http: HttpClient,
-    private cookieService: CookieService
-  ) { }
+  constructor(private http: HttpClient) { }
 
   getUserProfile(): Observable<User> {
     const url = `${environment.apiUrl}/user/profile`;
-    const headers = this.getAuthHeaders();
-
-    return this.http.get<User>(url, {
-      headers
-    });
+    return this.http.get<User>(url);
   }
 
   getMyCustomizations(): Observable<Customization[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<Customization[]>(`${environment.apiUrl}/user/my-customizations`,
-      { headers });
+    return this.http.get<Customization[]>(`${environment.apiUrl}/user/my-customizations`);
   }
 
   getOrders(): Observable<{
@@ -49,13 +31,12 @@ export class UserService {
     designs: Design[],
     products: Product[]
   }> {
-    const headers = this.getAuthHeaders();
     return this.http.get<{
       orders: Order[],
       customizations: Customization[],
       designs: Design[],
       products: Product[]
-    }>(`${environment.apiUrl}/user/orders`, { headers });
+    }>(`${environment.apiUrl}/user/orders`);
   }
 
   getOrdersById(id: number): Observable<{
@@ -65,40 +46,34 @@ export class UserService {
     products: Product[],
     user: User
   }> {
-    const headers = this.getAuthHeaders();
     return this.http.get<{
       order: Order,
       customizations: Customization[],
       designs: Design[],
       products: Product[],
       user: User
-    }>(`${environment.apiUrl}/user/orders/${id}`, { headers });
+    }>(`${environment.apiUrl}/user/orders/${id}`);
   }
 
 
   makeOrder(customizationsIds: string[]): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${environment.apiUrl}/user/make-order`, customizationsIds, { headers });
+    return this.http.post(`${environment.apiUrl}/user/make-order`, customizationsIds);
   }
 
   cancelOrder(orderId: number): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${environment.apiUrl}/user/cancel-order/${orderId}`, {}, { headers });
+    return this.http.post(`${environment.apiUrl}/user/cancel-order/${orderId}`, {});
   }
 
   updateUserProfile(user: User): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.put(`${environment.apiUrl}/user/update`, user, { headers });
+    return this.http.put(`${environment.apiUrl}/user/update`, user);
   }
 
   removeUser(): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.delete(`${environment.apiUrl}/user/remove`, { headers });
+    return this.http.delete(`${environment.apiUrl}/user/remove`);
   }
 
   makeCustomization(requests: any[]): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${environment.apiUrl}/user/make-customization`, requests, { headers });
+    return this.http.post(`${environment.apiUrl}/user/make-customization`, requests);
   }
 
 

@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {Tag} from "../Models/tag.model";
 import {catchError, Observable, throwError} from "rxjs";
 import {environment} from "../../Environments/environment";
-import {CookieService} from "ngx-cookie-service";
 import {Design} from "../Models/design.model";
 import {Product} from "../Models/product.model";
 import {AllPairedDesignsResponse, PairedDesign} from "../Models/paired-design.model";
@@ -16,22 +15,12 @@ import {Customization} from "../Models/customization.model";
 })
 export class AdminService {
 
-  constructor(
-    private http: HttpClient,
-    private cookieService: CookieService
-  ) { }
+  constructor(private http: HttpClient) { }
 
   //TAG
   getAllTags(): Observable<Tag[]> {
-    const token = this.cookieService.get('uiAppToken');
     const url = `${environment.apiUrl}/admin/tag/getAll`;
-
-    const headers = new HttpHeaders()
-      .set('Authorization', `Bearer ${token}`);
-
-    return this.http.get<Tag[]>(url, {
-      headers
-    });
+    return this.http.get<Tag[]>(url);
   }
 
   updateTags(tag: Tag): Observable<Tag> {

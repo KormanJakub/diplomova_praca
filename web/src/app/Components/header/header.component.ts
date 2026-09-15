@@ -1,65 +1,50 @@
 import {Component, OnInit} from '@angular/core';
-import {Router, RouterLink} from "@angular/router";
-import {AuthService} from "../../Services/auth.service";
-import {DecodingTokenService, JwtPayload} from "../../Services/decoding-token.service";
-import {Button} from "primeng/button";
-import {NgIf} from "@angular/common";
-import {BadgeModule} from "primeng/badge";
-import {CookieService} from "ngx-cookie-service";
+import {Router, RouterLink} from '@angular/router';
+import {AuthService, UiSession} from '../../Services/auth.service';
+import {Button} from 'primeng/button';
+import {NgIf} from '@angular/common';
+import {BadgeModule} from 'primeng/badge';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [
-    Button,
-    RouterLink,
-    NgIf,
-    BadgeModule
-  ],
+  imports: [Button, RouterLink, NgIf, BadgeModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnInit{
-  decoded: JwtPayload | null = null;
+export class HeaderComponent implements OnInit {
+  session: UiSession | null = null;
 
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    private decoding: DecodingTokenService,
-    private cookieService: CookieService
-  ) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit(): void {
-    const token = this.authService.returnToken();
-    this.decoded = this.decoding.decodeToken(token);
+    this.session = this.authService.getSession();
+    if (this.session) {
+      this.authService.refreshSession().subscribe({
+        next: session => this.session = session,
+        error: () => {
+          localStorage.removeItem('waffl_ui_session');
+          this.session = null;
+        }
+      });
+    }
   }
 
   logout(): void {
-    this.cookieService.delete('uiAppToken');
-    this.cookieService.delete('uiAppRole');
-    this.cookieService.delete('uiAppEmailConfirmation');
+    this.authService.logout().subscribe({
+      next: () => this.finishLogout(),
+      error: () => this.finishLogout()
+    });
+  }
 
+  private finishLogout(): void {
+    this.session = null;
     this.router.navigate(['/']);
   }
 
-  routeToUserProfile () {
-    this.router.navigate(['/user']);
-  }
-
-  routeToAdminProfile() {
-    this.router.navigate(['/admin']);
-  }
-
-  routeToShoppingCart() {
-    this.router.navigate(['/shopping-cart']);
-  }
-
-  isLogged(): boolean {
-    const token = this.cookieService.get("uiAppToken");
-    return !!token;
-  }
-
-  isAdminLogged(): boolean {
-    return this.cookieService.get('uiAppRole') === 'admin';
-  }
+  routeToUserProfile(): void { this.router.navigate(['/user']); }
+  routeToAdminProfile(): void { this.router.navigate(['/admin']); }
+  routeToShoppingCart(): void { this.router.navigate(['/shopping-cart']); }
+  isLogged(): boolean { return this.session !== null; }
+  isAdminLogged(): boolean { return this.session?.role === 'admin'; }
 }

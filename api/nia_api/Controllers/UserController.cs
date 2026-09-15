@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Domain.Configuration;
+using nia_api.Domain.Orders;
 using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
@@ -20,12 +22,20 @@ public class UserController : ControllerBase
     private readonly IMongoCollection<Customization> _customizations;
     private readonly IMongoCollection<Design> _designs;
     private readonly IMongoCollection<Product> _products;
-    private readonly IMongoCollection<Order> _orders;
+    private readonly IOrderStore _orderStore;
+    private readonly IOrderLifecycleService _orderLifecycleService;
 
     private readonly HeaderReaderService _headerReader;
     private readonly OrderService _orderService;
+    private readonly IMerchantConfigurationService _configService;
 
-    public UserController(NiaDbContext context, HeaderReaderService headerReader, OrderService orderService)
+    public UserController(
+        NiaDbContext context,
+        HeaderReaderService headerReader,
+        OrderService orderService,
+        IOrderStore orderStore,
+        IOrderLifecycleService orderLifecycleService,
+        IMerchantConfigurationService? configService = null)
     {
         _users = context.Users;
         _headerReader = headerReader;
@@ -33,7 +43,9 @@ public class UserController : ControllerBase
         _customizations = context.Customizations;
         _designs = context.Designs;
         _products = context.Products;
-        _orders = context.Orders;
+        _orderStore = orderStore;
+        _orderLifecycleService = orderLifecycleService;
+        _configService = configService ?? new MerchantConfigurationService(context);
     }
     
     [HttpGet("profile")]
@@ -74,7 +86,7 @@ public class UserController : ControllerBase
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var orders = await _orders.Find(o => o.UserId == userId).ToListAsync();
+        var orders = await _orderStore.GetByUserIdAsync(userId.Value);
 
         var customizations = await _customizations.Find(c => c.UserId == userId.ToString()).ToListAsync();
 
@@ -119,9 +131,32 @@ public class UserController : ControllerBase
 
         var dbUser = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
 
-        var order = await _orders.Find(o => o.Id == Id && o.UserId == userId.Value).FirstOrDefaultAsync();
-        if (order == null)
+        var order = await _orderStore.GetByIdAsync(Id);
+        if (order == null || order.UserId != userId.Value)
             return NotFound(new { error = "Order not found" });
+
+        if (OrderSnapshotPresentation.HasSnapshots(order))
+        {
+            var (snapshotCustomizations, snapshotProducts, snapshotDesigns) = OrderSnapshotPresentation.MaterializeDetails(order);
+            return Ok(new 
+            {
+                order,
+                customizations = snapshotCustomizations,
+                designs = snapshotDesigns,
+                products = snapshotProducts,
+                user = dbUser != null ? UserResponse.From(dbUser) : (order.CustomerSnapshot != null ? new UserResponse(
+                    order.CustomerSnapshot.UserId,
+                    order.CustomerSnapshot.Email,
+                    true,
+                    order.CustomerSnapshot.FirstName,
+                    order.CustomerSnapshot.LastName,
+                    order.CustomerSnapshot.Country,
+                    order.CustomerSnapshot.PhoneNumber,
+                    order.CustomerSnapshot.Address,
+                    order.CustomerSnapshot.Zip,
+                    false) : null)
+            });
+        }
         
         var customizationIds = order.Customizations;
         var customizations = await _customizations.Find(c => customizationIds.Contains(c.Id)).ToListAsync();
@@ -176,7 +211,8 @@ public class UserController : ControllerBase
         [FromQuery] string? deliveryMethod = "HomeDelivery",
         [FromQuery] string? packetaPointId = null,
         [FromQuery] string? packetaPointName = null,
-        [FromQuery] string? packetaPointAddress = null)
+        [FromQuery] string? packetaPointAddress = null,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
         var userId = await _headerReader.GetUserIdAsync(User);
 
@@ -190,7 +226,8 @@ public class UserController : ControllerBase
             deliveryMethod,
             packetaPointId,
             packetaPointName,
-            packetaPointAddress);
+            packetaPointAddress,
+            idempotencyKey);
         if (result.Error == OrderCreationError.InvalidItems)
             return BadRequest(new { error = "Invalid customizations." });
         if (result.Error == OrderCreationError.OutOfStock)
@@ -199,7 +236,14 @@ public class UserController : ControllerBase
             return Conflict(new { error = "Could not allocate order number." });
 
         var order = result.Order!;
-        return Ok(new { OrderId = order.Id, order.TotalPrice, order.CancellationToken, order.FollowToken });
+        return Ok(new
+        {
+            OrderId = order.Id,
+            order.TotalPrice,
+            CancellationToken = result.CancellationToken ?? order.CancellationToken,
+            FollowToken = result.FollowToken ?? order.FollowToken,
+            OrderNumber = order.OrderNumber
+        });
     }
 
     [HttpPost("cancel-order/{OrderId}")]
@@ -210,8 +254,8 @@ public class UserController : ControllerBase
         if (userId == null)
             return Unauthorized(new { error = "User ID not found in token!" });
 
-        var success = await _orderService.CancelByUserAsync(OrderId, userId.Value);
-        if (!success)
+        var result = await _orderLifecycleService.CancelOrderAsync(OrderId, OrderActor.Customer(userId.Value));
+        if (!result.IsSuccess)
             return NotFound(new { error = "Order not found!" });
 
         return Ok(new { message = "Order is updated!" });
@@ -258,6 +302,15 @@ public class UserController : ControllerBase
     [HttpPost("make-customization")]
     public async Task<IActionResult> Custom(List<CustomizationRequest> requests)
     {
+        var personalizationEnabled = await _configService.IsPersonalizationEnabledAsync();
+        if (!personalizationEnabled)
+        {
+            if (requests.Any(c => !string.IsNullOrEmpty(c.DesignId) || !string.IsNullOrWhiteSpace(c.UserDescription)))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+            }
+        }
+
         var userId = await _headerReader.GetUserIdAsync(User);
         var designDictionary = new Dictionary<string, Design>();
         var productDictionary = new Dictionary<string, Product>();
@@ -270,13 +323,17 @@ public class UserController : ControllerBase
 
         foreach (var request in requests)
         {
-            Guid.TryParse(request.DesignId, out var designId);
-            var dbDesign = await _designs.Find(d => d.Id == designId).FirstOrDefaultAsync();
-
-            if (dbDesign == null)
+            Design? dbDesign = null;
+            if (!string.IsNullOrEmpty(request.DesignId))
             {
-                failedCustomizations.Add($"Design not found: {request.DesignId}");
-                continue;
+                Guid.TryParse(request.DesignId, out var designId);
+                dbDesign = await _designs.Find(d => d.Id == designId).FirstOrDefaultAsync();
+
+                if (dbDesign == null)
+                {
+                    failedCustomizations.Add($"Design not found: {request.DesignId}");
+                    continue;
+                }
             }
 
             Guid.TryParse(request.ProductId, out var productId);
@@ -302,13 +359,13 @@ public class UserController : ControllerBase
                 ProductSize = request.ProductSize,
                 UserId = userId.Value.ToString(),
                 UserDescription = request.UserDescription,
-                Price = price + dbDesign.Price + dbProduct.Price,
+                Price = price + (dbDesign?.Price ?? 0.0M) + dbProduct.Price,
                 CreatedAt = LocalTimeService.LocalTime()
             };
 
             customizations.Add(newCustomization);
             
-            if (!designDictionary.ContainsKey(request.DesignId))
+            if (dbDesign != null && !string.IsNullOrEmpty(request.DesignId) && !designDictionary.ContainsKey(request.DesignId))
                 designDictionary.Add(request.DesignId, dbDesign);
 
             if (!productDictionary.ContainsKey(request.ProductId))

@@ -1,76 +1,86 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using nia_api.Domain.Orders;
 using nia_api.Requests;
 using nia_api.Services;
 using Stripe;
 
 namespace nia_api.Controllers;
 
-/*
- * TODO:
- * Vytvor platobnú bránu 
- * Webhook
- */
-
 [ApiController]
 [Route("payment")]
 public class PaymentController : ControllerBase
 {
- 
- private readonly PaymentService _paymentService;
- private readonly IConfiguration _configuration;
+    private readonly PaymentService _paymentService;
+    private readonly IConfiguration _configuration;
 
-  public PaymentController(PaymentService paymentService, IConfiguration configuration)
-  {
-   _paymentService = paymentService;
-   _configuration = configuration;
-  }
+    public PaymentController(PaymentService paymentService, IConfiguration configuration)
+    {
+        _paymentService = paymentService;
+        _configuration = configuration;
+    }
 
- [HttpPost("create-checkout-session")]
- [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
- public async Task<IActionResult> CreateCheckoutSession([FromBody] PaymentRequest request)
- {
-  if (request == null || request.OrderId <= 0 || string.IsNullOrWhiteSpace(request.CancellationToken))
-   return BadRequest("Invalid request");
-  
-  var sessionUrl = await _paymentService.CreateSessionAsync(request);
-  return sessionUrl == null ? BadRequest(new { error = "Invalid order." }) : Ok(new { url = sessionUrl });
- }
+    [HttpPost("create-checkout-session")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
+    public async Task<IActionResult> CreateCheckoutSession(
+        [FromBody] PaymentRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
+    {
+        if (request == null || request.OrderId <= 0 || string.IsNullOrWhiteSpace(request.CancellationToken))
+            return BadRequest("Invalid request");
 
- [HttpPost("verify-payment")]
- public async Task<IActionResult> VerifyPayment(string sessionId)
- {
-  var isVerified = await _paymentService.VerifyPaymentAsync(sessionId);
+        var sessionUrl = await _paymentService.CreateSessionAsync(request, idempotencyKey);
+        return sessionUrl == null ? BadRequest(new { error = "Invalid order." }) : Ok(new { url = sessionUrl });
+    }
 
-  if (!isVerified)
-   return BadRequest(new { error = "Payment verification failed!" });
+    [HttpPost("verify-payment")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-read")]
+    public async Task<IActionResult> VerifyPayment(string sessionId)
+    {
+        var isVerified = await _paymentService.VerifyPaymentAsync(sessionId);
 
-  return Ok(new { message = "Payment verified successfully!" });
- }
+        if (!isVerified)
+            return BadRequest(new { error = "Payment verification failed!" });
 
- [HttpPost("stripe-webhook")]
- public async Task<IActionResult> StripeWebhook()
- {
-  var webhookSecret = _configuration["Stripe:WebhookSecret"];
-  if (string.IsNullOrWhiteSpace(webhookSecret)) return StatusCode(503);
+        return Ok(new { message = "Payment verified successfully!" });
+    }
 
-  var body = await new StreamReader(Request.Body).ReadToEndAsync();
-  Event stripeEvent;
-  try
-  {
-   stripeEvent = EventUtility.ConstructEvent(body, Request.Headers["Stripe-Signature"], webhookSecret);
-  }
-  catch (StripeException)
-  {
-   return BadRequest();
-  }
+    [HttpPost("stripe-webhook")]
+    public async Task<IActionResult> StripeWebhook()
+    {
+        var webhookSecret = _configuration["Stripe:WebhookSecret"];
+        if (string.IsNullOrWhiteSpace(webhookSecret)) return StatusCode(503);
 
-  if (stripeEvent.Type == "checkout.session.completed" ||
-      stripeEvent.Type == "checkout.session.async_payment_succeeded")
-  {
-   if (stripeEvent.Data.Object is not Stripe.Checkout.Session session ||
-       !await _paymentService.VerifyPaymentAsync(session.Id)) return StatusCode(503);
-  }
+        var body = await new StreamReader(Request.Body).ReadToEndAsync();
+        Event stripeEvent;
+        try
+        {
+            stripeEvent = EventUtility.ConstructEvent(body, Request.Headers["Stripe-Signature"], webhookSecret);
+        }
+        catch (StripeException)
+        {
+            return BadRequest();
+        }
 
-  return Ok();
- }
+        var sessionId = (stripeEvent.Data.Object as Stripe.Checkout.Session)?.Id;
+        var processed = await _paymentService.ProcessWebhookEventAsync(stripeEvent.Id, stripeEvent.Type, body, sessionId);
+        if (!processed) return StatusCode(503);
+
+        return Ok();
+    }
+
+    [HttpPost("refund/{orderId}")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
+    public async Task<IActionResult> RefundOrder(int orderId, [FromBody] RefundRequest? request)
+    {
+        var success = await _paymentService.RefundOrderAsync(
+            orderId,
+            request?.Amount,
+            request?.Reason,
+            OrderActor.Staff());
+
+        if (!success)
+            return BadRequest(new { error = "Refund failed or order cannot be refunded." });
+
+        return Ok(new { message = "Refund executed successfully!" });
+    }
 }

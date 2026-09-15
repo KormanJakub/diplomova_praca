@@ -32,6 +32,8 @@ public class Order
     public decimal PaymentFee { get; set; } = 0.00m;
     [BsonElement("deliveryMethod"), BsonRepresentation(BsonType.String)]
     public string DeliveryMethod { get; set; } = "HomeDelivery";
+    [BsonElement("deliveryFee"), BsonRepresentation(BsonType.Decimal128)]
+    public decimal DeliveryFee { get; set; } = 0.00m;
     [BsonElement("packetaPointId"), BsonRepresentation(BsonType.String)]
     public string? PacketaPointId { get; set; }
     [BsonElement("packetaPointName"), BsonRepresentation(BsonType.String)]
@@ -40,10 +42,32 @@ public class Order
     public string? PacketaPointAddress { get; set; }
     [BsonElement("cancellationToken"), BsonRepresentation(BsonType.String)]
     public string CancellationToken { get; set; }
+    [BsonElement("cancellationTokenExpiresAt"), BsonRepresentation(BsonType.DateTime)]
+    public DateTime? CancellationTokenExpiresAt { get; set; }
     [BsonElement("followToken"), BsonRepresentation(BsonType.String)]
     public string FollowToken { get; set; }
+    [BsonElement("followTokenExpiresAt"), BsonRepresentation(BsonType.DateTime)]
+    public DateTime? FollowTokenExpiresAt { get; set; }
     [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? CreatedAt { get; set; }
     [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
     public DateTime? UpdatedAt { get; set; } = LocalTimeService.LocalTime();
+
+    [BsonElement("orderNumber"), BsonIgnoreIfNull]
+    public string? OrderNumber { get; set; }
+
+    [BsonElement("lines"), BsonIgnoreIfNull]
+    public List<nia_api.Domain.Orders.OrderLineSnapshot>? Lines { get; set; }
+
+    [BsonElement("customerSnapshot"), BsonIgnoreIfNull]
+    public nia_api.Domain.Orders.OrderCustomerSnapshot? CustomerSnapshot { get; set; }
+
+    [BsonElement("deliverySnapshot"), BsonIgnoreIfNull]
+    public nia_api.Domain.Orders.OrderDeliverySnapshot? DeliverySnapshot { get; set; }
+
+    [BsonElement("pricingSnapshot"), BsonIgnoreIfNull]
+    public nia_api.Domain.Orders.OrderPricingSnapshot? PricingSnapshot { get; set; }
+
+    [BsonElement("idempotencyKey"), BsonIgnoreIfNull]
+    public string? IdempotencyKey { get; set; }
 }

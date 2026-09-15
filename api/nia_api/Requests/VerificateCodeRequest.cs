@@ -4,7 +4,7 @@ namespace nia_api.Requests;
 
 public class VerificateCodeRequest
 {
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string? Email { get; set; }
-    public int VerificationCode { get; set; }
+    [Range(100000, 999999)] public int VerificationCode { get; set; }
 }

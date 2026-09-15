@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import {CookieService} from "ngx-cookie-service";
+import {AuthService} from '../Services/auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,13 +8,11 @@ import {CookieService} from "ngx-cookie-service";
 export class NoAuthGuard implements CanActivate {
   constructor(
     private router: Router,
-    private cookieService: CookieService,
+    private authService: AuthService,
   ) {}
 
   canActivate(): boolean {
-    const token = this.cookieService.get("uiAppToken");
-
-    if (token) {
+    if (this.authService.isLoggedIn()) {
       this.router.navigate(['/']);
       return false;
     }

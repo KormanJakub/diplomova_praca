@@ -22,9 +22,7 @@ export class PaymentService {
   }
 
   cancelOrder(cancellationToken: string): Observable<any> {
-    const params = new HttpParams().set('cancellationToken', cancellationToken);
-
-    return this.http.post<any>(`${this.baseUrl}/guest/cancel`, {}, {params: params});
+    return this.http.post<any>(`${this.baseUrl}/guest/cancel`, {Token: cancellationToken});
   }
 
   verifyPayment(sessionId: string): Observable<any> {

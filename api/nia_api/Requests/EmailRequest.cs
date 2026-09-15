@@ -4,6 +4,6 @@ namespace nia_api.Requests;
 
 public class EmailRequest
 {
-    [Required, EmailAddress]
+    [Required, EmailAddress, StringLength(254)]
     public string? Email { get; set; }
 }

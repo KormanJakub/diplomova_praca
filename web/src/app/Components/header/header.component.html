@@ -21,13 +21,13 @@
 
     <div *ngIf="isLogged()">
       <div *ngIf="!isAdminLogged()" class="sign-in">
-        <a (click)="routeToUserProfile()">Ahoj {{decoded?.FirstName}}!</a>
+        <a (click)="routeToUserProfile()">Ahoj {{session?.firstName}}!</a>
         <a (click)="logout()">Odhlásenie</a>
         <a (click)="routeToShoppingCart()">Pokladňa</a>
       </div>
 
       <div *ngIf="isAdminLogged()" class="sign-in">
-        <a (click)="routeToAdminProfile()">Admin: {{decoded?.FirstName}}!</a>
+        <a (click)="routeToAdminProfile()">Admin: {{session?.firstName}}!</a>
         <a (click)="logout()">Odhlásenie</a>
         <a (click)="routeToShoppingCart()">Pokladňa</a>
       </div>

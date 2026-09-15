@@ -1,7 +1,9 @@
-﻿namespace nia_api.Requests;
+using System.ComponentModel.DataAnnotations;
+
+namespace nia_api.Requests;
 
 public class LoginRequest
 {
-    public string? Email { get; set; }
-    public string? Password { get; set; }
+    [Required, EmailAddress, StringLength(254)] public string? Email { get; set; }
+    [Required, StringLength(128, MinimumLength = 6)] public string? Password { get; set; }
 }

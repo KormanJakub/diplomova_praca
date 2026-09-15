@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "nia_api", "nia_api.csproj", "{49694763-4A10-4257-A193-8AE253156ACA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nia_api.Tests", "..\nia_api.Tests\nia_api.Tests.csproj", "{B0BC55E5-A265-4B81-A397-1B45D79147AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{49694763-4A10-4257-A193-8AE253156ACA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49694763-4A10-4257-A193-8AE253156ACA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49694763-4A10-4257-A193-8AE253156ACA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0BC55E5-A265-4B81-A397-1B45D79147AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0BC55E5-A265-4B81-A397-1B45D79147AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0BC55E5-A265-4B81-A397-1B45D79147AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0BC55E5-A265-4B81-A397-1B45D79147AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

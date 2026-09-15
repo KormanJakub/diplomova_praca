@@ -1,10 +1,12 @@
-﻿namespace nia_api.Requests;
+using System.ComponentModel.DataAnnotations;
+
+namespace nia_api.Requests;
 
 public class QuestionRequest
 {
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public string? Description { get; set; }
-    public string? FileId { get; set; }
-    public string? PathOfUrl { get; set; }
+    [Required, StringLength(100)] public string? Name { get; set; }
+    [Required, EmailAddress, StringLength(254)] public string? Email { get; set; }
+    [Required, StringLength(2000)] public string? Description { get; set; }
+    [StringLength(36)] public string? FileId { get; set; }
+    [StringLength(300)] public string? PathOfUrl { get; set; }
 }

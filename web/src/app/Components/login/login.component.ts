@@ -10,7 +10,6 @@ import {Button} from "primeng/button";
 import {HeaderComponent} from "../header/header.component";
 import {FooterComponent} from "../footer/footer.component";
 import {LoginPageComponent} from "./login-page/login-page.component";
-import {CookieService} from "ngx-cookie-service";
 
 /*
 TODO:
@@ -42,7 +41,7 @@ export class LoginComponent {
     password: new FormControl(null, [Validators.required])
   })
 
-  constructor( private router: Router, private authService: AuthService, private cookieService: CookieService) { }
+  constructor(private router: Router, private authService: AuthService) { }
 
   login(user: LoginRequest) {
     /*
@@ -52,14 +51,7 @@ export class LoginComponent {
     */
 
     this.authService.login(user).subscribe({
-      next: (response: { token: string, email_confirmation: string, role?: string }) => {
-        this.cookieService.set('uiAppToken', response.token);
-        this.cookieService.set('uiAppEmailConfirmation', JSON.stringify(response.email_confirmation));
-
-        if (response.role) {
-          this.cookieService.set('uiAppRole', response.role);
-        }
-
+      next: () => {
         this.router.navigate(['/']);
       },
       error: () => {

@@ -7,7 +7,6 @@ import {NgIf} from "@angular/common";
 import {PublicService} from "../../../Services/public.service";
 import {AuthService} from "../../../Services/auth.service";
 import {Router} from "@angular/router";
-import {CookieService} from "ngx-cookie-service";
 import {DialogModule} from "primeng/dialog";
 import {ButtonDirective} from "primeng/button";
 
@@ -36,7 +35,6 @@ export class LoginPageComponent implements OnInit{
   constructor(
     private router: Router,
     private authService: AuthService,
-    private cookieService: CookieService,
     ) {
   }
 
@@ -63,18 +61,7 @@ export class LoginPageComponent implements OnInit{
       this.user.email = this.loginForm.controls['email'].value;
 
       this.authService.login(this.user).subscribe({
-        next: (response: {
-          token: string,
-          email_confirmation: string,
-          role?: string
-        }) => {
-          this.cookieService.set('uiAppToken', response.token);
-          this.cookieService.set('uiAppEmailConfirmation', JSON.stringify(response.email_confirmation));
-
-          if (response.role === 'admin') {
-            this.cookieService.set('uiAppRole', 'admin');
-          }
-
+        next: () => {
           this.router.navigate(['/']);
         },
         error: () => {

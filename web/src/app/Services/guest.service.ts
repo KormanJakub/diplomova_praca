@@ -24,21 +24,18 @@ export class GuestService {
   }
 
   cancelOrderByToken(token: string): Observable<any> {
-    const params = new HttpParams().set('token', token);
-    return this.http.post<any>(`${this.baseUrl}/cancel-order-by-token`, null, { params });
+    return this.http.post<any>(`${this.baseUrl}/cancel-order-by-token`, {Token: token});
   }
 
   cancelOrderByCancellationToken(cancellationToken: string): Observable<any> {
-    const params = new HttpParams().set('cancellationToken', cancellationToken);
-    return this.http.post<any>(`${this.baseUrl}/cancel`, null, { params });
+    return this.http.post<any>(`${this.baseUrl}/cancel`, {Token: cancellationToken});
   }
 
   followOrder(followToken: string): Observable<any> {
-    const params = new HttpParams().set('followToken', followToken);
-    return this.http.post<any>(`${this.baseUrl}/follow-order`, null, { params });
+    return this.http.post<any>(`${this.baseUrl}/follow-order`, {Token: followToken});
   }
 
   orderInformation(orderId: number, followToken: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/order/${orderId}`, { params: new HttpParams().set('followToken', followToken) });
+    return this.http.post<any>(`${this.baseUrl}/order/${orderId}`, {Token: followToken});
   }
 }

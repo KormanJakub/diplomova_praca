@@ -49,11 +49,11 @@ public class EmailSenderService : IEmailSender
             mailMessage.To.Add(to);
 
             await smtpClient.SendMailAsync(mailMessage);
-            _logger.LogInformation($"Email sent to {to} successfully.");
+            _logger.LogInformation("Transactional email sent successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error sending email to {to}: {ex.Message}");
+            _logger.LogError(ex, "Transactional email delivery failed.");
             throw;
         }
     }

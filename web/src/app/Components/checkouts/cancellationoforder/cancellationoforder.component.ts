@@ -26,11 +26,12 @@ export class CancellationoforderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.cancellationToken = params['cancellationToken'];
+    this.route.fragment.subscribe(fragment => {
+      this.cancellationToken = fragment || '';
+      if (this.cancellationToken) {
+        this.paymentService.cancelOrder(this.cancellationToken).subscribe();
+      }
     });
-
-    this.paymentService.cancelOrder(this.cancellationToken).subscribe();
 
     this.cookieService.delete('CartCustomizations');
   }

@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using nia_api.Data;
+using nia_api.Domain.Configuration;
 using nia_api.Enums;
 using nia_api.Models;
 using nia_api.Requests;
@@ -23,12 +24,13 @@ namespace nia_api.Controllers
         private readonly IMongoCollection<Tag> _tags;
         private readonly IMongoCollection<Design> _designs;
         private readonly IMongoCollection<StoreSettings> _storeSettings;
+        private readonly IMerchantConfigurationService _configService;
         
         private readonly PasswordService _service;
         private readonly JwtTokenService _token;
         private readonly IEmailSender _emailSender;
 
-        public PublicController(NiaDbContext context, PasswordService service, JwtTokenService token, IEmailSender emailSender)
+        public PublicController(NiaDbContext context, PasswordService service, JwtTokenService token, IEmailSender emailSender, IMerchantConfigurationService? configService = null)
         {
             _users = context.Users;
             _products = context.Products;
@@ -38,6 +40,7 @@ namespace nia_api.Controllers
             _tags = context.Tags;
             _designs = context.Designs;
             _storeSettings = context.StoreSettings;
+            _configService = configService ?? new MerchantConfigurationService(context);
             
             _emailSender = emailSender;
             _service = service;
@@ -110,6 +113,9 @@ namespace nia_api.Controllers
         [HttpGet("all-designs")]
         public async Task<IActionResult> GetDesigns()
         {
+            if (!await _configService.IsPersonalizationEnabledAsync())
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
             var dbDesigns = await _designs
                 .Find(_ => true)
                 .ToListAsync();
@@ -224,8 +230,8 @@ namespace nia_api.Controllers
             if (user.LastName == null)
                 return BadRequest(new { error = "Last name is empty!" });
 
-            if (user.Password.Length < 6)
-                return BadRequest(new { error = "Password is too short! Min 6 Length" });
+            if (user.Password.Length < 8)
+                return BadRequest(new { error = "Password is too short! Minimum length is 8." });
 
             if (!user.Password.Any(char.IsUpper))
                 return BadRequest(new { error = "Password must contain at least one uppercase letter!" });
@@ -294,12 +300,12 @@ namespace nia_api.Controllers
             if (dbUser.IsAdmin)
             {
                 token = _token.GenerateToken(dbUser.Id, dbUser.Email, dbUser.FirstName, dbUser.LastName, "admin");
-                return Ok(new { token, role = "admin", email_confirmation = dbUser.IsEmailConfirmed });
+                return Ok(new { token, role = "admin", firstName = dbUser.FirstName, email_confirmation = dbUser.IsEmailConfirmed });
             }
             else
             {
-                token = _token.GenerateToken(dbUser.Id, dbUser.Email, dbUser.FirstName, dbUser.LastName, null);
-                return Ok(new { token, email_confirmation = dbUser.IsEmailConfirmed });
+                token = _token.GenerateToken(dbUser.Id, dbUser.Email, dbUser.FirstName, dbUser.LastName, "user");
+                return Ok(new { token, role = "user", firstName = dbUser.FirstName, email_confirmation = dbUser.IsEmailConfirmed });
             }
         }
 
@@ -335,12 +341,12 @@ namespace nia_api.Controllers
                 return Unauthorized(new { error = "User is not registered!"});
 
             if (user.VerificationCode < 100000 || user.VerificationCode > 999999)
-                return BadRequest(new { error = "Wrong verification code!"});
+                return BadRequest(new { error = "Invalid verification code." });
 
             if (user.VerificationCode != dbUser.VerificationCode ||
                 dbUser.VerificationCodeExpiresAt == null ||
                 dbUser.VerificationCodeExpiresAt <= DateTime.UtcNow)
-                return BadRequest(new {error = "You entered bad code"});
+                return BadRequest(new { error = "Invalid verification code." });
 
             var verificationFilter = Builders<User>.Filter.And(
                 Builders<User>.Filter.Eq(u => u.Id, dbUser.Id),
@@ -361,25 +367,22 @@ namespace nia_api.Controllers
         [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("sensitive")]
         public async Task<IActionResult> NewVerificationCode([FromBody] EmailRequest user)
         {
+            var safeMessage = "Ak účet existuje, nový kód bol odoslaný.";
             var dbUser = await _users.Find(u => u.Email == user.Email).FirstOrDefaultAsync();
-            
             if (dbUser == null)
-                return Unauthorized(new { error = "User is not registered!"});
-            
+                return Ok(new { message = safeMessage });
+
             var generateNewVerificationCode = GenerateVerificationCode();
             var update = Builders<User>.Update
                 .Set(u => u.VerificationCode, generateNewVerificationCode)
                 .Set(u => u.VerificationCodeExpiresAt, DateTime.UtcNow.AddMinutes(10));
-            
-            await _users.FindOneAndUpdateAsync(
-                u => u.Id == dbUser.Id,
-                update 
-            );
-            
+
+            await _users.FindOneAndUpdateAsync(u => u.Id == dbUser.Id, update);
+
             await _emailSender.SendEmailAsync(dbUser.Email, "Nový overovací kód",
                 dbUser.FirstName, dbUser.LastName, generateNewVerificationCode.ToString(), EEmail.REGISTRACION);
-            
-            return Ok(new {message = "You should receive new verification code!" });
+
+            return Ok(new { message = safeMessage });
         }
 
         [HttpPut("new-password")]
@@ -390,8 +393,8 @@ namespace nia_api.Controllers
             if (dbUser == null || string.IsNullOrWhiteSpace(user.Token))
                 return BadRequest(new { error = "Invalid reset request." });
 
-            if (user.NewPassword.Length < 6)
-                return BadRequest(new { error = "Password is too short! Min 6 Lenght" });
+            if (user.NewPassword.Length < 8)
+                return BadRequest(new { error = "Password is too short! Minimum length is 8." });
 
             if (!user.NewPassword.Any(char.IsUpper))
                 return BadRequest(new { error = "Password must contain at least one uppercase letter!" });
@@ -421,13 +424,12 @@ namespace nia_api.Controllers
         [HttpGet("store-settings")]
         public async Task<IActionResult> GetStoreSettings()
         {
-            var settings = await _storeSettings.Find(s => s.Id == "store_settings").FirstOrDefaultAsync();
-            if (settings == null)
-            {
-                settings = new StoreSettings { Id = "store_settings", CashOnDeliveryFee = 1.00m };
-            }
-            return Ok(settings);
+            var profile = await _configService.GetPublicProfileAsync();
+            return Ok(profile);
         }
+
+        [HttpPost("logout")]
+        public IActionResult Logout() => NoContent();
 
         private int GenerateVerificationCode()
         {

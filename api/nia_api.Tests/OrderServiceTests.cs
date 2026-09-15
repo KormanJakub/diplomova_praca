@@ -1,21 +1,21 @@
-using Microsoft.Extensions.Options;
 using nia_api.Data;
 using nia_api.Models;
 using nia_api.Services;
 
 namespace nia_api.Tests;
 
-public class OrderServiceTests
+public class OrderServiceTests : IClassFixture<ApiWebApplicationFactory>
 {
+    private readonly ApiWebApplicationFactory _factory;
+
+    public OrderServiceTests(ApiWebApplicationFactory factory)
+    {
+        _factory = factory;
+    }
+
     private OrderService CreateOrderService()
     {
-        var settings = Options.Create(new NiaDbSettings
-        {
-            ConnectionString = "mongodb://127.0.0.1:27017",
-            DatabaseName = "TestDatabase"
-        });
-        var context = new NiaDbContext(settings);
-        return new OrderService(context);
+        return new OrderService(_factory.GetDbContext());
     }
 
     [Fact]
@@ -51,6 +51,19 @@ public class OrderServiceTests
         Assert.Equal(OrderCreationError.InvalidItems, result.Error);
     }
 
+    [Fact]
+    public async Task CreateAsync_ReturnsInvalidItems_WhenCustomizationDoesNotExistInDatabase()
+    {
+        var service = CreateOrderService();
+        var missingId = Guid.NewGuid();
+        var list = new List<Guid> { missingId };
+
+        var result = await service.CreateAsync(Guid.NewGuid(), list);
+
+        Assert.Null(result.Order);
+        Assert.Equal(OrderCreationError.InvalidItems, result.Error);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -59,6 +72,24 @@ public class OrderServiceTests
     {
         var service = CreateOrderService();
         var result = await service.CancelByTokenAsync(token!);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task CancelByUserAsync_ReturnsFalse_WhenOrderDoesNotExist()
+    {
+        var service = CreateOrderService();
+        var result = await service.CancelByUserAsync(999999, Guid.NewGuid());
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task CancelByAdminAsync_ReturnsFalse_WhenOrderDoesNotExist()
+    {
+        var service = CreateOrderService();
+        var result = await service.CancelByAdminAsync(999999);
 
         Assert.False(result);
     }

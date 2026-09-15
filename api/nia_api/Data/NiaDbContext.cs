@@ -43,5 +43,9 @@ namespace nia_api.Data
         public IMongoCollection<Questions> Questions => _database.GetCollection<Questions>("Questions");
 
         public IMongoCollection<StoreSettings> StoreSettings => _database.GetCollection<StoreSettings>("StoreSettings");
+        public IMongoCollection<nia_api.Domain.Configuration.MerchantConfiguration> MerchantSettings => _database.GetCollection<nia_api.Domain.Configuration.MerchantConfiguration>("StoreSettings");
+        public IMongoCollection<MongoDB.Bson.BsonDocument> Counters => _database.GetCollection<MongoDB.Bson.BsonDocument>("Counters");
+        public IMongoCollection<nia_api.Domain.Payments.PaymentAttempt> PaymentAttempts => _database.GetCollection<nia_api.Domain.Payments.PaymentAttempt>("PaymentAttempts");
+        public IMongoCollection<nia_api.Domain.Payments.WebhookInboxMessage> WebhookInbox => _database.GetCollection<nia_api.Domain.Payments.WebhookInboxMessage>("WebhookInbox");
     }
 }

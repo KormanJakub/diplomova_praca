@@ -1,20 +1,20 @@
-﻿using nia_api.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace nia_api.Requests;
 
 public class GuestCustomizationRequest
 {
-    public GuestData GuestData { get; set; }
-    public List<CustomizationRequest> Customizations { get; set; }
+    [Required] public GuestData GuestData { get; set; } = new();
+    [Required, MinLength(1), MaxLength(25)] public List<CustomizationRequest> Customizations { get; set; } = [];
 }
 
 public class GuestData
 {
-    public string? Email { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public string? Country { get; set; }
-    public string? PhoneNumber { get; set; }
-    public string? Address { get; set; }
-    public string? Zip {  get; set; }
+    [Required, EmailAddress, StringLength(254)] public string? Email { get; set; }
+    [Required, StringLength(100)] public string? FirstName { get; set; }
+    [Required, StringLength(100)] public string? LastName { get; set; }
+    [Required, StringLength(100)] public string? Country { get; set; }
+    [Required, Phone, StringLength(30)] public string? PhoneNumber { get; set; }
+    [Required, StringLength(250)] public string? Address { get; set; }
+    [Required, StringLength(20)] public string? Zip { get; set; }
 }

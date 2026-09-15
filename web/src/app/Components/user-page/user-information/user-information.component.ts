@@ -5,6 +5,7 @@ import {CurrencyPipe, DatePipe} from "@angular/common";
 import {Button, ButtonDirective} from "primeng/button";
 import {FormsModule} from "@angular/forms";
 import {DialogModule} from "primeng/dialog";
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-user-information',
@@ -26,7 +27,8 @@ export class UserInformationComponent implements OnInit {
   userDialog: boolean = false;
 
   constructor(
-    private userService: UserService
+    private userService: UserService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -52,7 +54,8 @@ export class UserInformationComponent implements OnInit {
   updateUserProfile() {
     this.userService.updateUserProfile(this.user).subscribe({
       next: () => {
-
+        localStorage.removeItem('waffl_ui_session');
+        this.router.navigate(['/']);
       }
     })
   }

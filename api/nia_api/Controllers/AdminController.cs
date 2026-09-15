@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using nia_api.Data;
+using nia_api.Domain.Configuration;
+using nia_api.Domain.Orders;
 using nia_api.Enums;
 using nia_api.Models;
+using nia_api.Requests;
 using nia_api.Services;
 using Tag = nia_api.Models.Tag;
 
@@ -19,24 +22,33 @@ public class AdminController : ControllerBase
     private readonly IMongoCollection<Tag> _tags;
     private readonly IMongoCollection<PairedDesign> _pairedDesigns;
     private readonly IMongoCollection<Customization> _customizations;
-    private readonly IMongoCollection<Order> _orders;
+    private readonly IOrderStore _orderStore;
+    private readonly IOrderLifecycleService _orderLifecycleService;
     private readonly IMongoCollection<User> _users;
     private readonly IMongoCollection<GuestUser> _guestUsers;
     private readonly IMongoCollection<StoreSettings> _storeSettings;
     private readonly OrderService _orderService;
+    private readonly IMerchantConfigurationService _configService;
     
-    public AdminController(NiaDbContext context, OrderService orderService)
+    public AdminController(
+        NiaDbContext context,
+        OrderService orderService,
+        IOrderStore orderStore,
+        IOrderLifecycleService orderLifecycleService,
+        IMerchantConfigurationService? configService = null)
     {
         _designs = context.Designs;
         _products = context.Products;
         _tags = context.Tags;
         _pairedDesigns = context.PairedDesigns;
         _customizations = context.Customizations;
-        _orders = context.Orders;
+        _orderStore = orderStore;
+        _orderLifecycleService = orderLifecycleService;
         _users = context.Users;
         _guestUsers = context.GuestUsers;
         _storeSettings = context.StoreSettings;
         _orderService = orderService;
+        _configService = configService ?? new MerchantConfigurationService(context);
     }
 
     [HttpGet("tag/getAll")]
@@ -75,6 +87,9 @@ public class AdminController : ControllerBase
     [HttpGet("design/getAll")]
     public async Task<IActionResult> GetAllDesigns()
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         var dbDesigns = await _designs.Find(_ => true).ToListAsync();
 
         if (dbDesigns == null || dbDesigns.Count == 0)
@@ -86,6 +101,9 @@ public class AdminController : ControllerBase
     [HttpGet("design/all-paired-designs")]
     public async Task<IActionResult> GetAllPairedDesgings()
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         var dbPairedDesigns = await _pairedDesigns.Find(_ => true).ToListAsync();
 
         if (dbPairedDesigns.Count == 0 || dbPairedDesigns == null)
@@ -108,6 +126,9 @@ public class AdminController : ControllerBase
     [HttpGet("design/paired-design/designs-in-pair/{pairedDesignId}")]
     public async Task<IActionResult> GetDesignsInPair(string pairedDesignId)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         Guid parsedPairedDesignId;
         if (!Guid.TryParse(pairedDesignId, out parsedPairedDesignId))
             return BadRequest(new { error = "Invalid pairedDesignId format." });
@@ -219,6 +240,8 @@ public class AdminController : ControllerBase
     [HttpDelete("design/remove")]
     public async Task<IActionResult> RemoveTags([FromBody] List<Design> designs)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
         if (designs == null || !designs.Any())
             return BadRequest(new { message = "No tags provided for deletion." });
         
@@ -368,6 +391,9 @@ public class AdminController : ControllerBase
     [HttpPost("design/create")]
     public async Task<IActionResult> CreateDesign([FromBody] Design design)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         if (design == null)
             return BadRequest(new {error = "Design is empty!"});
 
@@ -387,6 +413,9 @@ public class AdminController : ControllerBase
     [HttpPut("design/update")]
     public async Task<IActionResult> UpdateDesign(Design design)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         if (design == null)
             return BadRequest(new { error = "Design is null!" });
 
@@ -402,6 +431,9 @@ public class AdminController : ControllerBase
     [HttpDelete("design/custom-delete/{designId}")]
     public async Task<IActionResult> DeleteCustomDesign(string designId)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         var id = Guid.Parse(designId);
 
         var dbDesign = await _designs.DeleteOneAsync(d => d.Id == id);
@@ -415,6 +447,8 @@ public class AdminController : ControllerBase
     [HttpDelete("design/delete-with-pair/{designId}")]
     public async Task<IActionResult> DeleteCustomDesignWithPair(string designId)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
         var id = Guid.Parse(designId);
 
         var dbDesign = await _designs.DeleteOneAsync(d => d.Id == id);
@@ -433,6 +467,9 @@ public class AdminController : ControllerBase
     [HttpPost("design/pair-two-designs")]
     public async Task<IActionResult> PairTwoDesigns(PairedDesign pairedDesign)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         if (pairedDesign == null)
             return BadRequest(new { error =  "Pairing failed!"});
 
@@ -454,6 +491,9 @@ public class AdminController : ControllerBase
     [HttpPut("design/update-two-designs")]
     public async Task<IActionResult> UpdateTwoDesigns(PairedDesign pairedDesign)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         if (pairedDesign == null)
             return BadRequest(new { error =  "Pairing failed!"});
         
@@ -469,6 +509,9 @@ public class AdminController : ControllerBase
     [HttpDelete("design/delete-pair-design/{pairDesignId}")]
     public async Task<IActionResult> RemovePairDesign(string pairDesignId)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         var id = Guid.Parse(pairDesignId);
 
         var dbPairDesign = await _pairedDesigns.DeleteOneAsync(pd => pd.Id == id);
@@ -482,6 +525,9 @@ public class AdminController : ControllerBase
     [HttpDelete("design/delete-pair-design")]
     public async Task<IActionResult> RemovePairDesign([FromBody] List<string> pairedDesignIds)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         if (pairedDesignIds == null || !pairedDesignIds.Any())
             return BadRequest(new { message = "No pairedDesign IDs provided for deletion." });
     
@@ -494,6 +540,8 @@ public class AdminController : ControllerBase
     [HttpDelete("design/delete-one-pair/{pairDesignId}/{designId}")]
     public async Task<IActionResult> RemoveOnePairDesign(string pairDesignId, string designId)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
         var pairId = Guid.Parse(pairDesignId);
         var dId = Guid.Parse(designId);
 
@@ -553,9 +601,9 @@ public class AdminController : ControllerBase
     [HttpGet("orders")]
     public async Task<IActionResult> GetAllOrders()
     {
-        var dbOrders = await _orders.Find(_ => true).ToListAsync();
+        var dbOrders = await _orderStore.GetAllAsync();
 
-        if (dbOrders.Count == 0 || dbOrders == null)
+        if (dbOrders == null || dbOrders.Count == 0)
             return NotFound(new { error = "No Orders designs!" });
 
         var customizationIds = dbOrders
@@ -577,75 +625,78 @@ public class AdminController : ControllerBase
     [HttpPost("orders/increase-status/{orderId}")]
     public async Task<IActionResult> IncreaseOrderStatus(int orderId)
     {
-        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
-        if (order == null)
-            return NotFound(new { error = "Order not found!" });
-
-        if (order.StatusOrder < EStatus.POSLANA) 
+        var result = await _orderLifecycleService.IncreaseStatusAsync(orderId, OrderActor.Staff());
+        if (!result.IsSuccess)
         {
-            order.StatusOrder++;
-            if (order.StatusOrder >= EStatus.ZAPLATENA && order.PaymentStatus != "Paid")
+            return result.Status switch
             {
-                order.PaymentStatus = "Paid";
-            }
-            order.UpdatedAt = DateTime.UtcNow;
-            await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+                OrderMutationStatus.NotFound => NotFound(new { error = "Order not found!" }),
+                _ => BadRequest(new { error = result.Message })
+            };
         }
 
-        return Ok(new { message = "Order status increased!", order });
+        return Ok(new { message = "Order status increased!", order = result.Order });
     }
     
     [HttpPost("orders/decrease-status/{orderId}")]
     public async Task<IActionResult> DecreaseOrderStatus(int orderId)
     {
-        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
-        if (order == null)
-            return NotFound(new { error = "Order not found!" });
-
-        if (order.StatusOrder > EStatus.PRIJATA && order.StatusOrder <= EStatus.POSLANA)
+        var result = await _orderLifecycleService.DecreaseStatusAsync(orderId, OrderActor.Staff());
+        if (!result.IsSuccess)
         {
-            order.StatusOrder--;
-            order.UpdatedAt = DateTime.UtcNow;
-            await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
+            return result.Status switch
+            {
+                OrderMutationStatus.NotFound => NotFound(new { error = "Order not found!" }),
+                _ => BadRequest(new { error = result.Message })
+            };
         }
 
-        return Ok(new { message = "Order status decreased!", order });
+        return Ok(new { message = "Order status decreased!", order = result.Order });
     }
 
     [HttpDelete("orders/{orderId}")]
-    public async Task<IActionResult> RemoveOrder(int orderId)
+    public Task<IActionResult> RemoveOrder(int orderId)
     {
-        var result = await _orders.DeleteOneAsync(o => o.Id == orderId);
-
-        if (result.DeletedCount == 0)
-            return NotFound(new { error = "Order not found!" });
-
-        return Ok(new { message = "Order deleted successfully!" });
+        return Task.FromResult<IActionResult>(BadRequest(new { error = "Orders cannot be deleted; use cancellation instead." }));
     }
 
     [HttpPost("orders/cancel/{orderId}")]
     public async Task<IActionResult> CancelOrder(int orderId)
     {
-        var success = await _orderService.CancelByAdminAsync(orderId);
-        if (!success)
+        var result = await _orderLifecycleService.CancelOrderAsync(orderId, OrderActor.Staff());
+        if (!result.IsSuccess)
             return NotFound(new { error = "Order not found or already cancelled!" });
 
-        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
-        return Ok(new { message = "Order cancelled!", order });
+        return Ok(new { message = "Order cancelled!", order = result.Order });
     }
     
     [HttpPut("orders/{orderId}")]
-    public async Task<IActionResult> UpdateOrder(int orderId, [FromBody] Order updatedOrder)
+    public async Task<IActionResult> UpdateOrder(int orderId, [FromBody] AdminUpdateOrderRequest updatedOrder)
     {
         if (updatedOrder == null)
             return BadRequest(new { error = "Invalid order data!" });
 
-        var existingOrder = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        var existingOrder = await _orderStore.GetByIdAsync(orderId);
         if (existingOrder == null)
             return NotFound(new { error = "Order not found!" });
 
-        updatedOrder.Id = orderId;
-        await _orders.ReplaceOneAsync(o => o.Id == orderId, updatedOrder);
+        var result = await _orderLifecycleService.UpdateOrderDetailsAsync(
+            orderId,
+            updatedOrder.DeliveryMethod ?? existingOrder.DeliveryMethod ?? "HomeDelivery",
+            updatedOrder.PacketaPointId,
+            updatedOrder.PacketaPointName,
+            updatedOrder.PacketaPointAddress,
+            updatedOrder.StatusOrder,
+            OrderActor.Staff());
+
+        if (!result.IsSuccess)
+        {
+            return result.Status switch
+            {
+                OrderMutationStatus.NotFound => NotFound(new { error = "Order not found!" }),
+                _ => BadRequest(new { error = result.Message })
+            };
+        }
 
         return Ok(new { message = "Order updated!", updatedOrder });
     }
@@ -653,9 +704,15 @@ public class AdminController : ControllerBase
     [HttpGet("orders/{orderId}")]
     public async Task<IActionResult> GetOrderInformation(int orderId)
     {
-        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
+        var order = await _orderStore.GetByIdAsync(orderId);
         if (order == null)
             return NotFound(new { error = "Order not found" });
+
+        if (OrderSnapshotPresentation.HasSnapshots(order))
+        {
+            var (snapshotCustomizations, snapshotProducts, snapshotDesigns) = OrderSnapshotPresentation.MaterializeDetails(order);
+            return Ok(new { order, customizations = snapshotCustomizations, products = snapshotProducts, designs = snapshotDesigns });
+        }
 
         var customizationIds = order.Customizations;
         var customizations = await _customizations.Find(c => customizationIds.Contains(c.Id)).ToListAsync();
@@ -698,6 +755,9 @@ public class AdminController : ControllerBase
     [HttpPost("design/getSpecific")]
     public async Task<IActionResult> GetSpecificDesigns([FromBody] List<string> designIds)
     {
+        if (!await _configService.IsPersonalizationEnabledAsync())
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Personalization module is disabled for this store." });
+
         if (designIds == null || !designIds.Any())
             return BadRequest(new { error = "Žiadne ID dizajnov neboli poskytnuté." });
     
@@ -713,22 +773,8 @@ public class AdminController : ControllerBase
     [HttpGet("orders/sales-summary")]
     public async Task<IActionResult> GetSalesSummary()
     {
-        var soldCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.ZAPLATENA);
-        var pendingCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.PRIJATA);
-        var makingCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.VO_VYROBE);
-        var readyCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.PRIPRAVENA);
-        var sendCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.POSLANA);
-        var cancelCount = await _orders.CountDocumentsAsync(o => o.StatusOrder == EStatus.ZRUSENA);
-    
-        return Ok(new 
-        { 
-            soldOrders = soldCount,
-            pendingOrders = pendingCount,
-            makingOrders = makingCount,
-            readyOrders = readyCount,
-            sendOrders = sendCount,
-            cancelOrders = cancelCount
-        });
+        var summary = await _orderStore.GetSalesSummaryAsync();
+        return Ok(summary);
     }
 
     [HttpGet("products/low-stock")]
@@ -764,34 +810,8 @@ public class AdminController : ControllerBase
     [HttpGet("kpi")]
     public async Task<IActionResult> GetKpiData()
     {
-        var filter = Builders<Order>.Filter.Ne(o => o.StatusOrder, EStatus.ZRUSENA);
-        var paidFilter = Builders<Order>.Filter.Eq(o => o.PaymentStatus, "Paid");
-    
-        var totalOrders = await _orders.CountDocumentsAsync(filter);
-
-        var revenueAggregate = await _orders.Aggregate()
-            .Match(paidFilter)
-            .Group(new BsonDocument 
-            { 
-                { "_id", BsonNull.Value }, 
-                { "totalRevenue", new BsonDocument("$sum", "$totalPrice") }
-            })
-            .FirstOrDefaultAsync();
-        
-        decimal totalRevenue = revenueAggregate != null ? revenueAggregate["totalRevenue"].ToDecimal() : 0;
-        var paidOrders = await _orders.CountDocumentsAsync(paidFilter);
-        decimal averageOrderValue = paidOrders > 0 ? totalRevenue / paidOrders : 0;
-
-        var distinctUserIds = await _orders.DistinctAsync<Guid>("UserId", filter);
-        int newCustomers = distinctUserIds.ToList().Count;
-
-        return Ok(new 
-        {
-            totalOrders,
-            totalRevenue,
-            averageOrderValue,
-            newCustomers
-        });
+        var kpi = await _orderStore.GetKpiDataAsync();
+        return Ok(kpi);
     }
 
     [HttpGet("user/{userId}")]
@@ -827,56 +847,119 @@ public class AdminController : ControllerBase
     [HttpGet("settings")]
     public async Task<IActionResult> GetSettings()
     {
-        var settings = await _storeSettings.Find(s => s.Id == "store_settings").FirstOrDefaultAsync();
-        if (settings == null)
-        {
-            settings = new StoreSettings { Id = "store_settings", CashOnDeliveryFee = 1.00m };
-        }
+        var settings = await _configService.GetConfigurationAsync();
         return Ok(settings);
     }
 
     [HttpPut("settings")]
     public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsRequest request)
     {
-        if (request.CashOnDeliveryFee < 0)
+        if (request.CashOnDeliveryFee.HasValue && request.CashOnDeliveryFee.Value < 0)
             return BadRequest(new { error = "Poplatok za dobierku nemôže byť záporný." });
+        if (request.HomeDeliveryFee.HasValue && request.HomeDeliveryFee.Value < 0)
+            return BadRequest(new { error = "Poplatok za doručenie nemôže byť záporný." });
+        if (request.PacketaFee.HasValue && request.PacketaFee.Value < 0)
+            return BadRequest(new { error = "Poplatok za Packetu nemôže byť záporný." });
 
-        var update = Builders<StoreSettings>.Update
-            .Set(s => s.CashOnDeliveryFee, request.CashOnDeliveryFee)
-            .Set(s => s.PacketaApiKey, request.PacketaApiKey)
-            .Set(s => s.UpdatedAt, DateTime.UtcNow);
+        var current = await _configService.GetConfigurationAsync();
 
-        var options = new UpdateOptions { IsUpsert = true };
-        await _storeSettings.UpdateOneAsync(s => s.Id == "store_settings", update, options);
+        if (request.StoreName != null) current.StoreName = request.StoreName;
+        if (request.LogoUrl != null) current.LogoUrl = request.LogoUrl;
+        if (request.ContactEmail != null) current.ContactEmail = request.ContactEmail;
+        if (request.ContactPhone != null) current.ContactPhone = request.ContactPhone;
+        if (request.Currency != null) current.Currency = request.Currency;
+        if (request.DefaultLocale != null) current.DefaultLocale = request.DefaultLocale;
 
-        var settings = await _storeSettings.Find(s => s.Id == "store_settings").FirstOrDefaultAsync();
-        return Ok(new { message = "Nastavenia boli úspešne uložené.", settings });
+        if (request.EnablePersonalization.HasValue) current.EnablePersonalization = request.EnablePersonalization.Value;
+        if (request.EnableReviews.HasValue) current.EnableReviews = request.EnableReviews.Value;
+        if (request.EnableCoupons.HasValue) current.EnableCoupons = request.EnableCoupons.Value;
+        if (request.EnableAdvancedReporting.HasValue) current.EnableAdvancedReporting = request.EnableAdvancedReporting.Value;
+
+        if (request.EnableStripe.HasValue) current.EnableStripe = request.EnableStripe.Value;
+        if (request.EnableCashOnDelivery.HasValue) current.EnableCashOnDelivery = request.EnableCashOnDelivery.Value;
+        if (request.CashOnDeliveryFee.HasValue) current.CashOnDeliveryFee = request.CashOnDeliveryFee.Value;
+
+        if (request.EnableBankTransfer.HasValue) current.EnableBankTransfer = request.EnableBankTransfer.Value;
+        if (request.BankAccountIban != null) current.BankAccountIban = request.BankAccountIban;
+        if (request.BankAccountBic != null) current.BankAccountBic = request.BankAccountBic;
+        if (request.BankTransferInstructions != null) current.BankTransferInstructions = request.BankTransferInstructions;
+
+        if (request.EnableHomeDelivery.HasValue) current.EnableHomeDelivery = request.EnableHomeDelivery.Value;
+        if (request.HomeDeliveryFee.HasValue) current.HomeDeliveryFee = request.HomeDeliveryFee.Value;
+
+        if (request.EnablePacketa.HasValue) current.EnablePacketa = request.EnablePacketa.Value;
+        if (request.PacketaApiKey != null) current.PacketaApiKey = request.PacketaApiKey;
+        if (request.PacketaFee.HasValue) current.PacketaFee = request.PacketaFee.Value;
+
+        if (request.Timezone != null) current.Timezone = request.Timezone;
+        if (request.VatPayer.HasValue) current.VatPayer = request.VatPayer.Value;
+        if (request.VatRate.HasValue) current.VatRate = request.VatRate.Value;
+        if (request.CompanyRegistrationNumber != null) current.CompanyRegistrationNumber = request.CompanyRegistrationNumber;
+        if (request.TaxRegistrationNumber != null) current.TaxRegistrationNumber = request.TaxRegistrationNumber;
+        if (request.VatRegistrationNumber != null) current.VatRegistrationNumber = request.VatRegistrationNumber;
+        if (request.BillingAddress != null) current.BillingAddress = request.BillingAddress;
+
+        var saved = await _configService.UpdateConfigurationAsync(current);
+        return Ok(new { message = "Nastavenia boli úspešne uložené.", settings = saved });
     }
 
     [HttpPost("orders/mark-paid/{orderId}")]
     public async Task<IActionResult> MarkOrderAsPaid(int orderId)
     {
-        var order = await _orders.Find(o => o.Id == orderId).FirstOrDefaultAsync();
-        if (order == null)
-            return NotFound(new { error = "Order not found!" });
-
-        if (order.StatusOrder == EStatus.ZRUSENA)
-            return BadRequest(new { error = "Zrušenú objednávku nie je možné označiť ako zaplatenú." });
-
-        order.PaymentStatus = "Paid";
-        if (order.StatusOrder == EStatus.PRIJATA)
+        var result = await _orderLifecycleService.MarkPaidAsync(orderId, OrderActor.Staff());
+        if (!result.IsSuccess)
         {
-            order.StatusOrder = EStatus.ZAPLATENA;
+            return result.Status switch
+            {
+                OrderMutationStatus.NotFound => NotFound(new { error = "Order not found!" }),
+                _ => BadRequest(new { error = result.Message })
+            };
         }
-        order.UpdatedAt = DateTime.UtcNow;
-        await _orders.ReplaceOneAsync(o => o.Id == orderId, order);
 
-        return Ok(new { message = "Platba objednávky bola úspešne potvrdená.", order });
+        return Ok(new { message = "Platba objednávky bola úspešne potvrdená.", order = result.Order });
     }
 }
 
 public class UpdateSettingsRequest
 {
-    public decimal CashOnDeliveryFee { get; set; }
+    // Legacy fields
+    public decimal? CashOnDeliveryFee { get; set; }
     public string? PacketaApiKey { get; set; }
+
+    // Store profile
+    public string? StoreName { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? ContactEmail { get; set; }
+    public string? ContactPhone { get; set; }
+    public string? Currency { get; set; }
+    public string? DefaultLocale { get; set; }
+
+    // Module entitlements
+    public bool? EnablePersonalization { get; set; }
+    public bool? EnableReviews { get; set; }
+    public bool? EnableCoupons { get; set; }
+    public bool? EnableAdvancedReporting { get; set; }
+
+    // Payment methods
+    public bool? EnableStripe { get; set; }
+    public bool? EnableCashOnDelivery { get; set; }
+    public bool? EnableBankTransfer { get; set; }
+    public string? BankAccountIban { get; set; }
+    public string? BankAccountBic { get; set; }
+    public string? BankTransferInstructions { get; set; }
+
+    // Delivery methods
+    public bool? EnableHomeDelivery { get; set; }
+    public decimal? HomeDeliveryFee { get; set; }
+    public bool? EnablePacketa { get; set; }
+    public decimal? PacketaFee { get; set; }
+
+    // Merchant operations
+    public string? Timezone { get; set; }
+    public bool? VatPayer { get; set; }
+    public decimal? VatRate { get; set; }
+    public string? CompanyRegistrationNumber { get; set; }
+    public string? TaxRegistrationNumber { get; set; }
+    public string? VatRegistrationNumber { get; set; }
+    public string? BillingAddress { get; set; }
 }

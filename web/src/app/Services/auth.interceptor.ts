@@ -1,13 +1,12 @@
-import {inject} from '@angular/core';
 import {HttpInterceptorFn} from '@angular/common/http';
-import {CookieService} from 'ngx-cookie-service';
 import {environment} from '../../Environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
-  const token = inject(CookieService).get('uiAppToken');
-  if (!token || !request.url.startsWith(`${environment.apiUrl}/`) ||
-      request.headers.has('Authorization')) {
+  if (!request.url.startsWith(`${environment.apiUrl}/`)) {
     return next(request);
   }
-  return next(request.clone({setHeaders: {Authorization: `Bearer ${token}`}}));
+
+  // Authentication is carried only by the API's HttpOnly cookie. JavaScript
+  // never receives or reads the bearer token.
+  return next(request.clone({withCredentials: true}));
 };

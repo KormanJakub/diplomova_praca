@@ -12,6 +12,9 @@ namespace nia_api.Models
         public Guid Id { get; set; }
         [BsonElement("email"), BsonRepresentation(BsonType.String)]
         public string? Email { get; set; }
+        [BsonElement("normalizedEmail"), BsonRepresentation(BsonType.String)]
+        [BsonIgnoreIfNull]
+        public string? NormalizedEmail { get; set; }
         [BsonElement("email_confirmed"), BsonRepresentation(BsonType.Boolean)]
         public bool IsEmailConfirmed { get; set; }
         [BsonElement("password"), BsonRepresentation(BsonType.String)]
@@ -35,6 +38,8 @@ namespace nia_api.Models
         public DateTime? VerificationCodeExpiresAt { get; set; }
         public string? PasswordResetTokenHash { get; set; }
         public DateTime? PasswordResetExpiresAt { get; set; }
+        [BsonElement("tokenVersion")]
+        public int TokenVersion { get; set; }
         [BsonElement("createdAt"), BsonRepresentation(BsonType.DateTime)]
         public DateTime? CreatedAt { get; set; }
         [BsonElement("updatedAt"), BsonRepresentation(BsonType.DateTime)]
